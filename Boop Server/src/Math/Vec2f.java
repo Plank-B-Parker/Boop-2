@@ -1,8 +1,8 @@
 package Math;
 
-public class Vect2f {
+public class Vec2f {
 
-	public Vect2f() {
+	public Vec2f() {
 		// TODO Auto-generated constructor stub
 	}
 
