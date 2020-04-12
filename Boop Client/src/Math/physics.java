@@ -7,27 +7,35 @@ public class physics {
 	//If they go below -1, they loop to 1. 
 	Vec2f pos;
 	Vec2f targetPos;
+	Vec2f posError;
 	
 	Vec2f vel;
-	Vec2f targetVel;
+	//Vec2f targetVel;
+	//Vec2f velError;
 	
 	Vec2f acc;
 	
 	//Time between getting updates from server.
-	private static double server_dt;
+	private static float server_dt = 1f/30f;
 	
 	
 	public physics() {
 		// TODO Auto-generated constructor stub
 	}
 	
+	//Try changing pos proportional to their error.
 	public void update(float dt) {
 		calcAcc();
-		//Predict target vel and pos.
-		Vec2f.increment(targetVel, targetVel, acc, dt);
-		Vec2f.increment(targetPos, targetPos, targetVel, dt);
+		//Predict target pos.
+		Vec2f.increment(vel, vel, acc, dt);
+		Vec2f.increment(targetPos, targetPos, vel, dt);
+		Vec2f.increment(pos, pos, vel, dt);
 		
+		//Calc the errors.
+		Vec2f.sub(posError, targetPos, pos);
 		
+		//Correct position.
+		Vec2f.increment(pos, pos, posError, dt/server_dt);
 	}
 
 	private void calcAcc() {
