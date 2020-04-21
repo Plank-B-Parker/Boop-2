@@ -19,7 +19,7 @@ public class physics {
 	private static float server_dt = 1f/30f;
 	
 	
-	public physics() {
+	public physics(Vec2f pos) {
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -36,11 +36,21 @@ public class physics {
 		
 		//Correct position.
 		Vec2f.increment(pos, pos, posError, dt/server_dt);
+		
+		normalisePos();
+	}
+	
+	//Sets pos components to go between -1 and -1.
+	private void normalisePos() {
+		pos.x = pos.x % 1f;
+		pos.y = pos.y % 1f;
+		
+		targetPos.x = targetPos.x % 1f;
+		targetPos.y = targetPos.y % 1f;
 	}
 
 	private void calcAcc() {
 		acc.set(0, 0);
-		
 	}
 
 }
