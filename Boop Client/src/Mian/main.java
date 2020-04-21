@@ -1,5 +1,7 @@
 package Mian;
 
+import java.awt.Canvas;
+
 public class main {
 
 	public main() {
