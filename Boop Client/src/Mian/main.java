@@ -1,6 +1,8 @@
 package Mian;
 
 import java.awt.Canvas;
+import java.awt.Graphics;
+import java.awt.image.BufferStrategy;
 
 public class main extends Canvas implements Runnable{
 
@@ -41,7 +43,18 @@ public class main extends Canvas implements Runnable{
 	}
 	//^
 	private void render() {
+		BufferStrategy bufS = getBufferStrategy();
+		if(bufS == null){
+			createBufferStrategy(3);
+			return;
+		}
+		Graphics g= bufS.getDrawGraphics();
+		//DRAWING//
 		
+		
+		//DRAWING//
+		g.dispose();
+		bufS.show();
 	}
 
 	public static void main(String args[]){
