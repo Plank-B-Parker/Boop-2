@@ -5,15 +5,15 @@ public class physics {
 	//For pos, x and y go between -1 and 1.
 	//If they go above 1, then loop back to -1.
 	//If they go below -1, they loop to 1. 
-	Vec2f pos;
-	Vec2f targetPos;
-	Vec2f posError;
+	public Vec2f pos;
+	public Vec2f targetPos;
+	private Vec2f posError;
 	
-	Vec2f vel;
+	public Vec2f vel;
 	//Vec2f targetVel;
 	//Vec2f velError;
 	
-	Vec2f acc;
+	public Vec2f acc;
 	
 	//Time between getting updates from server.
 	private static float server_dt = 1f/30f;
@@ -51,6 +51,16 @@ public class physics {
 
 	private void calcAcc() {
 		acc.set(0, 0);
+	}
+	
+	public void setPos(float x, float y) {
+		targetPos.x = x;
+		targetPos.y = y;
+	}
+	
+	public void setVel(float x, float y) {
+		vel.x = x;
+		vel.y = y;
 	}
 
 }
