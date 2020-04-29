@@ -73,6 +73,9 @@ public class ServerLink implements Runnable{
 			switch (data[0]) {
 			case 5:
 				ID = data[2];
+				break;
+			default:
+				return;
 			}
 		}
 		
