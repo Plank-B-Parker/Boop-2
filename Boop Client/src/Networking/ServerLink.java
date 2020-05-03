@@ -14,10 +14,12 @@ public class ServerLink implements Runnable{
 	
 	public long ID;
 	
-	public volatile boolean connected = false;
+	volatile boolean connected = false;
 	
 	DataInputStream in;
 	DataOutputStream out;
+	
+	Thread threadTCP;
 	
 	public LinkedBlockingQueue<byte[]> dataBuffer;
 	
@@ -25,8 +27,7 @@ public class ServerLink implements Runnable{
 		
 		dataBuffer = new LinkedBlockingQueue<>(60);
 		
-		Thread threadTCP = new Thread("TCP-Thread");
-		threadTCP.start();
+		threadTCP = new Thread("TCP-Thread");
 	}
 
 	@Override
@@ -44,7 +45,7 @@ public class ServerLink implements Runnable{
 	
 	// TCP stream information is set out as (byte PacketID, int length ..... rest of data
 	
-	public byte[] recieveData() throws IOException {
+	private byte[] recieveData() throws IOException {
 		int packetID = in.read();
 		int len = in.readInt();
 		
@@ -88,6 +89,7 @@ public class ServerLink implements Runnable{
 		out = new DataOutputStream(socketTCP.getOutputStream());
 		
 		connected = true;
+		threadTCP.start();
 	}
 	
 	public static int convertBytestoInt(byte[] bytes) {
