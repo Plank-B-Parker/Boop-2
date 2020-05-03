@@ -9,29 +9,17 @@ import java.net.SocketException;
 public class UdpLink implements Runnable{
 	
 	private ServerLink serverlink;
-	private final int PORT;
-	
-	
+	private int serverport;
 	private DatagramSocket socket;
-	private InetAddress ipv4Address;
-	
+	private InetAddress serveripv4Address;
 	public static final int MAX_PAYLOAD_SIZE = 1472;
 	
-	public UdpLink(ServerLink serverlink, int port, InetAddress ipv4Address) {
+	public Thread threadUDP;
+	
+	public UdpLink(ServerLink serverlink) {
 		this.serverlink = serverlink;
-		this.PORT = port;
-		this.ipv4Address = ipv4Address;
 		
-		
-		try {
-			this.socket = new DatagramSocket(PORT, this.ipv4Address);
-			
-		} catch (SocketException e) {
-			e.printStackTrace();
-		}
-		
-		Thread threadUDP = new Thread("UDP-Thread");
-		threadUDP.start();
+		threadUDP = new Thread("UDP-Thread");
 	}
 
 	@Override
@@ -62,5 +50,29 @@ public class UdpLink implements Runnable{
 			return;
 		}
 	}
+	
+	public void sendData(byte[] data) {
+		DatagramPacket packet = new DatagramPacket(data, data.length, serveripv4Address, serverport);
+		
+		try {
+			socket.send(packet);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
+	public void connectToServerUDP(int serverport, InetAddress serveripv4Address) {
+		this.serveripv4Address = serveripv4Address;
+		this.serverport = serverport;
+		
+		
+		try {
+			this.socket = new DatagramSocket(this.serverport, this.serveripv4Address);
+			
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		
+		threadUDP.start();
+	}
 }
