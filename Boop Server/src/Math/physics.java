@@ -3,8 +3,8 @@ package Math;
 public class physics {
 	
 	public Vec2f pos;
-	public Vec2f vel;
-	public Vec2f acc;
+	public Vec2f vel = new Vec2f();
+	public Vec2f acc = new Vec2f();
 	
 	public physics() {
 		

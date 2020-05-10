@@ -12,7 +12,7 @@ public class Ball {
 	private int ownerID;
 	
 	//Contains physics attributes: pos, vel.
-	private physics phys;
+	private physics phys = new physics();
 	
 	
 	public Ball(float[] data) {
@@ -24,7 +24,7 @@ public class Ball {
 		ID = (int)data[0];
 		type = (int)data[1];
 		phys.setPos(data[2], data[3]);
-		phys.setPos(data[4], data[5]);
+		phys.setVel(data[4], data[5]);
 		ownerID = (int)data[6];
 		
 		//Determine radius from type.
