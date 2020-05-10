@@ -19,7 +19,7 @@ public class physics {
 	private static float server_dt = 1f/30f;
 	
 	
-	public physics(Vec2f pos) {
+	public physics() {
 		// TODO Auto-generated constructor stub
 	}
 	
