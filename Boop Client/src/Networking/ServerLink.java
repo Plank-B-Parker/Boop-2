@@ -12,7 +12,7 @@ public class ServerLink implements Runnable{
 	
 	Socket socketTCP;
 	
-	public long ID;
+	public long ID = 0;
 	
 	volatile boolean connected = false;
 	
@@ -32,6 +32,8 @@ public class ServerLink implements Runnable{
 
 	@Override
 	public void run() {
+		readIDfromServer();
+		
 		while(connected) {
 			try {
 				// Read data in stream and store in buffer			
@@ -80,6 +82,17 @@ public class ServerLink implements Runnable{
 			}
 		}
 		
+	}
+	
+	public void readIDfromServer() {
+		try {
+			Thread.sleep(1000);
+			ID = in.readLong();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void connectToServer(String ipV4Address, int port) throws IOException{

@@ -5,9 +5,15 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
+
+import Networking.Client;
+import Networking.ClientAccept;
+import Networking.UDP;
 
 public class main {
 	
@@ -35,16 +41,25 @@ public class main {
 		frame.validate();
 	}
 	
+	ClientAccept clientAcceptor;
+	UDP udp;
+	public int port = 27000;
+	
+	public void setupConnections() {
+		clientAcceptor = new ClientAccept(port);
+		UDP udp = new UDP(port);
+		clientAcceptor.startServer();
+		udp.startUDP();
+	}
+	
 	private boolean running = false;
-	private int ticksPerSecond = 0;
-	private int framesPerSecond = 0;
+	private int TPS = 0;
+	private int FPS = 0;
 	private int packetsSentPerSec = 0;
 	
 	public void mainLoop() {
 		running = true;
-		
-		int packetsSent = 0; 
-		
+				
 		final double MS_PER_UPDATE = 1000.0 / 60.0;
 		long previous = System.currentTimeMillis();
 		long timeAfterLastTick = 0;
@@ -52,6 +67,7 @@ public class main {
 		
 		int ticks = 0;
 		int frames = 0;
+		int packetsSent = 0; 
 		
 		while(running) {
 			long current = System.currentTimeMillis();
@@ -70,6 +86,7 @@ public class main {
 			
 			// Code branch occurs 30 times a second
 			if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 2) {
+				
 				// Send data and other stuff here
 			}
 			
@@ -77,8 +94,8 @@ public class main {
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
-				ticksPerSecond = ticks;
-				framesPerSecond = frames;
+				TPS = ticks;
+				FPS = frames;
 				ticks = 0;
 				frames = 0;
 				timer += 1000;
@@ -88,6 +105,9 @@ public class main {
 	}
 	
 	public void fixedUpdate() {
+		List<Client> clients = new ArrayList<>(clientAcceptor.clients.size());
+		System.arraycopy(clientAcceptor.clients, 0, clients, 0, clients.size());
+		
 		
 	}
 	
@@ -105,9 +125,19 @@ public class main {
 			
 			drawPerformance(g2d);
 			
+			g2d.dispose();
+			bs.show();
 		}while(bs.contentsLost());
 	}
-	
+
+	private void drawPerformance(Graphics2D g2d) {
+		g2d.setColor(Color.RED);
+		g2d.setFont(new Font("SansSerif", Font.PLAIN, 20)); 
+		g2d.drawString("fps: " + FPS, 50, 50);
+		g2d.drawString("ticks: " + TPS, 50, 75);
+		
+		g2d.drawString("tx: " + packetsSentPerSec, 140, 50);
+	}
 	
 	public static void main(String args[]){
 		Thread t = Thread.currentThread();
@@ -115,15 +145,7 @@ public class main {
 		
 		main main = new main();
 		main.createDisplay();
+		main.setupConnections();
 		main.mainLoop();
-	}
-
-	private void drawPerformance(Graphics2D g2d) {
-		g2d.setColor(Color.RED);
-		g2d.setFont(new Font("SansSerif", Font.PLAIN, 20)); 
-		g2d.drawString("fps: " + framesPerSecond, 50, 50);
-		g2d.drawString("ticks: " + ticksPerSecond, 50, 75);
-		
-		g2d.drawString("tx: " + packetsSentPerSec, 70, 50);
 	}
 }
