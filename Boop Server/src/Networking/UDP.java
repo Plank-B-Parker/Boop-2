@@ -24,7 +24,6 @@ public class UDP implements Runnable{
 		}
 		
 		threadUDP = new Thread("UDP-thread");
-		threadUDP.start();
 		
 	}
 	
@@ -63,6 +62,10 @@ public class UDP implements Runnable{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void startUDP() {
+		threadUDP.start();
 	}
 	
 	public void disconnect(){
