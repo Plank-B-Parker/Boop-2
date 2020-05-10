@@ -11,6 +11,10 @@ public class Storage {
 		
 	}
 	
+	public void updateBalls(double dt) {
+		
+	}
+	
 	public void add(Ball b) {
 		balls.add(b);
 	}

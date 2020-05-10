@@ -11,11 +11,25 @@ public class Ball {
 	private int ownerID;
 	
 	//Contains physics attributes: pos, vel.
-	private physics phys;
+	private physics phys = new physics();
 		
 	
-	public Ball() {
-		
+	public Ball(int type) {
+		this.type = type;
+		switch(type) {
+		case 1:
+			phys.mass = 1;
+			phys.bounciness = 1;
+		case 2:
+			phys.mass = 1;
+			phys.bounciness = 1;
+		case 3:
+			phys.mass = 1;
+			phys.bounciness = 1;
+		case 4:
+			phys.mass = 1;
+			phys.bounciness = 1;
+		}
 	}
 	
 	public float[] getData() {
@@ -40,7 +54,14 @@ public class Ball {
 	public Vec2f getVel() {
 		return phys.vel;
 	}
-
+	
+	public float getMass() {
+		return phys.mass;
+	}
+	
+	public float getBounciness() {
+		return phys.bounciness;
+	}
 	public int getType() {
 		return type;
 	}

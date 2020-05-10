@@ -16,6 +16,12 @@ public class Vec2f {
 		return new Vec2f(x,y);
 	}
 	
+	
+	/** Returns the square of the length of the vector*/
+	public double lengthSq() {
+		return x*x + y*y;
+	}
+	
 	/**
 	 * Sets vector components as (x,y). Used to avoid object creation.
 	 * @param x
