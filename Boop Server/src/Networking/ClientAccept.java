@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class ClientAccept implements Runnable{
 	
@@ -14,6 +15,8 @@ public class ClientAccept implements Runnable{
 	static volatile boolean serverON = false;
 	
 	public List<Client> clients;
+	
+	Random random = new Random();
 	
 	public ClientAccept(int port) {
 		this.serverPort = port;
@@ -33,16 +36,38 @@ public class ClientAccept implements Runnable{
 	public void run() {
 		while(serverON) {
 			try {
-				Client client = new Client();
+				// creates new client with a unique ID
+				Client client = createNewClient();
+				
 				// Blocking method
 				Socket socket = serverSocket.accept();
 				
+				clients.add(client);
+				
 				client.setupConnection(socket);
+				
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private Client createNewClient() {
+		Client client = new Client();
+		
+		boolean validID = true;
+		
+		do {
+			client.setIdentity((long) Math.random() * 1000);
+			for (int i = 0; i < clients.size(); i++) {
+				if (clients.get(i).getIdentity() == client.getIdentity()) {
+					validID = false;
+				}
+			}
+		} while (!validID); // While ID is not valid
+		
+		return client;
 	}
 	
 	public void startServer() {
@@ -60,9 +85,14 @@ public class ClientAccept implements Runnable{
 		}
 	}
 	
+	public void disconnectClient(Client client) throws IOException{
+		
+	}
+	
 	public void disconnectAllClients() throws IOException {
 		for (Client client: clients) {
 			client.disconnect();
 		}
+		clients.clear();
 	}
 }

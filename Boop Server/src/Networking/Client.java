@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Client extends Thread{
@@ -15,6 +16,7 @@ public class Client extends Thread{
 	DataInputStream in;
 	DataOutputStream out;
 	
+	private long ID = 0;
 	private InetAddress ipv4Address;
 	private InetAddress ipv6Address;
 	
@@ -60,10 +62,17 @@ public class Client extends Thread{
 	}
 	
 	public void setupConnection(Socket socket) throws IOException{
+		
+		if (ID == 0) {
+			System.out.println("ID has not been set");
+			return;
+		}
+		
 		myClientSocket = socket;
 		
 		in = new DataInputStream(myClientSocket.getInputStream());
 		out = new DataOutputStream(myClientSocket.getOutputStream());
+		out.writeLong(ID);
 		
 		ipv4Address = socket.getInetAddress();
 		clientPort = socket.getPort();
@@ -84,6 +93,14 @@ public class Client extends Thread{
 			}
 
 		}
+	}
+	
+	public void setIdentity(long id) {
+		ID = id;
+	}
+	
+	public long getIdentity() {
+		return ID;
 	}
 
 	public int getClientPort() {

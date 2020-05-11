@@ -4,6 +4,7 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
 
 import javax.swing.JFrame;
@@ -12,9 +13,6 @@ import javax.swing.WindowConstants;
 public class main extends Canvas implements Runnable{
 
 	public boolean running = false;
-	private int FPS = 0;
-	private int UPS = 0;
-	private int packetsSentPerSec = 0;
 
 	public main() {
 		// TODO Auto-generated constructor stub
@@ -37,60 +35,87 @@ public class main extends Canvas implements Runnable{
 		frame.validate();
 	}
 	
+	private int FPS = 0;
+	private int TPS = 0;
+	private int packetsSentPerSec = 0;
+	
 	public void run() {
-		long last = System.nanoTime();
-	    double targetFrames = 60;
-	    double targetDt = 1000000000/ targetFrames;
-	    long timer = 0;
+		
+		final double MS_PER_UPDATE = 1000.0 / 60.0;
+		long previous = System.currentTimeMillis();
+		long timeAfterLastTick = 0;
+	    long timer = System.currentTimeMillis();
+	    
+	    int ticks = 0;
 	    int frames = 0;
 	    int packetsSent = 0;
-	        
+	    
 	    while(running) {
-	    	long now = System.nanoTime();
-	    	long dt = now - last;
-	    	if(dt/targetDt > 1) {
-	    		render();
-	    		tick(dt);
-	    		now  = last;
-	    		timer += dt;
-	    		frames++;
-	    		
-	    	}
-	    	if(timer/1000000000 >= 1) {
-	    		FPS = frames;
-	    		packetsSentPerSec = packetsSent;
-	    		frames = 0;
-	    		packetsSent = 0;
-	    	}
+	    	long current = System.currentTimeMillis();
+			long elapsed = current - previous;
+			previous = current;
+			timeAfterLastTick += elapsed;
+			
+			// Process hardware inputs here <----
+			
+			// 60 physics update per second
+			while (timeAfterLastTick >= MS_PER_UPDATE) {
+				fixedUpdate();
+				timeAfterLastTick -= MS_PER_UPDATE;
+				ticks++;
+			}
+			
+			// Code branch occurs 30 times a second
+			if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 2) {
+				
+				// Send data and other stuff here
+			}
+			
+			render(timeAfterLastTick / MS_PER_UPDATE);
+			frames++;
+			
+			if (System.currentTimeMillis() - timer >= 1000) {
+				TPS = ticks;
+				FPS = frames;
+				ticks = 0;
+				frames = 0;
+				timer += 1000;
+			}
+	    	
 	    }
 	}
 	
-	//Updates every frame.
-	private void tick(long dt) {
+	private void fixedUpdate() {
 		
 	}
-	//^
-	private void render() {
-		BufferStrategy bufS = getBufferStrategy();
-		if(bufS == null){
+	
+	BufferStrategy bs;
+	private void render(double extrapolate) {
+		bs = getBufferStrategy();
+		if (bs == null) {
 			createBufferStrategy(2);
 			return;
 		}
-		Graphics g= bufS.getDrawGraphics();
-		//DRAWING//
 		
-		
-		//DRAWING//
-		g.dispose();
-		bufS.show();
+		do {
+			Graphics2D g2d = (Graphics2D) bs.getDrawGraphics();
+			
+			g2d.clearRect(0, 0, getWidth(), getHeight());;
+			
+			drawPerformance(g2d);
+			
+			g2d.dispose();
+			bs.show();
+		}while(bs.contentsLost());
 	}
 
-	public void drawPerformance(Graphics g) {
-		g.setColor(Color.RED);
-		g.setFont(new Font("SansSerif", Font.PLAIN, 20));
-		g.drawString("fps: " + FPS, 50, 50);
+	public void drawPerformance(Graphics2D g2d) {
+		g2d.setColor(Color.RED);
+		g2d.setFont(new Font("SansSerif", Font.PLAIN, 20));
+		g2d.drawString("fps: " + FPS, 50, 50);
+		g2d.drawString("ticks: " + TPS, 50, 75);
 		
-		g.drawString("tx: " + packetsSentPerSec, 70, 50);
+		g2d.drawString("tx: " + packetsSentPerSec, 140, 50);
 	}
 	
 	public static void main(String args[]){
