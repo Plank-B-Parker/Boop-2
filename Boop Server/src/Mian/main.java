@@ -17,6 +17,7 @@ import Networking.UDP;
 
 public class main {
 	
+	public static final int windowWidth = 1920, windowHeight = 1080;
 	private Canvas canvas = new Canvas();
 	BufferStrategy bs;
 	
