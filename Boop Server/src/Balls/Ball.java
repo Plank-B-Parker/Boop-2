@@ -44,6 +44,10 @@ public class Ball {
 		return data;
 	}
 	
+	public void update(float dt) {
+		phys.update(dt);
+	}
+	
 	public int getID() {
 		return ID;
 	}

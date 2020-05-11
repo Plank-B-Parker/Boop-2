@@ -44,6 +44,10 @@ public class Ball {
 		
 		//Determine radius from type.
 	}
+	
+	public void update(float dt) {
+		phys.update(dt);
+	}
 
 	public int getID() {
 		return ID;

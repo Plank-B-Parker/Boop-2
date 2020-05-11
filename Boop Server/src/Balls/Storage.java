@@ -3,6 +3,8 @@ package Balls;
 import java.util.ArrayList;
 import java.util.List;
 
+import Math.physics;
+
 public class Storage {
 
 	private List<Ball> balls = new ArrayList<>();
@@ -11,8 +13,11 @@ public class Storage {
 		
 	}
 	
-	public void updateBalls(double dt) {
-		
+	public void updateBalls(float dt) {
+		physics.checkCollision(balls);
+		for(Ball ball: balls) {
+			ball.update(dt);
+		}
 	}
 	
 	public void add(Ball b) {

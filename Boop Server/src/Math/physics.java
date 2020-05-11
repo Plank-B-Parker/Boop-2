@@ -1,6 +1,7 @@
 package Math;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import Balls.Ball;
 
@@ -23,7 +24,7 @@ public class physics {
 		normalisePos();
 	}
 	
-	public static void checkCollision(ArrayList<Ball> balls) {
+	public static void checkCollision(List<Ball> balls) {
 		Vec2f disp = new Vec2f();
 		
 		for(int i = 0; i < balls.size() - 1; i++) {
@@ -53,7 +54,7 @@ public class physics {
 		}
 	}
 	
-	public static float calcImpulse(Ball ball1, Ball ball2, Vec2f norm) {
+	private static float calcImpulse(Ball ball1, Ball ball2, Vec2f norm) {
 		float e1 = ball1.getBounciness(), e2 = ball2.getBounciness();
 		float m1 = ball1.getMass(), m2 = ball2.getMass();
 		
