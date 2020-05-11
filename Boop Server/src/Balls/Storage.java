@@ -46,14 +46,14 @@ public class Storage {
 				X2 = X - main.windowWidth;
 			}
 			else if(x + rad > -1 && x - rad < -1) {
-				X2 = X - main.windowWidth;
+				X2 = X + main.windowWidth;
 			}
 			
 			if(y + rad > 1 && y - rad < 1) {
 				Y2 = Y - main.windowHeight;
 			}
 			else if(y + rad > -1 && y - rad < -1) {
-				Y2 = Y - main.windowHeight;
+				Y2 = Y + main.windowHeight;
 			}
 			
 			g.drawOval(X, Y, RadX, RadY);
