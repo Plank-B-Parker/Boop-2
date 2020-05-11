@@ -20,15 +20,19 @@ public class Ball {
 		case 1:
 			phys.mass = 1;
 			phys.bounciness = 1;
+			rad = 0.01f;
 		case 2:
 			phys.mass = 1;
 			phys.bounciness = 1;
+			rad = 0.01f;
 		case 3:
 			phys.mass = 1;
 			phys.bounciness = 1;
+			rad = 0.01f;
 		case 4:
 			phys.mass = 1;
 			phys.bounciness = 1;
+			rad = 0.01f;
 		}
 	}
 	
