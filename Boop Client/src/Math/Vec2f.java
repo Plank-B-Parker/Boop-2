@@ -81,4 +81,7 @@ public class Vec2f {
 	public static float dot(Vec2f A, Vec2f B) {
 		return A.x*B.x + A.y*B.y;
 	}
+	public float lengthSq() {
+		return x*x + y*y;
+	}
 }
