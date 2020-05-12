@@ -19,7 +19,7 @@ import Networking.UDP;
 
 public class main {
 	
-	public static final int windowWidth = 1920, windowHeight = 1080;
+	public static final int windowWidth = 1280, windowHeight = 720;
 	private Canvas canvas = new Canvas();
 	public Storage balls = new Storage();
 	
@@ -34,7 +34,7 @@ public class main {
 		
 		canvas.setSize(1920, 1080);
 		
-		frame.setSize(1280, 720);
+		frame.setSize(windowWidth, windowHeight);
 		frame.setLayout(null);
 		frame.getContentPane().setBackground(Color.BLACK);
 		frame.getContentPane().add(canvas);

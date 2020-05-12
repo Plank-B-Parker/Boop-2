@@ -56,9 +56,10 @@ public class Storage {
 				Y2 = Y + main.windowHeight;
 			}
 			
-			g.drawOval(X, Y, RadX, RadY);
+			g.setColor(ball.getColour());
+			g.fillOval(X, Y, RadX, RadY);
 			if(X2 != X && Y2 != Y) {
-				g.drawOval(X2, Y2, RadX, RadY);
+				g.fillOval(X2, Y2, RadX, RadY);
 			}
 			
 		}

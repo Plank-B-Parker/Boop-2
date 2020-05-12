@@ -7,7 +7,10 @@ import Balls.Ball;
 
 public class physics {
 	
-	public Vec2f pos;
+	//For pos, x and y go between -1 and 1.
+	//If they go above 1, then loop back to -1.
+	//If they go below -1, they loop to 1. 
+	public Vec2f pos = new Vec2f();
 	public Vec2f vel = new Vec2f();
 	public Vec2f acc = new Vec2f();
 	public float mass;
