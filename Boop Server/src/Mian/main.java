@@ -26,10 +26,10 @@ public class main {
 	BufferStrategy bs;
 	
 	public main() {
-		for(int i = 0; i < 10; i++) {
+		for(int i = 0; i < 2000; i++) {
 			Ball ball = new Ball(1);
-			ball.getVel().x = 0.002f*((float)(Math.random()) - 0.5f);
-			ball.getVel().y = 0.002f*((float)(Math.random()) - 0.5f);
+			ball.getVel().x = 0.0002f*((float)(Math.random()) - 0.5f);
+			ball.getVel().y = 0.0002f*((float)(Math.random()) - 0.5f);
 			balls.add(ball);
 		}
 	}
