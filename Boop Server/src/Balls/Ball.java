@@ -23,22 +23,22 @@ public class Ball {
 		case 1:
 			phys.mass = 1;
 			phys.bounciness = 1;
-			rad = 0.1f;
+			rad = 0.05f;
 			colour = Color.BLUE;
 		case 2:
 			phys.mass = 1;
 			phys.bounciness = 1;
-			rad = 0.1f;
+			rad = 0.05f;
 			colour = Color.BLUE;
 		case 3:
 			phys.mass = 1;
 			phys.bounciness = 1;
-			rad = 0.1f;
+			rad = 0.05f;
 			colour = Color.BLUE;
 		case 4:
 			phys.mass = 1;
 			phys.bounciness = 1;
-			rad = 0.1f;
+			rad = 0.05f;
 			colour = Color.BLUE;
 		}
 	}

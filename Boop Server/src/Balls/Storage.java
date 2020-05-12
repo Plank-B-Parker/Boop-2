@@ -57,9 +57,9 @@ public class Storage {
 			}
 			
 			g.setColor(ball.getColour());
-			g.fillOval(X, Y, RadX, RadY);
+			g.fillOval(X - RadX, Y - RadY, 2*RadX, 2*RadY);
 			if(X2 != X && Y2 != Y) {
-				g.fillOval(X2, Y2, RadX, RadY);
+				g.fillOval(X2 - RadX, Y2 - RadY, 2*RadX, 2*RadY);
 			}
 			
 		}
