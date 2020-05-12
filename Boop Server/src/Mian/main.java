@@ -26,7 +26,12 @@ public class main {
 	BufferStrategy bs;
 	
 	public main() {
-		balls.add(new Ball(1));
+		for(int i = 0; i < 1; i++) {
+			Ball ball = new Ball(1);
+			ball.getVel().x = 2*((float)(Math.random()) - 0.5f);
+			ball.getVel().y = 2*((float)(Math.random()) - 0.5f);
+			balls.add(ball);
+		}
 	}
 	
 	public void createDisplay() {
@@ -84,7 +89,7 @@ public class main {
 			
 			// 60 physics update per second
 			while (timeAfterLastTick >= MS_PER_UPDATE) {
-				fixedUpdate();
+				fixedUpdate(timeAfterLastTick);
 				timeAfterLastTick -= MS_PER_UPDATE;
 				ticks++;
 			}
@@ -109,11 +114,11 @@ public class main {
 		
 	}
 	
-	public void fixedUpdate() {
+	public void fixedUpdate(float dt) {
 		List<Client> clients = new ArrayList<>(clientAcceptor.clients.size());
 		System.arraycopy(clientAcceptor.clients, 0, clients, 0, clients.size());
 		
-		
+		balls.updateBalls(dt);
 	}
 	
 	public void render(float dt) {
