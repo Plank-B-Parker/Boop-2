@@ -39,7 +39,11 @@ public class physics {
 				float minimumDistance = ball.getRad() + otherBall.getRad();
 				if(disp.lengthSq() > minimumDistance*minimumDistance)
 					continue;
-				
+				if(disp.lengthSq() == 0) {
+					disp.x = (float)Math.random();
+					disp.x = (float)Math.random();
+					
+				}
 				float distance = (float)Math.sqrt(disp.lengthSq());
 				float overlap = minimumDistance - distance;
 				
