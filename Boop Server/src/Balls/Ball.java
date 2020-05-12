@@ -1,5 +1,7 @@
 package Balls;
 
+import java.awt.Color;
+
 import Math.Vec2f;
 import Math.physics;
 
@@ -8,6 +10,7 @@ public class Ball {
 	private int ID = -1;
 	private int type;
 	private float rad;
+	private Color colour;
 	private int ownerID;
 	
 	//Contains physics attributes: pos, vel.
@@ -21,18 +24,22 @@ public class Ball {
 			phys.mass = 1;
 			phys.bounciness = 1;
 			rad = 0.01f;
+			colour = Color.BLUE;
 		case 2:
 			phys.mass = 1;
 			phys.bounciness = 1;
 			rad = 0.01f;
+			colour = Color.BLUE;
 		case 3:
 			phys.mass = 1;
 			phys.bounciness = 1;
 			rad = 0.01f;
+			colour = Color.BLUE;
 		case 4:
 			phys.mass = 1;
 			phys.bounciness = 1;
 			rad = 0.01f;
+			colour = Color.BLUE;
 		}
 	}
 	
