@@ -11,6 +11,8 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
+import Balls.Ball;
+import Balls.Storage;
 import Networking.Client;
 import Networking.ClientAccept;
 import Networking.UDP;
@@ -19,10 +21,12 @@ public class main {
 	
 	public static final int windowWidth = 1920, windowHeight = 1080;
 	private Canvas canvas = new Canvas();
+	public Storage balls = new Storage();
+	
 	BufferStrategy bs;
 	
 	public main() {
-		
+		balls.add(new Ball(1));
 	}
 	
 	public void createDisplay() {
@@ -91,7 +95,7 @@ public class main {
 				// Send data and other stuff here
 			}
 			
-			render(timeAfterLastTick / MS_PER_UPDATE);
+			render(timeAfterLastTick);
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
@@ -112,7 +116,7 @@ public class main {
 		
 	}
 	
-	public void render(double extrapolate) {
+	public void render(float dt) {
 		bs = canvas.getBufferStrategy();
 		if (bs == null) {
 			canvas.createBufferStrategy(2);
@@ -123,6 +127,8 @@ public class main {
 			Graphics2D g2d = (Graphics2D) bs.getDrawGraphics();
 			
 			g2d.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());;
+			
+			balls.renderBalls(g2d, dt);
 			
 			drawPerformance(g2d);
 			
