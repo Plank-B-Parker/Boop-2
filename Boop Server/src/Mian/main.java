@@ -26,7 +26,7 @@ public class main {
 	BufferStrategy bs;
 	
 	public main() {
-		for(int i = 0; i < 1; i++) {
+		for(int i = 0; i < 10; i++) {
 			Ball ball = new Ball(1);
 			ball.getVel().x = 0.002f*((float)(Math.random()) - 0.5f);
 			ball.getVel().y = 0.002f*((float)(Math.random()) - 0.5f);
@@ -116,7 +116,7 @@ public class main {
 	
 	public void fixedUpdate(float dt) {
 		List<Client> clients = new ArrayList<>(clientAcceptor.clients.size());
-		//System.arraycopy(clientAcceptor.clients, 0, clients, 0, clients.size());
+		clients = List.copyOf(clientAcceptor.clients);
 		
 		balls.updateBalls(dt);
 	}

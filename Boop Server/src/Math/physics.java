@@ -73,10 +73,17 @@ public class physics {
 		return impulse;
 	}
 	
-	//Sets pos components to go between -1 and -1.
+	//Sets pos components to go between -1 and 1.
 	private void normalisePos() {
-		pos.x = pos.x % 1f;
-		pos.y = pos.y % 1f;
+		while(pos.x > 1) 
+			pos.x = pos.x - 2;
+		while(pos.x < -1)
+			pos.x = pos.x + 2;
+		
+		while(pos.y > 1) 
+			pos.y = pos.y - 2;
+		while(pos.y < -1)
+			pos.y = pos.y + 2;
 	}
 	
 	private void calcAcc() {
