@@ -16,7 +16,7 @@ public class Ball {
 	private int ownerID;
 	
 	//Contains physics attributes: pos, vel.
-	private physics phys = new physics();
+	private physics phys = new physics(this);
 		
 	
 	public Ball(int type) {
