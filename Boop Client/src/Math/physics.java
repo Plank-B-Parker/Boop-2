@@ -66,6 +66,11 @@ public class physics {
 				if(disp.lengthSq() > minimumDistance*minimumDistance)
 					continue;
 				
+				if(disp.lengthSq() == 0) {
+					disp.x = (float)Math.random();
+					disp.x = (float)Math.random();
+				}
+				
 				float distance = (float)Math.sqrt(disp.lengthSq());
 				float overlap = minimumDistance - distance;
 				
@@ -97,11 +102,15 @@ public class physics {
 	
 	//Sets pos components to go between -1 and -1.
 	private void normalisePos() {
-		pos.x = pos.x % 1f;
-		pos.y = pos.y % 1f;
+		while(pos.x > 1) 
+			pos.x = pos.x - 2;
+		while(pos.x < -1)
+			pos.x = pos.x + 2;
 		
-		targetPos.x = targetPos.x % 1f;
-		targetPos.y = targetPos.y % 1f;
+		while(pos.y > 1) 
+			pos.y = pos.y - 2;
+		while(pos.y < -1)
+			pos.y = pos.y + 2;
 	}
 
 	private void calcAcc() {
