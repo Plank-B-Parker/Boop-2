@@ -1,6 +1,5 @@
 package Math;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import Balls.Ball;
@@ -16,8 +15,15 @@ public class physics {
 	public float mass;
 	public float bounciness;
 	
-	public physics() {
-		
+	public Ball owner;
+	
+	//Temp variables to avoid object creation;
+	final private static Vec2f temp1 = new Vec2f();
+	final private static Vec2f temp2 = new Vec2f();
+	final private static Vec2f temp3 = new Vec2f();
+	
+	public physics(Ball owner) {
+		this.owner = owner;
 	}
 	
 	public void update(float dt) {
@@ -28,7 +34,7 @@ public class physics {
 	}
 	
 	public static void checkCollision(List<Ball> balls) {
-		Vec2f disp = new Vec2f();
+		Vec2f disp = temp1;
 		
 		for(int i = 0; i < balls.size() - 1; i++) {
 			Ball ball = balls.get(i);
@@ -71,6 +77,20 @@ public class physics {
 		float impulse = (1+bounce)*(Vec2f.dot(v1, norm) - Vec2f.dot(v2, norm))/(1/m1 + 1/m2);
 		
 		return impulse;
+	}
+	
+	//adds gravitational attraction to acc.
+	private void addAttraction(Vec2f acc, List<Ball> balls) {
+		for(Ball ball: balls) {
+			if(ball == owner) 
+				continue;
+			Vec2f disp1 = temp1;
+			Vec2f disp2 = temp2;
+			
+			Vec2f.sub(disp1, ball.getPos(), pos);
+			
+			
+		}
 	}
 	
 	//Sets pos components to go between -1 and 1.

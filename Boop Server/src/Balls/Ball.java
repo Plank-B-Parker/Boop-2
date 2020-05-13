@@ -69,20 +69,19 @@ public class Ball {
 		float y = pos.y ;
 		
 		//Scaling for screen.
-		int X = (int)((x + 1)*0.5*main.windowWidth);
+		int X = (int)((x + 1)*0.5*main.windowHeight);
 		int Y = (int)((y + 1)*0.5*main.windowHeight);
-		int RadX = (int)(0.5*rad*main.windowWidth);
-		int RadY = (int)(0.5*rad*main.windowHeight);
+		int Rad = (int)(0.5*rad*main.windowHeight);
 		
 		//Second set of coordinates for edge.
 		int X2 = X;
 		int Y2 = Y;
 		
 		if(x + rad > 1) {
-			X2 = X - main.windowWidth;
+			X2 = X - main.windowHeight;
 		}
 		else if(x - rad < -1) {
-			X2 = X + main.windowWidth;
+			X2 = X + main.windowHeight;
 		}
 		
 		if(y + rad > 1) {
@@ -93,9 +92,9 @@ public class Ball {
 		}
 		
 		g.setColor(colour);
-		g.fillOval(X - RadX, Y - RadY, 2*RadX, 2*RadY);
+		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
 		if(X2 != X || Y2 != Y) {
-			g.fillOval(X2 - RadX, Y2 - RadY, 2*RadX, 2*RadY);
+			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
 		}
 	}
 	
