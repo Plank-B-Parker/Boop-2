@@ -26,12 +26,16 @@ public class main {
 	BufferStrategy bs;
 	
 	public main() {
-		for(int i = 0; i < 100; i++) {
+		/*for(int i = 0; i < 100; i++) {
 			Ball ball = new Ball(1);
 			ball.getVel().x = 0.0002f*((float)(Math.random()) - 0.5f);
 			ball.getVel().y = 0.0002f*((float)(Math.random()) - 0.5f);
 			balls.add(ball);
-		}
+		}*/
+		
+		Ball ball = new Ball(1);
+		ball.setPos(1, 0);
+		balls.add(ball);
 	}
 	
 	public void createDisplay() {
@@ -144,11 +148,11 @@ public class main {
 
 	private void drawPerformance(Graphics2D g2d) {
 		g2d.setColor(Color.RED);
-		g2d.setFont(new Font("SansSerif", Font.PLAIN, 20)); 
-		g2d.drawString("fps: " + FPS, 50, 50);
-		g2d.drawString("ticks: " + TPS, 50, 75);
+		g2d.setFont(new Font("Calibri", Font.PLAIN, 20)); 
+		g2d.drawString("FPS: " + FPS, 50, 50);
+		g2d.drawString("Ticks: " + TPS, 50, 75);
 		
-		g2d.drawString("tx: " + packetsSentPerSec, 140, 50);
+		g2d.drawString("TX: " + packetsSentPerSec, 140, 50);
 	}
 	
 	public static void main(String args[]){
