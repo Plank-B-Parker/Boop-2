@@ -102,6 +102,16 @@ public class Ball {
 		return ID;
 	}
 	
+	public void setPos(float x, float y) {
+		phys.pos.x = x;
+		phys.pos.y = y;
+	}
+	
+	public void setVel(float x, float y) {
+		phys.vel.x = x;
+		phys.vel.y = y;
+	}
+	
 	public Vec2f getPos() {
 		return phys.pos;
 	}
