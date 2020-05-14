@@ -13,7 +13,7 @@ public class physics {
 	public Vec2f vel = new Vec2f();
 	public Vec2f acc = new Vec2f();
 	public float mass;
-	public float mag = 0.05f;
+	public float mag = 0.02f;
 	public float bounciness;
 	
 	public Ball owner;
@@ -53,7 +53,8 @@ public class physics {
 	
 	public void calcAcc(List<Ball> balls) {
 		acc.set(0, 0);
-		this.addAttraction(acc, balls);
+		addAttraction(acc, balls, 3, owner.getRad()*2.5f, 10);
+		addAttraction(acc, balls, -1, 0, owner.getRad()*2.5f);
 	}
 	
 	public static void checkCollision(List<Ball> balls) {
@@ -127,19 +128,22 @@ public class physics {
 	}
 	
 	//adds gravitational attraction to acc.
-	private void addAttraction(Vec2f acc, List<Ball> balls) {
-		float minDist = 0.2f;
+	private void addAttraction(Vec2f acc, List<Ball> balls, float attractionStrength, float minDist, float maxDist) {
 		for(Ball ball: balls) {
 			if(ball == owner) 
 				continue;
 			Vec2f disp = temp1;
 			disp(disp, ball.phys.pos, pos);
+			
 			if(disp.lengthSq()<minDist)
+				continue;
+			
+			if(disp.lengthSq()>maxDist)
 				continue;
 			
 			float distCubed = disp.lengthSq();
 			distCubed *= Math.sqrt(distCubed);
-			Vec2f.increment(acc, acc, disp, mag*ball.phys.mag/(mass*distCubed));
+			Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
 		}
 	}
 	
