@@ -30,8 +30,8 @@ public class main {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*((float)(Math.random()) - 0.5f), 2f*((float)(Math.random()) - 0.5f));
 			//ball.setPos(0, -0.98f*i);
-			//ball.phys.vel.x = 0.2f*((float)(Math.random()) - 0.5f);
-			//ball.phys.vel.y = 0.2f*((float)(Math.random()) - 0.5f);
+			ball.phys.vel.x = 0.2f*((float)(Math.random()) - 0.5f);
+			ball.phys.vel.y = 0.2f*((float)(Math.random()) - 0.5f);
 			balls.add(ball);
 		}
 		//balls.getBall(0).setVel(0, 0.1f);
