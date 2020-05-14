@@ -26,7 +26,7 @@ public class main {
 	BufferStrategy bs;
 	
 	public main() {
-		for(int i = 0; i < 500; i++) {
+		for(int i = 0; i < 200; i++) {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*((float)(Math.random()) - 0.5f), 2f*((float)(Math.random()) - 0.5f));
 			//ball.setPos(0, -0.98f*i);
