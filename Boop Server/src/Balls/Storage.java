@@ -1,5 +1,6 @@
 package Balls;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,10 +32,12 @@ public class Storage {
 	
 	public void renderBalls(Graphics2D g, float dt) {
 		float energy = 0;
+		
 		for(Ball ball: balls) {
 			ball.render(g, dt);
-			energy += ball.phys.calcEnergy(balls);
+			energy += ball.phys.calcEnergy(balls, dt);
 		}
+		g.setColor(Color.PINK);
 		g.drawString("energy: " + energy, 20, 200);
 	}
 	
