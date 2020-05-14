@@ -66,8 +66,8 @@ public class Ball {
 		Vec2f pos = phys.pos;
 		Vec2f vel = phys.pos;
 		
-		float x = pos.x ;
-		float y = pos.y ;
+		float x = pos.x;
+		float y = pos.y;
 		
 		//Scaling for screen.
 		int X = (int)((x + 1)*0.5*main.windowHeight);

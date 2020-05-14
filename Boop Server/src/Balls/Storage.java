@@ -35,7 +35,7 @@ public class Storage {
 		
 		for(Ball ball: balls) {
 			ball.render(g, dt);
-			energy += ball.phys.calcEnergy(balls, dt);
+			energy += ball.phys.calcEnergy(balls);
 		}
 		g.setColor(Color.PINK);
 		g.drawString("energy: " + energy, 20, 200);
