@@ -2,6 +2,7 @@ package Balls;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.List;
 
 import Math.Vec2f;
 import Math.physics;
@@ -16,7 +17,7 @@ public class Ball {
 	private int ownerID;
 	
 	//Contains physics attributes: pos, vel.
-	private physics phys = new physics(this);
+	public physics phys = new physics(this);
 		
 	
 	public Ball(int type) {
@@ -24,24 +25,28 @@ public class Ball {
 		switch(type) {
 		case 1:
 			phys.mass = 1;
-			phys.bounciness = 1;
+			phys.bounciness = 0.1f;
 			rad = 0.01f;
 			colour = Color.BLUE;
+			break;
 		case 2:
 			phys.mass = 1;
-			phys.bounciness = 1;
+			phys.bounciness = 0.1f;
 			rad = 0.01f;
 			colour = Color.BLUE;
+			break;
 		case 3:
 			phys.mass = 1;
-			phys.bounciness = 1;
+			phys.bounciness = 0.1f;
 			rad = 0.01f;
 			colour = Color.BLUE;
+			break;
 		case 4:
 			phys.mass = 1;
-			phys.bounciness = 1;
+			phys.bounciness = 0.1f;
 			rad = 0.01f;
 			colour = Color.BLUE;
+			break;
 		}
 	}
 	
@@ -55,10 +60,6 @@ public class Ball {
 		data[5] = phys.vel.y;
 		data[6] = ownerID;
 		return data;
-	}
-	
-	public void update(float dt) {
-		phys.update(dt);
 	}
 	
 	public void render(Graphics2D g, float dt) {
@@ -112,20 +113,6 @@ public class Ball {
 		phys.vel.y = y;
 	}
 	
-	public Vec2f getPos() {
-		return phys.pos;
-	}
-	public Vec2f getVel() {
-		return phys.vel;
-	}
-	
-	public float getMass() {
-		return phys.mass;
-	}
-	
-	public float getBounciness() {
-		return phys.bounciness;
-	}
 	public int getType() {
 		return type;
 	}

@@ -13,6 +13,7 @@ public class physics {
 	public Vec2f vel = new Vec2f();
 	public Vec2f acc = new Vec2f();
 	public float mass;
+	public float mag = 0.05f;
 	public float bounciness;
 	
 	public Ball owner;
@@ -26,11 +27,33 @@ public class physics {
 		this.owner = owner;
 	}
 	
+	public float calcEnergy(List<Ball> balls) {
+		float energy = 0.5f*mass*vel.lengthSq();
+		
+		Vec2f disp = temp1;
+		for(Ball ball: balls) {
+			if(ball == owner)
+				continue;
+			disp(disp, ball.phys.pos, pos);
+			float dist = (float)Math.sqrt(disp.lengthSq());
+			energy -= mag*ball.phys.mag/dist;
+		}
+		return energy;
+	}
+	
 	public void update(float dt) {
-		calcAcc();
 		Vec2f.increment(vel, vel, acc, dt);
 		Vec2f.increment(pos, pos, vel, dt);
 		normalisePos();
+	}
+	
+	public void updateRungaCuttaYoMama(float dt) {
+		
+	}
+	
+	public void calcAcc(List<Ball> balls) {
+		acc.set(0, 0);
+		this.addAttraction(acc, balls);
 	}
 	
 	public static void checkCollision(List<Ball> balls) {
@@ -41,55 +64,82 @@ public class physics {
 			for(int j = i + 1; j < balls.size(); j++) {
 				Ball otherBall = balls.get(j);
 				
-				Vec2f.sub(disp, otherBall.getPos(), ball.getPos());
+				disp(disp, otherBall.phys.pos, ball.phys.pos);
 				float minimumDistance = ball.getRad() + otherBall.getRad();
 				if(disp.lengthSq() > minimumDistance*minimumDistance)
 					continue;
-				if(disp.lengthSq() == 0) {
-					disp.x = (float)Math.random();
-					disp.x = (float)Math.random();
-					
-				}
+				
 				float distance = (float)Math.sqrt(disp.lengthSq());
 				float overlap = minimumDistance - distance;
 				
 				Vec2f.scale(disp, disp, 1f/distance);
 				
-				Vec2f.increment(ball.getPos(), ball.getPos(), disp, -overlap*0.5f);
-				Vec2f.increment(otherBall.getPos(), otherBall.getPos(), disp, overlap*0.5f);
+				Vec2f.increment(ball.phys.pos, ball.phys.pos, disp, -overlap*0.5f);
+				Vec2f.increment(otherBall.phys.pos, otherBall.phys.pos, disp, overlap*0.5f);
 				
 				float impulse = calcImpulse(ball, otherBall, disp);
 				
-				Vec2f.increment(ball.getVel(), ball.getVel(), disp, -impulse);
-				Vec2f.increment(otherBall.getVel(), otherBall.getVel(), disp, impulse);
+				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, -impulse);
+				Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse);
 				
 			}
 		}
 	}
 	
 	private static float calcImpulse(Ball ball1, Ball ball2, Vec2f norm) {
-		float e1 = ball1.getBounciness(), e2 = ball2.getBounciness();
-		float m1 = ball1.getMass(), m2 = ball2.getMass();
+		float e1 = ball1.phys.bounciness, e2 = ball2.phys.bounciness;
+		float m1 = ball1.phys.mass, m2 = ball2.phys.mass;
 		
 		float bounce = (e1 + e2)*0.5f;
-		Vec2f v1 = ball1.getVel(), v2 = ball2.getVel();
+		Vec2f v1 = ball1.phys.vel, v2 = ball2.phys.vel;
 		
 		float impulse = (1+bounce)*(Vec2f.dot(v1, norm) - Vec2f.dot(v2, norm))/(1/m1 + 1/m2);
 		
 		return impulse;
 	}
 	
+	//Calculates minimum distance between two points.
+	public static void disp(Vec2f result, Vec2f pos2, Vec2f pos1) {
+		float x = pos2.x - pos1.x;
+		float y = pos2.y - pos1.y;
+		
+		if(x > 1) {
+			x = x-2;
+		}
+		if(x < -1) {
+			x = x+2;
+		}
+		
+		if(y > 1) {
+			y = y-2;
+		}
+		if(y < -1) {
+			y = y+2;
+		}
+		
+		result.x = x;
+		result.y = y;
+		
+		if(x == 0 && y == 0) {
+			result.x = (float) Math.random();
+			result.y = (float) Math.random();
+		}
+	}
+	
 	//adds gravitational attraction to acc.
 	private void addAttraction(Vec2f acc, List<Ball> balls) {
+		float minDist = 0.2f;
 		for(Ball ball: balls) {
 			if(ball == owner) 
 				continue;
-			Vec2f disp1 = temp1;
-			Vec2f disp2 = temp2;
+			Vec2f disp = temp1;
+			disp(disp, ball.phys.pos, pos);
+			if(disp.lengthSq()<minDist)
+				continue;
 			
-			Vec2f.sub(disp1, ball.getPos(), pos);
-			
-			
+			float distCubed = disp.lengthSq();
+			distCubed *= Math.sqrt(distCubed);
+			Vec2f.increment(acc, acc, disp, mag*ball.phys.mag/(mass*distCubed));
 		}
 	}
 	
@@ -104,10 +154,6 @@ public class physics {
 			pos.y = pos.y - 2;
 		while(pos.y < -1)
 			pos.y = pos.y + 2;
-	}
-	
-	private void calcAcc() {
-		acc.set(0, 0);
 	}
 	
 }
