@@ -15,6 +15,7 @@ public class physics {
 	public float mass;
 	public float mag = 0.02f;
 	public float bounciness;
+	private static float dragCoefficient = 10f;
 	
 	public Ball owner;
 	
@@ -55,7 +56,13 @@ public class physics {
 		acc.set(0, 0);
 		addAttraction(acc, balls, 3, owner.getRad()*2.5f, 10);
 		addAttraction(acc, balls, -1, 0, owner.getRad()*2.5f);
+		addDrag(acc);
 	}
+	
+	private void addDrag(Vec2f acc) {
+		Vec2f.increment(acc, acc, vel, -dragCoefficient*(float)Math.sqrt(vel.lengthSq()));
+	}
+	
 	
 	public static void checkCollision(List<Ball> balls) {
 		Vec2f disp = temp1;
