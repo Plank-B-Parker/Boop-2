@@ -15,7 +15,7 @@ public class physics {
 	public float mass;
 	public float mag = 0.02f;
 	public float bounciness;
-	private static float dragCoefficient = 10f;
+	private static float dragCoefficient = 0.1f;
 	
 	public Ball owner;
 	
@@ -54,8 +54,8 @@ public class physics {
 	
 	public void calcAcc(List<Ball> balls) {
 		acc.set(0, 0);
-		addAttraction(acc, balls, 3, owner.getRad()*2.5f, 10);
-		addAttraction(acc, balls, -1, 0, owner.getRad()*2.5f);
+		addAttraction(acc, balls, 3, owner.getRad()*2.5f, 0.2f);
+		addAttraction(acc, balls, -1f, 0, owner.getRad()*2.5f);
 		addDrag(acc);
 	}
 	
