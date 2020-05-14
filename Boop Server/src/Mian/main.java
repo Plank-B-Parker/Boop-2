@@ -30,8 +30,8 @@ public class main {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*((float)(Math.random()) - 0.5f), 2f*((float)(Math.random()) - 0.5f));
 			//ball.setPos(0, -0.98f*i);
-			//ball.phys.vel.x = 0.2f*((float)(Math.random()) - 0.5f);
-			//ball.phys.vel.y = 0.2f*((float)(Math.random()) - 0.5f);
+			ball.phys.vel.x = 2f*((float)(Math.random()) - 0.5f);
+			ball.phys.vel.y = 2f*((float)(Math.random()) - 0.5f);
 			balls.add(ball);
 		}
 		//balls.getBall(0).setVel(0, 0.1f);
@@ -152,10 +152,12 @@ public class main {
 	//Render a grid.
 	public void renderGrid(Graphics2D g) {
 		g.setColor(Color.WHITE);
-		float n = 6f;
+		float n = 8f;
 		for(int i = 1; i < n; i++) {
 			g.drawLine(0, (int)(i/n*windowHeight), windowHeight, (int)(i/n*windowHeight));
 			g.drawLine((int)(i/n*windowHeight), 0, (int)(i/n*windowHeight), windowHeight);
+			g.drawString(""+ 2*(n/2-i)/n,  windowHeight/2, (int)(i/n*windowHeight));
+			g.drawString(""+ 2*(i - n/2)/n,  (int)(i/n*windowHeight), windowHeight/2);
 		}
 	}
 

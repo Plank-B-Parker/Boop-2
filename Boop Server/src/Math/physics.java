@@ -74,7 +74,7 @@ public class physics {
 		//Strong mid range attractive force.
 		addAttraction(acc, balls, 2f, owner.getRad()*5, 0.5f);
 		//weaker small range repulsive force
-		addAttraction(acc, balls, -5f, 0, owner.getRad()*5);
+		addAttraction(acc, balls, -5f, owner.getRad(), owner.getRad()*5);
 		//Drag force to stop spinning.
 		addDrag(acc);
 	}
@@ -174,7 +174,7 @@ public class physics {
 	
 	//adds gravitational attraction to acc.
 	/**
-	 * 
+	 * Avoid making min Dist 0 as you can get infinite force if you're not careful.
 	 * @param acc: Current acceleration.
 	 * @param balls: List of balls that this ball could be attracted to.
 	 * @param attractionStrength: Repulsive if negative.
