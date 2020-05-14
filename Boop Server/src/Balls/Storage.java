@@ -18,15 +18,24 @@ public class Storage {
 	
 	public void updateBalls(float dt) {
 		physics.checkCollision(balls);
+		
 		for(Ball ball: balls) {
-			ball.update(dt);
+			ball.phys.calcAcc(balls);
 		}
+		
+		for(Ball ball: balls) {
+			ball.phys.update(dt);
+		}
+		
 	}
 	
 	public void renderBalls(Graphics2D g, float dt) {
+		float energy = 0;
 		for(Ball ball: balls) {
 			ball.render(g, dt);
+			energy += ball.phys.calcEnergy(balls);
 		}
+		g.drawString("energy: " + energy, 20, 200);
 	}
 	
 	public void add(Ball b) {

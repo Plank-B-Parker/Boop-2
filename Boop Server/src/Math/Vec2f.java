@@ -18,7 +18,7 @@ public class Vec2f {
 	
 	
 	/** Returns the square of the length of the vector*/
-	public double lengthSq() {
+	public float lengthSq() {
 		return x*x + y*y;
 	}
 	

@@ -26,16 +26,17 @@ public class main {
 	BufferStrategy bs;
 	
 	public main() {
-		/*for(int i = 0; i < 100; i++) {
+		for(int i = 0; i < 500; i++) {
 			Ball ball = new Ball(1);
-			ball.getVel().x = 0.0002f*((float)(Math.random()) - 0.5f);
-			ball.getVel().y = 0.0002f*((float)(Math.random()) - 0.5f);
+			ball.setPos(2f*((float)(Math.random()) - 0.5f), 2f*((float)(Math.random()) - 0.5f));
+			//ball.setPos(0, -0.98f*i);
+			//ball.phys.vel.x = 0.2f*((float)(Math.random()) - 0.5f);
+			//ball.phys.vel.y = 0.2f*((float)(Math.random()) - 0.5f);
 			balls.add(ball);
-		}*/
+		}
+		//balls.getBall(0).setVel(0, 0.1f);
+		//balls.getBall(1).setVel(0, -0.1f);
 		
-		Ball ball = new Ball(1);
-		ball.setPos(1, 0);
-		balls.add(ball);
 	}
 	
 	public void createDisplay() {
@@ -93,7 +94,7 @@ public class main {
 			
 			// 60 physics update per second
 			while (timeAfterLastTick >= MS_PER_UPDATE) {
-				fixedUpdate(timeAfterLastTick);
+				fixedUpdate(timeAfterLastTick/1000f);
 				timeAfterLastTick -= MS_PER_UPDATE;
 				ticks++;
 			}
@@ -104,7 +105,7 @@ public class main {
 				// Send data and other stuff here
 			}
 			
-			render(timeAfterLastTick);
+			render(timeAfterLastTick/1000f);
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
@@ -137,6 +138,8 @@ public class main {
 			
 			g2d.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());;
 			
+			renderGrid(g2d);
+			
 			balls.renderBalls(g2d, dt);
 			
 			drawPerformance(g2d);
@@ -144,6 +147,16 @@ public class main {
 			g2d.dispose();
 			bs.show();
 		}while(bs.contentsLost());
+	}
+	
+	//Render a grid.
+	public void renderGrid(Graphics2D g) {
+		g.setColor(Color.WHITE);
+		float n = 6f;
+		for(int i = 1; i < n; i++) {
+			g.drawLine(0, (int)(i/n*windowHeight), windowHeight, (int)(i/n*windowHeight));
+			g.drawLine((int)(i/n*windowHeight), 0, (int)(i/n*windowHeight), windowHeight);
+		}
 	}
 
 	private void drawPerformance(Graphics2D g2d) {
