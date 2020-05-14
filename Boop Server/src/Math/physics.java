@@ -159,15 +159,15 @@ public class physics {
 	
 	//Sets pos components to go between -1 and 1.
 	private void normalisePos() {
-		while(pos.x > 1) 
-			pos.x = pos.x - 2;
-		while(pos.x < -1)
-			pos.x = pos.x + 2;
+		if(pos.x > 1) 
+			pos.x = -1 + pos.x%1f;
+		if(pos.x < -1)
+			pos.x = 1 + pos.x%1f;
 		
-		while(pos.y > 1) 
-			pos.y = pos.y - 2;
-		while(pos.y < -1)
-			pos.y = pos.y + 2;
+		if(pos.y > 1) 
+			pos.y = -1 + pos.y%1f;
+		if(pos.y < -1)
+			pos.y = 1 + pos.y%1f;
 	}
 	
 }
