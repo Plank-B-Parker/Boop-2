@@ -15,7 +15,7 @@ public class physics {
 	public float mass;
 	public float mag = 0.02f;
 	public float bounciness;
-	private static float dragCoefficient = 0.1f;
+	private static float dragCoefficient = 10f;
 	
 	public Ball owner;
 	
@@ -28,8 +28,10 @@ public class physics {
 		this.owner = owner;
 	}
 	
-	public float calcEnergy(List<Ball> balls) {
-		float energy = 0.5f*mass*vel.lengthSq();
+	
+	public float calcEnergy(List<Ball> balls, float dt) {
+		float KE = 0.5f*mass*vel.lengthSq();
+		float PE = 0;
 		
 		Vec2f disp = temp1;
 		for(Ball ball: balls) {
@@ -37,9 +39,10 @@ public class physics {
 				continue;
 			disp(disp, ball.phys.pos, pos);
 			float dist = (float)Math.sqrt(disp.lengthSq());
-			energy -= mag*ball.phys.mag/dist;
+			PE -= mag*ball.phys.mag/dist;
 		}
-		return energy;
+		
+		return PE + KE;
 	}
 	
 	public void update(float dt) {
