@@ -21,33 +21,7 @@ public class Ball {
 		
 	
 	public Ball(int type) {
-		this.type = type;
-		switch(type) {
-		case 1:
-			phys.mass = 1;
-			phys.bounciness = 0.1f;
-			rad = 0.01f;
-			colour = Color.BLUE;
-			break;
-		case 2:
-			phys.mass = 1;
-			phys.bounciness = 0.1f;
-			rad = 0.01f;
-			colour = Color.BLUE;
-			break;
-		case 3:
-			phys.mass = 1;
-			phys.bounciness = 0.1f;
-			rad = 0.01f;
-			colour = Color.BLUE;
-			break;
-		case 4:
-			phys.mass = 1;
-			phys.bounciness = 0.1f;
-			rad = 0.01f;
-			colour = Color.BLUE;
-			break;
-		}
+		setType(type);
 	}
 	
 	public float[] getData() {
@@ -116,9 +90,43 @@ public class Ball {
 	public int getType() {
 		return type;
 	}
+	
+	public void setType(int type) {
+		this.type = type;
+		switch(type) {
+		case 1:
+			phys.mass = 1;
+			phys.bounciness = 0.1f;
+			rad = 0.01f;
+			colour = Color.BLUE;
+			break;
+		case 2:
+			phys.mass = 1;
+			phys.bounciness = 0.1f;
+			rad = 0.04f;
+			colour = Color.RED;
+			break;
+		case 3:
+			phys.mass = 1;
+			phys.bounciness = 0.1f;
+			rad = 0.1f;
+			colour = Color.ORANGE;
+			break;
+		case 4:
+			phys.mass = 1;
+			phys.bounciness = 0.1f;
+			rad = 0.01f;
+			colour = Color.BLUE;
+			break;
+		}
+	}
 
 	public float getRad() {
 		return rad;
+	}
+	
+	public void setRad(float rad) {
+		this.rad = rad;
 	}
 
 	public int getOwnerID() {
@@ -127,6 +135,10 @@ public class Ball {
 
 	public Color getColour() {	
 		return colour;
+	}
+	
+	public void setColour(Color colour) {
+		this.colour = colour;
 	}
 
 }
