@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
@@ -25,23 +26,34 @@ public class main {
 	
 	BufferStrategy bs;
 	
+	public static final boolean deterministicPhysics = true;
+	
 	public main() {
+		
+		Random random;
+		
+		// If the physics is deterministic, use a a set seed. Otherwise, use a random seed.
+		if (deterministicPhysics) random = new Random(3);
+		else random = new Random();
+		
+		
+		
 		for(int i = 0; i < 200; i++) {
 			Ball ball = new Ball(1);
-			ball.setPos(2f*((float)(Math.random()) - 0.5f), 2f*((float)(Math.random()) - 0.5f));
+			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
-			ball.phys.vel.x = 2f*((float)(Math.random()) - 0.5f);
-			ball.phys.vel.y = 2f*((float)(Math.random()) - 0.5f);
+			ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
+			ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
 			balls.add(ball);
 		}
 		
 		
 		for(int i = 0; i < 50; i++) {
 			Ball ball = new Ball(2);
-			ball.setPos(2f*((float)(Math.random()) - 0.5f), 2f*((float)(Math.random()) - 0.5f));
+			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
-			ball.phys.vel.x = 2f*((float)(Math.random()) - 0.5f);
-			ball.phys.vel.y = 2f*((float)(Math.random()) - 0.5f);
+			ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
+			ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
 			balls.add(ball);
 		}
 		
@@ -116,7 +128,13 @@ public class main {
 			
 			// 60 physics update per second
 			while (timeAfterLastTick >= MS_PER_UPDATE) {
-				fixedUpdate(timeAfterLastTick/1000f);
+				
+				// If the physics is not deterministic, use the real delta time for physics calculations
+				if (!deterministicPhysics) fixedUpdate(timeAfterLastTick/1000f);
+				
+				// If the physics is deterministic, set a fixed delta time for physics calculations
+				else fixedUpdate(1f/60f);
+				
 				timeAfterLastTick -= MS_PER_UPDATE;
 				ticks++;
 			}
