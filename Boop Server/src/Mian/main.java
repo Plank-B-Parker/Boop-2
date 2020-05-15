@@ -34,6 +34,28 @@ public class main {
 			ball.phys.vel.y = 2f*((float)(Math.random()) - 0.5f);
 			balls.add(ball);
 		}
+		
+		
+		for(int i = 0; i < 50; i++) {
+			Ball ball = new Ball(2);
+			ball.setPos(2f*((float)(Math.random()) - 0.5f), 2f*((float)(Math.random()) - 0.5f));
+			//ball.setPos(0, -0.98f*i);
+			ball.phys.vel.x = 2f*((float)(Math.random()) - 0.5f);
+			ball.phys.vel.y = 2f*((float)(Math.random()) - 0.5f);
+			balls.add(ball);
+		}
+		
+//		Ball a = new Ball(2);
+//		a.setPos(-0.2f, 0);
+//		a.setVel(1f, 0);
+//		a.phys.acc.x = 2f;
+//		balls.add(a);
+//		
+//		Ball b = new Ball(2);
+//		b.setPos(0, 0);
+//		b.setVel(0,0);
+//		balls.add(b);
+		
 		//balls.getBall(0).setVel(0, 0.1f);
 		//balls.getBall(1).setVel(0, -0.1f);
 		

@@ -1,5 +1,6 @@
 package Math;
 
+import java.awt.Color;
 import java.util.List;
 
 import Balls.Ball;
@@ -74,7 +75,7 @@ public class physics {
 		//Strong mid range attractive force.
 		addAttraction(acc, balls, 2f, owner.getRad()*5, 0.5f);
 		//weaker small range repulsive force
-		addAttraction(acc, balls, -5f, owner.getRad(), owner.getRad()*5);
+		addAttraction(acc, balls, -5f, owner.getRad(), owner.getRad()*5f);
 		//Drag force to stop spinning.
 		addDrag(acc);
 	}
@@ -121,6 +122,12 @@ public class physics {
 				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, -impulse);
 				Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse);
 				
+				
+				// If the types of each ball are exploding types, explode them into 4 smaller balls with 2J of explosion power
+				if (ball.getType() == 2 && otherBall.getType() == 2) {
+					ball.phys.explode(balls, 4, 2f);
+					otherBall.phys.explode(balls, 4, 2f);
+				}
 			}
 		}
 	}
@@ -213,6 +220,41 @@ public class physics {
 			pos.y = -1 + pos.y%1f;
 		if(pos.y < -1)
 			pos.y = 1 + pos.y%1f;
+	}
+	
+	// Makes a ball explode into a given number of parts with a given amount of extra energy
+	private void explode(List<Ball> balls, int parts, float energy) {
+		
+		// Remove the ball that is exploding
+		balls.remove(owner);
+		
+		// Calculate the new radius and mass of each smaller ball part
+		float newRad = (float) (owner.getRad() / Math.sqrt(parts));
+		float newMass = mass / parts;
+		
+		// The small balls will spawn on the vertices of a regular polygon, with as many sides as there parts,
+		// with sides the length of a small ball's diameter and centred on the original ball's position.
+		
+		// Calculate the distance from the centre of the polygon to a vertex
+		float polygonRad = (float) (newRad / Math.sin(Math.PI/parts));
+		
+		// Calculate the angle made by connecting two adjacent vertices to the centre
+		float angleDif = (float) (Math.PI * 2 / parts);
+		
+		// Calculate the magnitude of the extra velocity given to each small ball
+		float velAdd = (float) Math.sqrt(2 * energy / (mass * parts));
+		
+		// Spawn in the small balls
+		for (int i = 0; i < parts; i++) {
+			Ball ball = new Ball(3);
+			ball.setRad(newRad);
+			ball.phys.mass = newMass;
+			ball.phys.pos.x = (float) (pos.x + polygonRad * Math.cos(angleDif * i));
+			ball.phys.pos.y = (float) (pos.y + polygonRad * Math.sin(angleDif * i));
+			ball.phys.vel.x = (float) (vel.x / parts + velAdd * Math.cos(angleDif * i));
+			ball.phys.vel.y = (float) (vel.y / parts + velAdd * Math.sin(angleDif * i));
+			balls.add(ball);
+		}
 	}
 	
 }
