@@ -123,10 +123,19 @@ public class physics {
 				Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse/otherBall.phys.mass);
 				
 				
-				// If the types of each ball are exploding types, explode them into 4 smaller balls with 2J of explosion power
+				// If the types of each ball are exploding types, explode them into 16 smaller balls with 2J of explosion power
 				if (ball.getType() == 2 && otherBall.getType() == 2) {
-					ball.phys.explode(balls, 16, 10f);
-					otherBall.phys.explode(balls, 16, 10f);
+					Vec2f pos1 = temp1;
+					Vec2f pos2 = temp2;
+					
+					pos1 = ball.phys.pos.copy();
+					pos2 = otherBall.phys.pos.copy();
+					
+					ball.phys.explode(balls, 16, 0f);
+					otherBall.phys.explode(balls, 16, 0f);
+
+					shockwave(balls, pos1, 0.02f);
+					shockwave(balls, pos2, 0.02f);
 				}
 			}
 		}
@@ -258,6 +267,18 @@ public class physics {
 			Vec2f.increment(ball.phys.pos, pos, direction, polygonRad);
 			Vec2f.increment(ball.phys.vel, vel, direction, velAdd);
 			balls.add(ball);
+		}
+	}
+	
+	//Produces a shock wave that makes the balls move.
+	private static void shockwave(List<Ball> balls, Vec2f centre, float impulse) {
+		for(Ball ball: balls) {
+			Vec2f disp = temp2;
+			Vec2f.sub(disp, ball.phys.pos, centre);
+			float distCubed = disp.lengthSq();
+			distCubed *= Math.sqrt(distCubed);
+			
+			Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed));
 		}
 	}
 	

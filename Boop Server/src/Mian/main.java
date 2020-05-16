@@ -38,14 +38,31 @@ public class main {
 		
 		
 		
-		for(int i = 0; i < 100; i++) {
+		for(int i = 0; i < 200; i++) {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
-			ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
-			ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
+			//ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
+			//ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
 			balls.add(ball);
 		}
+		
+//		for(int i = 1; i <= 10; i++) {
+//			for(int j = 1; j <= 10; j++) {
+//				Ball ball = new Ball(1);
+//				Ball ball2 = new Ball(1);
+//				Ball ball3 = new Ball(1);
+//				Ball ball4 = new Ball(1);
+//				ball.setPos(i*0.1f, j*0.1f);
+//				ball2.setPos(-i*0.1f, j*0.1f);
+//				ball3.setPos(i*0.1f, -j*0.1f);
+//				ball4.setPos(-i*0.1f, -j*0.1f);
+//				balls.add(ball);
+//				balls.add(ball2);
+//				balls.add(ball3);
+//				balls.add(ball4);
+//			}
+//		}
 		
 		
 		
@@ -65,7 +82,7 @@ public class main {
 //		balls.add(a);
 //		
 //		Ball b = new Ball(2);
-//		b.setPos(0, 0);
+//		b.setPos(0.04f, 0);
 //		b.setVel(0,0);
 //		balls.add(b);
 		
