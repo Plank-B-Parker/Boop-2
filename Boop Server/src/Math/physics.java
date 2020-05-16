@@ -82,7 +82,7 @@ public class physics {
 	
 	//Drag force.
 	private void addDrag(Vec2f acc) {
-		Vec2f.increment(acc, acc, vel, -dragCoefficient*(float)Math.sqrt(vel.lengthSq()));
+		Vec2f.increment(acc, acc, vel, -dragCoefficient*(float)Math.sqrt(vel.lengthSq())/mass);
 	}
 	
 	//TODO: Implement some sort of broad phase collision detection.
