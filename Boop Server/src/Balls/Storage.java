@@ -12,6 +12,7 @@ import Mian.main;
 public class Storage {
 
 	private List<Ball> balls = new ArrayList<>();
+	private List<Ball> removedBalls = new ArrayList<>();
 	
 	public Storage() {
 		
@@ -43,10 +44,15 @@ public class Storage {
 	
 	public void add(Ball b) {
 		balls.add(b);
+		b.setID(balls.size()-1);
 	}
 	
+	private int removedCount = 0;
 	public void remove(Ball b) {
 		balls.remove(b);
+		//Top secret: Classified code right here.
+		removedBalls.add(b);
+		System.out.println(removedCount++);
 	}
 	
 	public Ball getBall(int ID) {

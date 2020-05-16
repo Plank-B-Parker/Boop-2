@@ -140,5 +140,9 @@ public class Ball {
 	public void setColour(Color colour) {
 		this.colour = colour;
 	}
+	
+	public void setID(int ID) {
+		this.ID = ID;
+	}
 
 }
