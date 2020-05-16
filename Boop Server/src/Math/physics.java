@@ -73,9 +73,9 @@ public class physics {
 	public void calcAcc(List<Ball> balls) {
 		acc.set(0, 0);
 		//Strong mid range attractive force.
-		addAttraction(acc, balls, 2f, owner.getRad()*5, 0.5f);
+		addAttraction(acc, balls, 1f, owner.getRad()*5, 0.5f);
 		//weaker small range repulsive force
-		addAttraction(acc, balls, -5f, owner.getRad(), owner.getRad()*5f);
+		addAttraction(acc, balls, -10f, owner.getRad(), owner.getRad()*5f);
 		//Drag force to stop spinning.
 		addDrag(acc);
 	}
@@ -119,14 +119,14 @@ public class physics {
 				float impulse = calcImpulse(ball, otherBall, disp);
 				
 				//Add impulse to the velocities.
-				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, -impulse);
-				Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse);
+				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, -impulse/ball.phys.mass);
+				Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse/otherBall.phys.mass);
 				
 				
 				// If the types of each ball are exploding types, explode them into 4 smaller balls with 2J of explosion power
 				if (ball.getType() == 2 && otherBall.getType() == 2) {
-					ball.phys.explode(balls, 4, 2f);
-					otherBall.phys.explode(balls, 4, 2f);
+					ball.phys.explode(balls, 16, 10f);
+					otherBall.phys.explode(balls, 16, 10f);
 				}
 			}
 		}
@@ -249,10 +249,14 @@ public class physics {
 			Ball ball = new Ball(3);
 			ball.setRad(newRad);
 			ball.phys.mass = newMass;
-			ball.phys.pos.x = (float) (pos.x + polygonRad * Math.cos(angleDif * i));
-			ball.phys.pos.y = (float) (pos.y + polygonRad * Math.sin(angleDif * i));
-			ball.phys.vel.x = (float) (vel.x / parts + velAdd * Math.cos(angleDif * i));
-			ball.phys.vel.y = (float) (vel.y / parts + velAdd * Math.sin(angleDif * i));
+			
+			Vec2f direction = temp1;
+			direction.x = (float)Math.cos(angleDif * i);
+			direction.y = (float)Math.sin(angleDif * i);
+			
+			//Increment: ballPos = pos + direction*polygonRad
+			Vec2f.increment(ball.phys.pos, pos, direction, polygonRad);
+			Vec2f.increment(ball.phys.vel, vel, direction, velAdd);
 			balls.add(ball);
 		}
 	}
