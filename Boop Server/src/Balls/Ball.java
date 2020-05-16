@@ -101,7 +101,7 @@ public class Ball {
 			colour = Color.BLUE;
 			break;
 		case 2:
-			phys.mass = 4;
+			phys.mass = 16;
 			phys.bounciness = 0.1f;
 			rad = 0.04f;
 			colour = Color.RED;

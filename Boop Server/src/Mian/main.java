@@ -33,7 +33,7 @@ public class main {
 		Random random;
 		
 		// If the physics is deterministic, use a a set seed. Otherwise, use a random seed.
-		if (deterministicPhysics) random = new Random(2);
+		if (deterministicPhysics) random = new Random(3);
 		else random = new Random();
 		
 		
@@ -49,7 +49,7 @@ public class main {
 		
 		
 		
-		for(int i = 0; i < 50; i++) {
+		for(int i = 0; i < 10; i++) {
 			Ball ball = new Ball(2);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
