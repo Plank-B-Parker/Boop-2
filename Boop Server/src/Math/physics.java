@@ -231,11 +231,15 @@ public class physics {
 			pos.y = 1 + pos.y%1f;
 	}
 	
+	
+	private static int removeCount = 0;
 	// Makes a ball explode into a given number of parts with a given amount of extra energy
 	private void explode(List<Ball> balls, int parts, float energy) {
 		
 		// Remove the ball that is exploding
 		balls.remove(owner);
+		removeCount++;
+		System.out.println(removeCount);
 		
 		// Calculate the new radius and mass of each smaller ball part
 		float newRad = (float) (owner.getRad() / Math.sqrt(parts));
@@ -273,12 +277,12 @@ public class physics {
 	//Produces a shock wave that makes the balls move.
 	private static void shockwave(List<Ball> balls, Vec2f centre, float impulse) {
 		for(Ball ball: balls) {
-			Vec2f disp = temp2;
+			Vec2f disp = temp3;
 			Vec2f.sub(disp, ball.phys.pos, centre);
 			float distCubed = disp.lengthSq();
 			distCubed *= Math.sqrt(distCubed);
 			
-			Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed));
+			Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed + 0.01f));
 		}
 	}
 	
