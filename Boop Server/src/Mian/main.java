@@ -33,12 +33,12 @@ public class main {
 		Random random;
 		
 		// If the physics is deterministic, use a a set seed. Otherwise, use a random seed.
-		if (deterministicPhysics) random = new Random(3);
+		if (deterministicPhysics) random = new Random(2);
 		else random = new Random();
 		
 		
 		
-		for(int i = 0; i < 200; i++) {
+		for(int i = 0; i < 100; i++) {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -46,6 +46,7 @@ public class main {
 			ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
 			balls.add(ball);
 		}
+		
 		
 		
 		for(int i = 0; i < 50; i++) {
@@ -58,9 +59,9 @@ public class main {
 		}
 		
 //		Ball a = new Ball(2);
-//		a.setPos(-0.2f, 0);
+//		a.setPos(-1f, 0);
 //		a.setVel(1f, 0);
-//		a.phys.acc.x = 2f;
+//		a.phys.acc.x = 0f;
 //		balls.add(a);
 //		
 //		Ball b = new Ball(2);
@@ -68,8 +69,8 @@ public class main {
 //		b.setVel(0,0);
 //		balls.add(b);
 		
-		//balls.getBall(0).setVel(0, 0.1f);
-		//balls.getBall(1).setVel(0, -0.1f);
+//		balls.getBall(0).setVel(0, 0.1f);
+//		balls.getBall(1).setVel(0, -0.1f);
 		
 	}
 	
