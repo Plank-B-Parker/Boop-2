@@ -14,6 +14,7 @@ import javax.swing.WindowConstants;
 
 import Balls.Ball;
 import Balls.Storage;
+import Debug.Key;
 import Debug.Keyboard;
 import Networking.Client;
 import Networking.ClientAccept;
@@ -24,6 +25,7 @@ public class main {
 	public static final int windowWidth = 1280, windowHeight = 720;
 	private Canvas canvas = new Canvas();
 	public Storage balls = new Storage();
+	public Keyboard keyboard;
 	
 	BufferStrategy bs;
 	
@@ -31,8 +33,10 @@ public class main {
 	
 	public main() {
 		
+		keyboard = new Keyboard(this);
+		
 		//Add keyboard listener.
-		canvas.addKeyListener(new Keyboard(this));
+		canvas.addKeyListener(keyboard);
 		
 		
 		Random random;
@@ -100,6 +104,7 @@ public class main {
 		JFrame frame = new JFrame("Server");
 		
 		canvas.setSize(1920, 1080);
+		canvas.setFocusable(true);
 		
 		frame.setSize(windowWidth, windowHeight);
 		frame.setLayout(null);
@@ -108,7 +113,6 @@ public class main {
 		frame.setResizable(true);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
-		frame.setFocusable(true);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.validate();
 	}
@@ -125,7 +129,7 @@ public class main {
 	}
 	
 	private boolean running = false;
-	public static boolean paused = false;
+	public static boolean physpaused = false;
 	private int TPS = 0;
 	private int FPS = 0;
 	private int packetsSentPerSec = 0;
@@ -149,16 +153,22 @@ public class main {
 			timeAfterLastTick += elapsed;
 			
 			// Process hardware inputs here <----
+			processInputs();
 			
 			// 60 physics update per second
 			while (timeAfterLastTick >= MS_PER_UPDATE) {
 				
-				if(!paused) {
+				if(! physpaused) {
 					// If the physics is not deterministic, use the real delta time for physics calculations
 					if (!deterministicPhysics) fixedUpdate(timeAfterLastTick/1000f);
 					
 					// If the physics is deterministic, set a fixed delta time for physics calculations
 					else fixedUpdate(1f/60f);
+				}
+				
+				if (physpaused && keyboard.getTimeStep() > 0) {
+					fixedUpdate(1f/60f);
+					keyboard.decrementTimeStep();
 				}
 				
 				timeAfterLastTick -= MS_PER_UPDATE;
@@ -185,6 +195,10 @@ public class main {
 		
 	}
 	
+	public void processInputs() {
+		physpaused = keyboard.getValueFromKeyMap(Key.K);
+	}
+	
 	public void fixedUpdate(float dt) {
 		List<Client> clients = new ArrayList<>(clientAcceptor.clients.size());
 		clients = List.copyOf(clientAcceptor.clients);
@@ -204,7 +218,7 @@ public class main {
 			
 			g2d.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());;
 			
-			renderGrid(g2d);
+			if (keyboard.getValueFromKeyMap(Key.SPACE)) renderGrid(g2d);
 			
 			balls.renderBalls(g2d, dt);
 			
