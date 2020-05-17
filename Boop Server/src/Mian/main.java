@@ -14,6 +14,7 @@ import javax.swing.WindowConstants;
 
 import Balls.Ball;
 import Balls.Storage;
+import Debug.Keyboard;
 import Networking.Client;
 import Networking.ClientAccept;
 import Networking.UDP;
@@ -29,6 +30,10 @@ public class main {
 	public static final boolean deterministicPhysics = true;
 	
 	public main() {
+		
+		//Add keyboard listener.
+		canvas.addKeyListener(new Keyboard(this));
+		
 		
 		Random random;
 		
@@ -120,6 +125,7 @@ public class main {
 	}
 	
 	private boolean running = false;
+	public static boolean paused = false;
 	private int TPS = 0;
 	private int FPS = 0;
 	private int packetsSentPerSec = 0;
@@ -147,11 +153,13 @@ public class main {
 			// 60 physics update per second
 			while (timeAfterLastTick >= MS_PER_UPDATE) {
 				
-				// If the physics is not deterministic, use the real delta time for physics calculations
-				if (!deterministicPhysics) fixedUpdate(timeAfterLastTick/1000f);
-				
-				// If the physics is deterministic, set a fixed delta time for physics calculations
-				else fixedUpdate(1f/60f);
+				if(!paused) {
+					// If the physics is not deterministic, use the real delta time for physics calculations
+					if (!deterministicPhysics) fixedUpdate(timeAfterLastTick/1000f);
+					
+					// If the physics is deterministic, set a fixed delta time for physics calculations
+					else fixedUpdate(1f/60f);
+				}
 				
 				timeAfterLastTick -= MS_PER_UPDATE;
 				ticks++;
