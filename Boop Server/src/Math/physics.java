@@ -2,6 +2,7 @@ package Math;
 
 import java.awt.Color;
 import java.util.List;
+import java.util.Iterator;
 
 import Balls.Ball;
 
@@ -40,12 +41,15 @@ public class physics {
 		float PE = 0;
 		
 		Vec2f disp = temp1;
-		for(Ball ball: balls) {
-			if(ball == owner)
-				continue;
-			disp(disp, ball.phys.pos, pos);
-			float dist = (float)Math.sqrt(disp.lengthSq());
-			PE -= mag*ball.phys.mag/dist;
+
+		synchronized (balls) {
+			for (Ball ball: balls) {
+				if(ball == owner)
+					continue;
+				disp(disp, ball.phys.pos, pos);
+				float dist = (float)Math.sqrt(disp.lengthSq());
+				PE -= mag*ball.phys.mag/dist;
+			}
 		}
 		
 		return PE + KE;
@@ -93,49 +97,51 @@ public class physics {
 	public static void checkCollision(List<Ball> balls) {
 		Vec2f disp = temp1;
 		
-		for(int i = 0; i < balls.size() - 1; i++) {
-			Ball ball = balls.get(i);
-			//Go through every ball after current ball in list.
-			for(int j = i + 1; j < balls.size(); j++) {
-				Ball otherBall = balls.get(j);
-				
-				disp(disp, otherBall.phys.pos, ball.phys.pos);
-				float minimumDistance = ball.getRad() + otherBall.getRad();
-				
-				//If distance between centres is bigger that the sum of the radi than skip.
-				if(disp.lengthSq() > minimumDistance*minimumDistance)
-					continue;
-				
-				float distance = (float)Math.sqrt(disp.lengthSq());
-				float overlap = minimumDistance - distance;
-				
-				//Normalise disp.
-				Vec2f.scale(disp, disp, 1f/distance);
-				
-				//Move balls apart to stop overlap.
-				Vec2f.increment(ball.phys.pos, ball.phys.pos, disp, -overlap*0.5f);
-				Vec2f.increment(otherBall.phys.pos, otherBall.phys.pos, disp, overlap*0.5f);
-				
-				float impulse = calcImpulse(ball, otherBall, disp);
-				
-				//Add impulse to the velocities.
-				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, -impulse/ball.phys.mass);
-				Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse/otherBall.phys.mass);
-				
-				
-				// If the types of each ball are exploding types, explode them into 16 smaller balls with 2J of explosion power
-				if (ball.getType() == 2 && otherBall.getType() == 2) {
-					Vec2f pos1 = temp1;
-					Vec2f pos2 = temp2;
+		synchronized (balls) {
+			for(int i = 0; i < balls.size() - 1; i++) {
+				Ball ball = balls.get(i);
+				//Go through every ball after current ball in list.
+				for(int j = i + 1; j < balls.size(); j++) {
+					Ball otherBall = balls.get(j);
 					
-					pos1 = ball.phys.pos.copy();
-					pos2 = otherBall.phys.pos.copy();
+					disp(disp, otherBall.phys.pos, ball.phys.pos);
+					float minimumDistance = ball.getRad() + otherBall.getRad();
 					
-					ball.phys.explode(balls, 16, 0f);
-					otherBall.phys.explode(balls, 16, 0f);
+					//If distance between centres is bigger that the sum of the radi than skip.
+					if(disp.lengthSq() > minimumDistance*minimumDistance)
+						continue;
+					
+					float distance = (float)Math.sqrt(disp.lengthSq());
+					float overlap = minimumDistance - distance;
+					
+					//Normalise disp.
+					Vec2f.scale(disp, disp, 1f/distance);
+					
+					//Move balls apart to stop overlap.
+					Vec2f.increment(ball.phys.pos, ball.phys.pos, disp, -overlap*0.5f);
+					Vec2f.increment(otherBall.phys.pos, otherBall.phys.pos, disp, overlap*0.5f);
+					
+					float impulse = calcImpulse(ball, otherBall, disp);
+					
+					//Add impulse to the velocities.
+					Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, -impulse/ball.phys.mass);
+					Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse/otherBall.phys.mass);
+					
+					
+					// If the types of each ball are exploding types, explode them into 16 smaller balls with 2J of explosion power
+					if (ball.getType() == 2 && otherBall.getType() == 2) {
+						Vec2f pos1 = temp1;
+						Vec2f pos2 = temp2;
+						
+						pos1 = ball.phys.pos.copy();
+						pos2 = otherBall.phys.pos.copy();
+						
+						ball.phys.explode(balls, 16, 0f);
+						otherBall.phys.explode(balls, 16, 0f);
 
-					shockwave(balls, pos1, 0.02f);
-					shockwave(balls, pos2, 0.02f);
+						shockwave(balls, pos1, 0.02f);
+						shockwave(balls, pos2, 0.02f);
+					}
 				}
 			}
 		}
@@ -198,23 +204,26 @@ public class physics {
 	 * @param maxDist: Balls farther than this wont be affected.
 	 */
 	private void addAttraction(Vec2f acc, List<Ball> balls, float attractionStrength, float minDist, float maxDist) {
-		for(Ball ball: balls) {
-			//Skip if the other ball is this ball.
-			if(ball == owner) 
-				continue;
-			Vec2f disp = temp1;
-			disp(disp, ball.phys.pos, pos);
-			
-			//If distance is less than minDist then skip.
-			if(disp.lengthSq()<minDist*minDist)
-				continue;
-			//If distance is bigger than maxDist then skip.
-			if(disp.lengthSq()>maxDist*maxDist)
-				continue;
-			
-			float distCubed = disp.lengthSq();
-			distCubed *= Math.sqrt(distCubed);
-			Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
+
+		synchronized (balls) {
+			for(Ball ball: balls) {
+				//Skip if the other ball is this ball.
+				if(ball == owner) 
+					continue;
+				Vec2f disp = temp1;
+				disp(disp, ball.phys.pos, pos);
+				
+				//If distance is less than minDist then skip.
+				if(disp.lengthSq()<minDist*minDist)
+					continue;
+				//If distance is bigger than maxDist then skip.
+				if(disp.lengthSq()>maxDist*maxDist)
+					continue;
+				
+				float distCubed = disp.lengthSq();
+				distCubed *= Math.sqrt(distCubed);
+				Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
+			}
 		}
 	}
 	
@@ -276,13 +285,16 @@ public class physics {
 	
 	//Produces a shock wave that makes the balls move.
 	private static void shockwave(List<Ball> balls, Vec2f centre, float impulse) {
-		for(Ball ball: balls) {
-			Vec2f disp = temp3;
-			Vec2f.sub(disp, ball.phys.pos, centre);
-			float distCubed = disp.lengthSq();
-			distCubed *= Math.sqrt(distCubed);
-			
-			Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed + 0.01f));
+
+		synchronized (balls) {
+			for(Ball ball: balls) {
+				Vec2f disp = temp3;
+				Vec2f.sub(disp, ball.phys.pos, centre);
+				float distCubed = disp.lengthSq();
+				distCubed *= Math.sqrt(distCubed);
+				
+				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed + 0.01f));
+			}
 		}
 	}
 	
