@@ -7,32 +7,21 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
 public class main extends Canvas implements Runnable{
 
 	public boolean running = false;
-
+	public Display display;
+	
 	public main() {
-		// TODO Auto-generated constructor stub
+		
 	}
 	
 	public void createDisplay() {
-		JFrame frame = new JFrame("Client");
-		
-		setSize(1920, 1080);
-		
-		frame.setSize(1280, 720);
-		frame.setLayout(null);
-		frame.getContentPane().setBackground(Color.BLACK);
-		frame.getContentPane().add(this);
-		frame.setResizable(true);
-		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
-		frame.setFocusable(true);
-		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		frame.validate();
+		display = new Display(this);
 	}
 	
 	private int FPS = 0;
@@ -118,13 +107,13 @@ public class main extends Canvas implements Runnable{
 		g2d.drawString("tx: " + packetsSentPerSec, 140, 50);
 	}
 	
+	
 	public static void main(String args[]){
 		Thread t = Thread.currentThread();
 		t.setName("Main-Loop");
 		
 		main main = new main();
 		main.createDisplay();
-		main.running = true;
 		main.run();
 	}
 
