@@ -119,5 +119,9 @@ public class Keyboard implements KeyListener{
 		timeStep--;
 		if (timeStep < 0) timeStep = 0;
 	}
+
+	public void resetTimeStep() {
+		timeStep = 0;
+	}
 	
 }
