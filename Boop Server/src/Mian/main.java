@@ -168,7 +168,6 @@ public class main {
 				
 				if (physpaused && keyboard.isActive(Key.L)) {
 					fixedUpdate(1f/60f);
-					// keyboard.decrementCount(Key.L);
 				}
 				
 				timeAfterLastTick -= MS_PER_UPDATE;
