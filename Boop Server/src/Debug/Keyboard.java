@@ -12,8 +12,7 @@ public class Keyboard implements KeyListener{
 	
 	private Map<Key, Boolean> keymap = new EnumMap<>(Key.class);
 	private Map<Key, Boolean> keyReleased = new EnumMap<>(Key.class);
-	
-	private int timeStep = 0;
+	private Map<Key, Integer> keyCountMap = new EnumMap<>(Key.class);
 	
 	public Keyboard(main main) {
 		this.main = main;
@@ -24,6 +23,9 @@ public class Keyboard implements KeyListener{
 		for (Key key: Key.values()) {
 			keymap.put(key, false);
 			keyReleased.put(key, true);
+			if (! key.isToggle() && ! key.isHold()) {
+				keyCountMap.put(key, 0);
+			}
 		}
 		
 	}
@@ -33,45 +35,15 @@ public class Keyboard implements KeyListener{
 	public void keyPressed(KeyEvent e) {
 		switch(e.getKeyCode()) {
 			case KeyEvent.VK_SPACE:
-				// Checks if the key is active and if the user has released the key before
-				if (getValueFromKeyMap(Key.SPACE) && getValueFromKeyRelease(Key.SPACE)) {
-					keymap.put(Key.SPACE, false);
-					keyReleased.put(Key.SPACE, false);
-					break;
-				}
-				if (! getValueFromKeyMap(Key.SPACE) && getValueFromKeyRelease(Key.SPACE)) {
-					keymap.put(Key.SPACE, true);
-					keyReleased.put(Key.SPACE, false);
-					break;
-				}
+				handleKeyPress(Key.SPACE);
 				break;
 				
 			case KeyEvent.VK_K:
-				if (getValueFromKeyMap(Key.K) && getValueFromKeyRelease(Key.K)) {
-					keymap.put(Key.K, false);
-					keyReleased.put(Key.K, false);
-					break;
-				}
-				if (! getValueFromKeyMap(Key.K) && getValueFromKeyRelease(Key.K)) {
-					keymap.put(Key.K, true);
-					keyReleased.put(Key.K, false);
-					break;
-				}
+				handleKeyPress(Key.K);
 				break;
 				
 			case KeyEvent.VK_L:
-				if(getValueFromKeyMap(Key.L) && getValueFromKeyRelease(Key.L)) {
-					keymap.put(Key.L, false);
-					keyReleased.put(Key.L, false);
-					timeStep += 1;
-					break;
-				}
-				if(! getValueFromKeyMap(Key.L) && getValueFromKeyRelease(Key.L)) {
-					keymap.put(Key.L, true);
-					keyReleased.put(Key.L, false);
-					timeStep += 1;
-					break;
-				}
+				handleKeyPress(Key.L);
 				break;
 				
 			default:
@@ -83,18 +55,18 @@ public class Keyboard implements KeyListener{
 	@Override
 	public void keyReleased(KeyEvent e) {
 		switch(e.getKeyCode()) {
-		case KeyEvent.VK_SPACE:
-			keyReleased.put(Key.SPACE, true);
-			break;
-		case KeyEvent.VK_K:
-			keyReleased.put(Key.K, true);
-			break;
-		case KeyEvent.VK_L:
-			keyReleased.put(Key.L, true);
-			break;
-			
-		default:
-			System.out.println("Not valid release key");
+			case KeyEvent.VK_SPACE:
+				handleKeyRelease(Key.SPACE);
+				break;
+			case KeyEvent.VK_K:
+				handleKeyRelease(Key.K);
+				break;
+			case KeyEvent.VK_L:
+				handleKeyRelease(Key.L);
+				break;
+				
+			default:
+				System.out.println("Not valid release key");
 		}
 	}
 	
@@ -102,26 +74,60 @@ public class Keyboard implements KeyListener{
 	public void keyTyped(KeyEvent e) {
 		
 	}
+
+	private void handleKeyPress(Key key) {
+		if (getValueFromKeyRelease(key)) {
+			if(getValueFromKeyMap(key)) {
+				keymap.put(key, false);
+				keyReleased.put(key, false);
+				if (! key.isToggle() && ! key.isHold()) keyCountMap.put(key, keyCountMap.get(key) + 1);
+			}
+			else if(! getValueFromKeyMap(key)) {
+				keymap.put(key, true);
+				keyReleased.put(key, false);
+				if (! key.isToggle() && ! key.isHold()) keyCountMap.put(key, keyCountMap.get(key) + 1);
+			}
+		}
+	}
+
+	private void handleKeyRelease(Key key) {
+		keyReleased.put(key, true);
+		if (key.isHold()) keymap.put(key, false);
+	}
 	
-	public boolean getValueFromKeyMap(Key key) {
+	private boolean getValueFromKeyMap(Key key) {
 		return Boolean.TRUE.equals(keymap.get(key));
 	}
 	
-	public boolean getValueFromKeyRelease(Key key) {
+	private boolean getValueFromKeyRelease(Key key) {
 		return Boolean.TRUE.equals(keyReleased.get(key));
 	}
 
-	public int getTimeStep() {
-		return timeStep;
+	private int getCount(Key key) {
+		return keyCountMap.get(key);
 	}
 	
-	public void decrementTimeStep() {
-		timeStep--;
-		if (timeStep < 0) timeStep = 0;
+	private void decrementCount(Key key) {
+		int currentCount = keyCountMap.get(key);
+		keyCountMap.put(key, currentCount - 1);
+		if (currentCount < 0) keyCountMap.put(key, 0);
 	}
 
-	public void resetTimeStep() {
-		timeStep = 0;
+	public void resetCount(Key key) {
+		keyCountMap.put(key, 0);
+	}
+
+	// Used to check if a key is active
+	// If the key is not a toggle or hold key it will automatically decrement the count
+	public boolean isActive(Key key) {
+		if (key.isToggle() || key.isHold()) return getValueFromKeyMap(key);
+		
+		else if (getCount(key) > 0) {
+			decrementCount(key);
+			return true;
+		}
+
+		return false;
 	}
 	
 }

@@ -166,9 +166,9 @@ public class main {
 					else fixedUpdate(1f/60f);
 				}
 				
-				if (physpaused && keyboard.getTimeStep() > 0) {
+				if (physpaused && keyboard.isActive(Key.L)) {
 					fixedUpdate(1f/60f);
-					keyboard.decrementTimeStep();
+					// keyboard.decrementCount(Key.L);
 				}
 				
 				timeAfterLastTick -= MS_PER_UPDATE;
@@ -197,8 +197,8 @@ public class main {
 	
 	public void processInputs() {
 		boolean prevPause = physpaused;
-		physpaused = keyboard.getValueFromKeyMap(Key.K);
-		if (prevPause != physpaused) keyboard.resetTimeStep();
+		physpaused = keyboard.isActive(Key.K);
+		if (prevPause != physpaused) keyboard.resetCount(Key.L);
 	}
 	
 	public void fixedUpdate(float dt) {
@@ -220,7 +220,7 @@ public class main {
 			
 			g2d.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());;
 			
-			if (keyboard.getValueFromKeyMap(Key.SPACE)) renderGrid(g2d);
+			if (keyboard.isActive(Key.SPACE)) renderGrid(g2d);
 			
 			balls.renderBalls(g2d, dt);
 			
