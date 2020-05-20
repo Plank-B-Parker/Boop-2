@@ -196,7 +196,9 @@ public class main {
 	}
 	
 	public void processInputs() {
+		boolean prevPause = physpaused;
 		physpaused = keyboard.getValueFromKeyMap(Key.K);
+		if (prevPause != physpaused) keyboard.resetTimeStep();
 	}
 	
 	public void fixedUpdate(float dt) {
