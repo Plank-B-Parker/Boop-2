@@ -9,21 +9,19 @@ import java.net.SocketException;
 public class UDP implements Runnable{
 	
 	DatagramSocket socket;
-	private int serverPort;
-	public static final int MAX_PAYLOAD_SIZE = 1472;
+	public static final int MAX_PAYLOAD_SIZE = 1400;
 	
 	Thread threadUDP;
 	
-	public UDP(int port) {
-		this.serverPort = port;
+	public UDP() {
 		
 		try {
-			this.socket = new DatagramSocket(port);
+			this.socket = new DatagramSocket(ClientAccept.PORT);
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
 		
-		threadUDP = new Thread("UDP-thread");
+		threadUDP = new Thread(this, "UDP-thread");
 		
 	}
 	
@@ -62,6 +60,15 @@ public class UDP implements Runnable{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public byte[] addPacketTypeToData(byte packetType, byte[] data) {
+		byte[] newData = new byte[data.length + 1];
+		System.arraycopy(data, 0, newData, 1, data.length);
+		
+		newData[0] = packetType;
+		
+		return newData;
 	}
 	
 	public void startUDP() {

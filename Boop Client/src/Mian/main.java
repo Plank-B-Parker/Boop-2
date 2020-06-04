@@ -3,32 +3,56 @@ package Mian;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.util.Random;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.WindowConstants;
+import Balls.Ball;
+import Balls.Storage;
+import Networking.ServerLink;
+import Networking.UdpLink;
 
-public class main extends Canvas implements Runnable{
+public class main {
 
-	public boolean running = false;
+	public volatile boolean running = false;
+	private Canvas canvas = new Canvas();
 	public Display display;
+	public ServerLink serverLink;
+	public UdpLink udpLink;
+	
+	public Storage balls = new Storage();
 	
 	public main() {
+		
+		Random random = new Random();
+		
+		/*for(int i = 0; i < 10; i++) {
+			Ball ball = new Ball(2);
+			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
+			//ball.setPos(0, -0.98f*i);
+			ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
+			ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
+			balls.add(ball);
+		}*/
 		
 	}
 	
 	public void createDisplay() {
-		display = new Display(this);
+		display = new Display(this, canvas);
+	}
+	
+	public void setupConnections() {
+		serverLink = new ServerLink(this);
+		udpLink = new UdpLink(serverLink, this);
 	}
 	
 	private int FPS = 0;
 	private int TPS = 0;
 	private int packetsSentPerSec = 0;
 	
-	public void run() {
+	public void mainLoop() {
 		
 		final double MS_PER_UPDATE = 1000.0 / 60.0;
 		long previous = System.currentTimeMillis();
@@ -45,11 +69,12 @@ public class main extends Canvas implements Runnable{
 			previous = current;
 			timeAfterLastTick += elapsed;
 			
-			// Process hardware inputs here <----
+			processInputs();
 			
 			// 60 physics update per second
 			while (timeAfterLastTick >= MS_PER_UPDATE) {
-				fixedUpdate();
+				// use deterministic from server?????????
+				fixedUpdate(1f / 60f);
 				timeAfterLastTick -= MS_PER_UPDATE;
 				ticks++;
 			}
@@ -60,7 +85,7 @@ public class main extends Canvas implements Runnable{
 				// Send data and other stuff here
 			}
 			
-			render(timeAfterLastTick / MS_PER_UPDATE);
+			render(timeAfterLastTick / 1000f);
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
@@ -74,22 +99,29 @@ public class main extends Canvas implements Runnable{
 	    }
 	}
 	
-	private void fixedUpdate() {
+	private void processInputs() {
+		
+	}
+	
+	private void fixedUpdate(float dt) {
+		
 		
 	}
 	
 	BufferStrategy bs;
-	private void render(double extrapolate) {
-		bs = getBufferStrategy();
+	private void render(float dt) {
+		bs = canvas.getBufferStrategy();
 		if (bs == null) {
-			createBufferStrategy(2);
+			canvas.createBufferStrategy(2);
 			return;
 		}
 		
 		do {
 			Graphics2D g2d = (Graphics2D) bs.getDrawGraphics();
 			
-			g2d.clearRect(0, 0, getWidth(), getHeight());;
+			g2d.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+			
+			balls.renderBalls(g2d, dt);
 			
 			drawPerformance(g2d);
 			
@@ -107,6 +139,29 @@ public class main extends Canvas implements Runnable{
 		g2d.drawString("tx: " + packetsSentPerSec, 140, 50);
 	}
 	
+	public void connectToServer(InetAddress ipV4Address) throws IOException {
+		serverLink.connectToServer(ipV4Address);
+		udpLink.connectToServerUDP(ipV4Address);
+	}
+	
+	public void disconnectServer() {
+		
+	}
+	
+	public void startGame() {
+		if (running) return;
+		
+		running = true;
+		mainLoop();
+		
+	}
+	
+	public void stopGame() {
+		// disconnect
+		running = false;
+		
+	}
+	
 	
 	public static void main(String args[]){
 		Thread t = Thread.currentThread();
@@ -114,7 +169,9 @@ public class main extends Canvas implements Runnable{
 		
 		main main = new main();
 		main.createDisplay();
-		main.run();
+		main.setupConnections();
+		main.running = true;
+		main.mainLoop();
 	}
 
 }

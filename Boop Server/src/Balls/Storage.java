@@ -3,6 +3,7 @@ package Balls;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -66,6 +67,10 @@ public class Storage {
 	
 	public Ball getBall(int ID) {
 		return balls.get(ID);
+	}
+	
+	public Collection<Ball> getBalls() {
+		return Collections.unmodifiableCollection(balls);
 	}
 
 }

@@ -5,12 +5,16 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
+
 
 import Balls.Ball;
 import Balls.Storage;
@@ -24,7 +28,7 @@ public class main {
 	
 	public static final int windowWidth = 1280, windowHeight = 720;
 	private Canvas canvas = new Canvas();
-	public Storage balls = new Storage();
+	public Storage storage = new Storage();
 	public Keyboard keyboard;
 	
 	BufferStrategy bs;
@@ -53,7 +57,7 @@ public class main {
 			//ball.setPos(0, -0.98f*i);
 			//ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
 			//ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
-			balls.add(ball);
+			storage.add(ball);
 		}
 		
 //		for(int i = 1; i <= 10; i++) {
@@ -81,7 +85,7 @@ public class main {
 			//ball.setPos(0, -0.98f*i);
 			ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
 			ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
-			balls.add(ball);
+			storage.add(ball);
 		}
 		
 //		Ball a = new Ball(2);
@@ -119,11 +123,10 @@ public class main {
 	
 	ClientAccept clientAcceptor;
 	UDP udp;
-	public int port = 27000;
 	
 	public void setupConnections() {
-		clientAcceptor = new ClientAccept(port);
-		UDP udp = new UDP(port);
+		clientAcceptor = new ClientAccept();
+		udp = new UDP();
 		clientAcceptor.startServer();
 		udp.startUDP();
 	}
@@ -152,7 +155,6 @@ public class main {
 			previous = current;
 			timeAfterLastTick += elapsed;
 			
-			// Process hardware inputs here <----
 			processInputs();
 			
 			// 60 physics update per second
@@ -176,8 +178,8 @@ public class main {
 			
 			// Code branch occurs 30 times a second
 			if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 2) {
-				
 				// Send data and other stuff here
+				sendTestBalls();
 			}
 			
 			render(timeAfterLastTick/1000f);
@@ -189,6 +191,7 @@ public class main {
 				ticks = 0;
 				frames = 0;
 				timer += 1000;
+				System.out.println(clientAcceptor.clients);
 			}
 		}
 		
@@ -204,7 +207,7 @@ public class main {
 		List<Client> clients = new ArrayList<>(clientAcceptor.clients.size());
 		clients = List.copyOf(clientAcceptor.clients);
 		
-		balls.updateBalls(dt);
+		storage.updateBalls(dt);
 	}
 	
 	public void render(float dt) {
@@ -221,7 +224,7 @@ public class main {
 			
 			if (keyboard.isActive(Key.SPACE)) renderGrid(g2d);
 			
-			balls.renderBalls(g2d, dt);
+			storage.renderBalls(g2d, dt);
 			
 			drawPerformance(g2d);
 			
@@ -240,6 +243,15 @@ public class main {
 			g.drawString(""+ 2*(n/2-i)/n,  windowHeight/2, (int)(i/n*windowHeight));
 			g.drawString(""+ 2*(i - n/2)/n,  (int)(i/n*windowHeight), windowHeight/2);
 		}
+		g.setColor(Color.RED);
+		for (Client client: clientAcceptor.clients) {
+			int x = (int) (client.topLeftCorner.x * windowHeight);
+			int y = (int) (client.topLeftCorner.y * windowHeight);
+			int width = (int) ((client.botRightCorner.x - client.topLeftCorner.x) * windowHeight);
+			int height = (int) ((client.botRightCorner.y - client.topLeftCorner.y) * windowHeight);
+			
+			g.drawRect(x, y, width, height);
+		}
 	}
 
 	private void drawPerformance(Graphics2D g2d) {
@@ -249,6 +261,80 @@ public class main {
 		g2d.drawString("Ticks: " + TPS, 50, 75);
 		
 		g2d.drawString("TX: " + packetsSentPerSec, 140, 50);
+	}
+	
+	private void sendTestBalls() {
+		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
+		Collection<Ball> allBalls = storage.getBalls();
+		Client[] clients = new Client[clientAcceptor.clients.size()];
+		System.arraycopy(clientAcceptor.clients.toArray(), 0, clients, 0, clientAcceptor.clients.size());
+		
+		// sends data to all clients at the same time
+		int bytesPerBall = 28;
+		int numberOfItems = 7;
+		int ballsPerPacket = (UDP.MAX_PAYLOAD_SIZE - 1) / bytesPerBall; // 50 @ payloadSize = 28
+		
+		// Store balls within a certain area around the client screen inside the Client class TODO
+		
+		// replace 10 with the max number of packets required TODO
+		byte[][][] data = new byte[clients.length][10][UDP.MAX_PAYLOAD_SIZE];
+		
+		
+		for (int i = 0; i < clients.length; i++) {
+			List<Ball> inRange = new ArrayList<>();
+			
+			for (Ball ball: allBalls) {
+				// check if ball is in client area (simple rect)
+				if (ball.phys.pos.x + ball.getRad() >= clients[i].topLeftCorner.x &&
+					ball.phys.pos.x - ball.getRad() <= clients[i].botRightCorner.x &&
+					ball.phys.pos.y + ball.getRad() >= clients[i].topLeftCorner.y &&
+					ball.phys.pos.y - ball.getRad() <= clients[i].botRightCorner.y) {
+						inRange.add(ball);	
+				}
+			}
+			
+			int numberOfPackets = (int) Math.ceil((double) inRange.size() / ballsPerPacket);
+			int floatsPerPacket = ballsPerPacket * numberOfItems;
+			int packetsFilled = 0;
+			
+			float[][] floatData = new float[numberOfPackets][floatsPerPacket];
+			
+			while (packetsFilled < numberOfPackets) {
+				for (int b1 = 0, b2 = 0; b1 < ballsPerPacket && b2 < inRange.size(); b1++, b2++) {
+					Ball ball = inRange.get(b2);
+					int offset = numberOfItems *  b1;
+					
+					floatData[packetsFilled][offset] = ball.getID();
+					floatData[packetsFilled][offset + 1] = ball.getType();
+					floatData[packetsFilled][offset + 2] = ball.phys.pos.x;
+					floatData[packetsFilled][offset + 3] = ball.phys.pos.y;
+					floatData[packetsFilled][offset + 4] = ball.phys.vel.x;
+					floatData[packetsFilled][offset + 5] = ball.phys.vel.y;
+					floatData[packetsFilled][offset + 6] = ball.getOwnerID();
+					
+				}
+				data[i][packetsFilled] = floatsToBytes(floatData[packetsFilled]);
+				packetsFilled++;
+			}
+			
+		}
+		
+		// Send packets to client
+		for (int i = 0; i < clients.length; i++) {
+			for (int j = 0; j < data[i].length; j++) {
+				udp.sendData(udp.addPacketTypeToData((byte) 2, data[i][j]), clients[i].getIpv4Address(), clients[i].getClientPort());
+			}
+		}
+	}
+	
+	public byte[] floatsToBytes(float[] floats) {
+		ByteBuffer byteBuffer = ByteBuffer.allocate(floats.length * 4);
+		FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
+		
+		for (float i: floats) {
+			floatBuffer.put(i);
+		}
+		return byteBuffer.array();
 	}
 	
 	public static void main(String args[]){

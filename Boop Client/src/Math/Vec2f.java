@@ -1,9 +1,10 @@
 package Math;
 
 public class Vec2f {
+	// COPIED from server file
 	
-	float x = 0;
-	float y = 0;
+	public float x = 0;
+	public float y = 0;
 	
 	public Vec2f() {
 	}

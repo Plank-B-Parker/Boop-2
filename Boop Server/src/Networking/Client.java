@@ -9,7 +9,9 @@ import java.net.Socket;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class Client extends Thread{
+import Math.Vec2f;
+
+public class Client implements Runnable{
 	
 	private Socket myClientSocket;
 	
@@ -26,10 +28,23 @@ public class Client extends Thread{
 	
 	private volatile boolean connected = false;
 	
+	Thread clientThread;
+	
+	public Vec2f topLeftCorner = new Vec2f();
+	public float width = 0.4f;
+	public float height = 0.225f;
+	public Vec2f botRightCorner = new Vec2f();
+	
+	
 	public Client() {
-		super("Client-Thread");
+		clientThread = new Thread(this, "Client-Thread");
 		
 		dataBuffer = new LinkedBlockingQueue<>(60);
+		
+		Random random = new Random();
+		
+		topLeftCorner.set(random.nextFloat() - width, random.nextFloat() - height);
+		botRightCorner.set(topLeftCorner.x + width, topLeftCorner.y + height);
 		
 	}
 	
@@ -64,7 +79,7 @@ public class Client extends Thread{
 	public void setupConnection(Socket socket) throws IOException{
 		
 		if (ID == 0) {
-			System.out.println("ID has not been set");
+			System.out.println("Client ID has not been set");
 			return;
 		}
 		
@@ -78,7 +93,7 @@ public class Client extends Thread{
 		clientPort = socket.getPort();
 		
 		connected = true;
-		start();
+		clientThread.start();
 	}
 	
 	public void disconnect() throws IOException{
@@ -86,10 +101,10 @@ public class Client extends Thread{
 			connected = false;
 			myClientSocket.close();
 			try {
-				join();
+				clientThread.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-				interrupt();
+				clientThread.interrupt();
 			}
 
 		}

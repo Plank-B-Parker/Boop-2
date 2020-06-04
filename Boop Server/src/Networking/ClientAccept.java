@@ -10,7 +10,7 @@ import java.util.Random;
 public class ClientAccept implements Runnable{
 	
 	ServerSocket serverSocket;
-	private int serverPort;
+	public static final int PORT = 23000;
 	Thread clientAcceptor;
 	static volatile boolean serverON = false;
 	
@@ -18,18 +18,17 @@ public class ClientAccept implements Runnable{
 	
 	Random random = new Random();
 	
-	public ClientAccept(int port) {
-		this.serverPort = port;
+	public ClientAccept() {
 		
 		try {
-			serverSocket = new ServerSocket(port);
+			serverSocket = new ServerSocket(PORT);
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
 		clients = new ArrayList<>(8);
-		clientAcceptor = new Thread("Client-Acceptor");
+		clientAcceptor = new Thread(this, "Client-Acceptor");
 	}
 
 	@Override
@@ -39,13 +38,14 @@ public class ClientAccept implements Runnable{
 				// creates new client with a unique ID
 				Client client = createNewClient();
 				
+				System.out.println("Block");
+				
 				// Blocking method
 				Socket socket = serverSocket.accept();
 				
-				clients.add(client);
-				
 				client.setupConnection(socket);
 				
+				clients.add(client);
 				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -59,7 +59,7 @@ public class ClientAccept implements Runnable{
 		boolean validID = true;
 		
 		do {
-			client.setIdentity((long) Math.random() * 1000);
+			client.setIdentity((long) (Math.random() * 1000));
 			for (int i = 0; i < clients.size(); i++) {
 				if (clients.get(i).getIdentity() == client.getIdentity()) {
 					validID = false;

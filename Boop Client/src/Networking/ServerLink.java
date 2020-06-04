@@ -4,15 +4,21 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import Mian.main;
 
 public class ServerLink implements Runnable{
 	
 	Socket socketTCP;
 	
-	public long ID = 0;
+	public static final int PORT = 23000;
+	
+	public long ID = -1;
 	
 	volatile boolean connected = false;
 	
@@ -23,11 +29,14 @@ public class ServerLink implements Runnable{
 	
 	public LinkedBlockingQueue<byte[]> dataBuffer;
 	
-	public ServerLink(){
+	main main;
+	
+	public ServerLink(main main){
+		this.main = main;
 		
 		dataBuffer = new LinkedBlockingQueue<>(60);
 		
-		threadTCP = new Thread("TCP-Thread");
+		threadTCP = new Thread(this, "TCP-Thread");
 	}
 
 	@Override
@@ -36,11 +45,13 @@ public class ServerLink implements Runnable{
 		
 		while(connected) {
 			try {
-				// Read data in stream and store in buffer			
-				dataBuffer.add(recieveData());
+				// Read data in stream and store in buffer	
+				byte[] data = recieveData();
+				if (data.length != 0) dataBuffer.add(data);
 				
 			} catch (IOException e) {
 				e.printStackTrace();
+				// close connection here
 			}
 		}
 	}
@@ -49,6 +60,7 @@ public class ServerLink implements Runnable{
 	
 	private byte[] recieveData() throws IOException {
 		int packetID = in.read();
+		if (packetID == -1) return new byte[0];
 		int len = in.readInt();
 		
 		byte[] data = new byte[len + 1];
@@ -84,10 +96,11 @@ public class ServerLink implements Runnable{
 		
 	}
 	
-	public void readIDfromServer() {
+	private void readIDfromServer() {
 		try {
 			Thread.sleep(1000);
 			ID = in.readLong();
+			System.out.println(ID);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		} catch (IOException e) {
@@ -95,8 +108,8 @@ public class ServerLink implements Runnable{
 		}
 	}
 	
-	public void connectToServer(String ipV4Address, int port) throws IOException{
-		socketTCP = new Socket(ipV4Address, port);
+	public void connectToServer(InetAddress ipV4Address) throws IOException{
+		socketTCP = new Socket(ipV4Address, PORT);
 		
 		in = new DataInputStream(socketTCP.getInputStream());
 		out = new DataOutputStream(socketTCP.getOutputStream());
