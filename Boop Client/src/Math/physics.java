@@ -284,6 +284,7 @@ public class physics {
 		
 		// Spawn in the small balls
 		for (int i = 0; i < parts; i++) {
+			//What to do about spawning in client?
 			Ball ball = new Ball(3);
 			ball.setRad(newRad);
 			ball.phys.mass = newMass;
