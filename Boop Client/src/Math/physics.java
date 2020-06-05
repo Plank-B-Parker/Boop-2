@@ -13,7 +13,8 @@ public class physics {
 	//If they go above 1, then loop back to -1.
 	//If they go below -1, they loop to 1. 
 	public Vec2f pos = new Vec2f();
-	public Vec2f targetPos = new Vec2f();
+	//Client sees client pos.
+	public Vec2f clientPos = new Vec2f();
 	public Vec2f vel = new Vec2f();
 	public Vec2f acc = new Vec2f();
 	public float mass;
@@ -67,12 +68,12 @@ public class physics {
 	public void update(float dt) {
 		Vec2f.increment(vel, vel, acc, dt);
 		Vec2f.increment(pos, pos, vel, dt);
-		Vec2f.increment(targetPos, targetPos, vel, dt);
+		Vec2f.increment(clientPos, clientPos, vel, dt);
 		
-		//Decrease error between target pos and pos.
+		//Decrease error between client pos and pos.
 		Vec2f posError = temp1;
-		disp(posError, targetPos, pos);
-		Vec2f.increment(pos, pos, posError, dt/timeLeftForCorrection);
+		disp(posError, pos, clientPos);
+		Vec2f.increment(clientPos, clientPos, posError, dt/timeLeftForCorrection);
 		timeLeftForCorrection -= dt;
 		if(timeLeftForCorrection <= 0)
 			timeLeftForCorrection = timeForCorrection;

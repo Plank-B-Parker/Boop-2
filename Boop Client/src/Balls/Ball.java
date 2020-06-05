@@ -32,7 +32,7 @@ public class Ball {
 		ID = (int)data[0];
 		type = (int)data[1];
 		setType(type);
-		phys.targetPos.set(data[2], data[3]);
+		phys.clientPos.set(data[2], data[3]);
 		phys.pos.set(data[2], data[3]);
 		phys.vel.set(data[4], data[5]);
 		ownerID = (int)data[6];
@@ -112,8 +112,8 @@ public class Ball {
 	}
 	
 	public void setPos(float x, float y) {
-		phys.targetPos.x = x;
-		phys.targetPos.y = y;
+		phys.pos.x = x;
+		phys.pos.y = y;
 	}
 	
 	public void setVel(float x, float y) {
