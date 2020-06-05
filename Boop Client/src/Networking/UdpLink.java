@@ -66,13 +66,9 @@ public class UdpLink implements Runnable{
 			for (int i = 0; i < numberOfEntities; i++) {
 				int offset = i * numberOfItems;
 				
-				currentBall[0] = ballData[offset];
-				currentBall[1] = ballData[offset + 1];
-				currentBall[2] = ballData[offset + 2];
-				currentBall[3] = ballData[offset + 3];
-				currentBall[4] = ballData[offset + 4];
-				currentBall[5] = ballData[offset + 5];
-				currentBall[6] = ballData[offset + 6];
+				//Put all data into currentBall.
+				for(int j = 0; j < numberOfItems; j++)
+					currentBall[j] = ballData[offset + j];
 				
 				main.balls.setBallData(currentBall);
 			}

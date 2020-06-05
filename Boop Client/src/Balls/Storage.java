@@ -40,20 +40,11 @@ public class Storage {
 	
 	public void setBallData(float data[]) {
 		int ID = (int)data[0];
-		int type = (int)data[1];
-		float x = data[2];
-		float y = data[3];
-		float velx = data[4];
-		float vely = data[5];
-		int ownerID = (int)data[6];
 		
 		boolean ballFound = false;
 		for (Ball ball: balls) {
 			if (ball.getID() == ID) {
-				ball.setPos(x, y);
-				ball.setVel(velx, vely);
-				// set OwnerID
-				ball.setType(type);
+				ball.updateBall(data);
 				ballFound = true;
 			}
 		}

@@ -95,8 +95,16 @@ public class Ball {
 	}
 	
 	
-	public void update(float dt) {
-		phys.update(dt);
+	public void updateBall(float[] data) {
+		type = (int)data[1];
+		float x = data[2];
+		float y = data[3];
+		float velx = data[4];
+		float vely = data[5];
+		ownerID = (int)data[6];
+		
+		setPos(x,y);
+		setVel(velx, vely);
 	}
 
 	public int getID() {
@@ -104,8 +112,8 @@ public class Ball {
 	}
 	
 	public void setPos(float x, float y) {
-		phys.pos.x = x;
-		phys.pos.y = y;
+		phys.targetPos.x = x;
+		phys.targetPos.y = y;
 	}
 	
 	public void setVel(float x, float y) {
