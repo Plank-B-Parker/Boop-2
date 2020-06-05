@@ -13,12 +13,16 @@ public class physics {
 	//If they go above 1, then loop back to -1.
 	//If they go below -1, they loop to 1. 
 	public Vec2f pos = new Vec2f();
+	public Vec2f targetPos = new Vec2f();
 	public Vec2f vel = new Vec2f();
 	public Vec2f acc = new Vec2f();
 	public float mass;
 	public float mag = 0.02f;
 	public float bounciness;
 	private static float dragCoefficient = 10f;
+	
+	public float timeForCorrection = 1f/15f;
+	public float timeLeftForCorrection = 1f/15f;
 	
 	public Ball owner;
 	
@@ -63,6 +67,17 @@ public class physics {
 	public void update(float dt) {
 		Vec2f.increment(vel, vel, acc, dt);
 		Vec2f.increment(pos, pos, vel, dt);
+		Vec2f.increment(targetPos, targetPos, vel, dt);
+		
+		//Decrease error between target pos and pos.
+		Vec2f posError = temp1;
+		disp(posError, targetPos, pos);
+		Vec2f.increment(pos, pos, posError, dt/timeLeftForCorrection);
+		timeLeftForCorrection -= dt;
+		if(timeLeftForCorrection <= 0)
+			timeLeftForCorrection = timeForCorrection;
+		
+		//Set pos to be between -1 and 1;
 		normalisePos();
 	}
 	

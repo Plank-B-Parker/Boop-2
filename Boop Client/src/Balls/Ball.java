@@ -11,7 +11,7 @@ import Mian.main;
 public class Ball {
 	// COPIED from server file
 	
-
+	//ID of -1 means ball is empty.
 	private int ID = -1;
 	private int type;
 	private float rad;
@@ -21,9 +21,23 @@ public class Ball {
 	//Contains physics attributes: pos, vel.
 	public physics phys = new physics(this);
 	
+	//Careful with ball creation on the client, I've set it up so that only existing balls can be created.
+	//Till we can figure out how to create balls on the client safely.
+	public Ball(float[] data) {
+		setBall(data);
+	}
 	
-	public Ball(int type) {
+	//data[] = [ID, Type, posX, posY, velX, velY, ownerID]//
+	public void setBall(float[] data) {
+		ID = (int)data[0];
+		type = (int)data[1];
 		setType(type);
+		phys.targetPos.set(data[2], data[3]);
+		phys.pos.set(data[2], data[3]);
+		phys.vel.set(data[4], data[5]);
+		ownerID = (int)data[6];
+		
+		//Determine radius from type.
 	}
 	
 	public float[] getData() {

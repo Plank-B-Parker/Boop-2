@@ -13,6 +13,8 @@ public class Storage {
 	// COPIED from server file
 
 	private List<Ball> balls = new ArrayList<>();
+	//List of slots that are empty in the balls list.
+	private Stack<Integer> emptySlots = new Stack<>();
 	private List<Ball> removedBalls = new ArrayList<>();
 	
 	public Storage() {
@@ -36,7 +38,15 @@ public class Storage {
 		
 	}
 	
-	public void setBallData(int ID, int type, float x, float y, float velx, float vely, int ownerID) {
+	public void setBallData(float data[]) {
+		int ID = (int)data[0];
+		int type = (int)data[1];
+		float x = data[2];
+		float y = data[3];
+		float velx = data[4];
+		float vely = data[5];
+		int ownerID = (int)data[6];
+		
 		boolean ballFound = false;
 		for (Ball ball: balls) {
 			if (ball.getID() == ID) {
@@ -48,12 +58,7 @@ public class Storage {
 			}
 		}
 		if (! ballFound) {
-			Ball ball = new Ball(type);
-			ball.setPos(x, y);
-			ball.setVel(velx, vely);
-			// set OwnerID
-			ball.setType(type);
-			balls.add(ball);
+			add(data);
 		}
 	}
 	
@@ -71,17 +76,23 @@ public class Storage {
 		g.drawString("energy: " + energy, 20, 200);
 	}
 	
-	public void add(Ball b) {
-		balls.add(b);
-		b.setID(balls.size()-1);
+	public void add(float data[]) {
+		//Check if there is an empty slot for this ball.
+		if(!emptySlots.isEmpty()) {
+			int index = emptySlots.pop();
+			Ball ball = balls.get(index);
+			ball.setBall(data);
+			return;
+		}
+		Ball ball = new Ball(data);
+		balls.add(ball);
 	}
-	
-	private int removedCount = 0;
+
 	public void remove(Ball b) {
-		balls.remove(b);
-		//Top secret: Classified code right here.
-		removedBalls.add(b);
-		System.out.println(removedCount++);
+		int index = balls.indexOf(b);
+		//Add an empty slot
+		emptySlots.push(index);
+		b.setID(-1);
 	}
 	
 	public Ball getBall(int ID) {
