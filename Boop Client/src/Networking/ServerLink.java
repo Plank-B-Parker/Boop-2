@@ -7,14 +7,18 @@ import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import Math.Vec2f;
 import Mian.main;
 
 public class ServerLink implements Runnable{
 	
 	Socket socketTCP;
+	private int myPort = 0;
 	
 	public static final int PORT = 23000;
 	
@@ -30,6 +34,11 @@ public class ServerLink implements Runnable{
 	public LinkedBlockingQueue<byte[]> dataBuffer;
 	
 	main main;
+	
+	public Vec2f topLeftCorner = new Vec2f();
+	public float width = 0;
+	public float height = 0;
+	public Vec2f botRightCorner = new Vec2f();
 	
 	public ServerLink(main main){
 		this.main = main;
@@ -51,8 +60,11 @@ public class ServerLink implements Runnable{
 				
 			} catch (IOException e) {
 				e.printStackTrace();
-				// close connection here
+				connected = false;
+				// close connection method here
 			}
+			
+			handleAllTCPData();
 		}
 	}
 	
@@ -61,15 +73,16 @@ public class ServerLink implements Runnable{
 	private byte[] recieveData() throws IOException {
 		int packetID = in.read();
 		if (packetID == -1) return new byte[0];
-		int len = in.readInt();
+		float len = in.readFloat();
+		System.out.println("Payload length: " + len);
 		
-		byte[] data = new byte[len + 1];
+		byte[] data = new byte[(int)len + 1];
 		data[0] = (byte) packetID;
 		
-		byte[] payload = in.readNBytes(len);
+		byte[] payload = in.readNBytes((int)len);
 		
 		for (int i = 0; i < len; i++) {
-			data[i + 1] = payload[0];
+			data[i + 1] = payload[i];
 		}
 		
 		return data;
@@ -86,8 +99,13 @@ public class ServerLink implements Runnable{
 		// Handles each type of packet. (Plan to add methods for specific data handling)
 		for (byte[] data: dataBuffer) {
 			switch (data[0]) {
-			case 5:
-				ID = data[2];
+			case 70:
+				topLeftCorner.x = convertBytestoFloat(data, 1);
+				topLeftCorner.y = convertBytestoFloat(data, 5);
+				width = convertBytestoFloat(data, 9);
+				height = convertBytestoFloat(data, 13);
+				botRightCorner.x = topLeftCorner.x + width;
+				botRightCorner.y = topLeftCorner.y + height;
 				break;
 			default:
 				return;
@@ -100,7 +118,7 @@ public class ServerLink implements Runnable{
 		try {
 			Thread.sleep(1000);
 			ID = in.readLong();
-			System.out.println(ID);
+			System.out.println("ID: " + ID);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		} catch (IOException e) {
@@ -114,12 +132,25 @@ public class ServerLink implements Runnable{
 		in = new DataInputStream(socketTCP.getInputStream());
 		out = new DataOutputStream(socketTCP.getOutputStream());
 		
+		myPort = socketTCP.getLocalPort();
+		
 		connected = true;
 		threadTCP.start();
 	}
 	
-	public static int convertBytestoInt(byte[] bytes) {
-		return  ((int) bytes[0] << 24) + ((int) bytes[1] << 16) + ((int) bytes[2] << 8) + bytes[3];
+	public static int convertBytestoInt(byte[] bytes, int start) {
+		return  ((int) bytes[start] << 24) + ((int) bytes[start + 1] << 16) + ((int) bytes[start + 2] << 8) + bytes[start + 3];
+	}
+	
+	public static float convertBytestoFloat(byte[] bytes, int start) {
+	    int intBits = 
+	    		// Bit shifting and 
+	    	      bytes[start] << 24 | (bytes[start + 1] & 0xFF) << 16 | (bytes[start + 2] & 0xFF) << 8 | (bytes[start + 3] & 0xFF);
+	    return Float.intBitsToFloat(intBits); 
+	}
+
+	public int getMyPort() {
+		return myPort;
 	}
 	
 }

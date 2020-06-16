@@ -10,6 +10,7 @@ import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import Math.Vec2f;
+import Mian.main;
 
 public class Client implements Runnable{
 	
@@ -43,7 +44,9 @@ public class Client implements Runnable{
 		
 		Random random = new Random();
 		
-		topLeftCorner.set(random.nextFloat() - width, random.nextFloat() - height);
+//		topLeftCorner.set(random.nextFloat() - width, random.nextFloat() - height);
+//		botRightCorner.set(topLeftCorner.x + width, topLeftCorner.y + height);
+		topLeftCorner.set(0.0f, 0.1f);
 		botRightCorner.set(topLeftCorner.x + width, topLeftCorner.y + height);
 		
 	}
@@ -70,7 +73,7 @@ public class Client implements Runnable{
 		byte[] payload = in.readNBytes(len);
 		
 		for (int i = 0; i < len; i++) {
-			data[i + 1] = payload[0];
+			data[i + 1] = payload[i];
 		}
 		
 		return data;
@@ -88,6 +91,19 @@ public class Client implements Runnable{
 		in = new DataInputStream(myClientSocket.getInputStream());
 		out = new DataOutputStream(myClientSocket.getOutputStream());
 		out.writeLong(ID);
+		
+		float[] clientPosData = new float[5];
+		clientPosData[1] = topLeftCorner.x;
+		clientPosData[2] = topLeftCorner.y;
+		clientPosData[3] = width;
+		clientPosData[4] = height;
+		clientPosData[0] = (float) 4 * 4; // 4 floats * 4 bytes = 16 byte payload (length)
+		
+		byte[] clientPos = main.floatsToBytes(clientPosData);
+		clientPos = UDP.addPacketTypeToData((byte) 70, clientPos);
+		
+		
+		out.write(clientPos);
 		
 		ipv4Address = socket.getInetAddress();
 		clientPort = socket.getPort();

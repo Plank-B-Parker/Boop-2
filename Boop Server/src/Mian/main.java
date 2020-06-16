@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -191,7 +192,7 @@ public class main {
 				ticks = 0;
 				frames = 0;
 				timer += 1000;
-				System.out.println(clientAcceptor.clients);
+				//System.out.println(clientAcceptor.clients);
 			}
 		}
 		
@@ -245,10 +246,10 @@ public class main {
 		}
 		g.setColor(Color.RED);
 		for (Client client: clientAcceptor.clients) {
-			int x = (int) (client.topLeftCorner.x * windowHeight);
-			int y = (int) (client.topLeftCorner.y * windowHeight);
-			int width = (int) ((client.botRightCorner.x - client.topLeftCorner.x) * windowHeight);
-			int height = (int) ((client.botRightCorner.y - client.topLeftCorner.y) * windowHeight);
+			int x = (int) ((client.topLeftCorner.x + 1) * 0.5 * windowHeight);
+			int y = (int) ((client.topLeftCorner.y + 1) * 0.5 * windowHeight);
+			int width = (int) ((client.width) * windowHeight);
+			int height = (int) ((client.height) * windowHeight);
 			
 			g.drawRect(x, y, width, height);
 		}
@@ -287,8 +288,8 @@ public class main {
 				// check if ball is in client area (simple rect)
 				if (ball.phys.pos.x + ball.getRad() >= clients[i].topLeftCorner.x &&
 					ball.phys.pos.x - ball.getRad() <= clients[i].botRightCorner.x &&
-					ball.phys.pos.y + ball.getRad() >= clients[i].topLeftCorner.y &&
-					ball.phys.pos.y - ball.getRad() <= clients[i].botRightCorner.y) {
+					ball.phys.pos.y + ball.getRad() >= clients[i].botRightCorner.y &&
+					ball.phys.pos.y - ball.getRad() <= clients[i].topLeftCorner.y) {
 						inRange.add(ball);	
 				}
 			}
@@ -322,17 +323,27 @@ public class main {
 		// Send packets to client
 		for (int i = 0; i < clients.length; i++) {
 			for (int j = 0; j < data[i].length; j++) {
-				udp.sendData(udp.addPacketTypeToData((byte) 2, data[i][j]), clients[i].getIpv4Address(), clients[i].getClientPort());
+				udp.sendData(UDP.addPacketTypeToData((byte) 2, data[i][j]), clients[i].getIpv4Address(), clients[i].getClientPort());
 			}
 		}
 	}
 	
-	public byte[] floatsToBytes(float[] floats) {
+	public static byte[] floatsToBytes(float[] floats) {
 		ByteBuffer byteBuffer = ByteBuffer.allocate(floats.length * 4);
 		FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
 		
 		for (float i: floats) {
 			floatBuffer.put(i);
+		}
+		return byteBuffer.array();
+	}
+	
+	public static byte[] intsToBytes(int[] ints) {
+		ByteBuffer byteBuffer = ByteBuffer.allocate(ints.length * 4);
+		IntBuffer intBuffer = byteBuffer.asIntBuffer();
+		
+		for (int i: ints) {
+			intBuffer.put(i);
 		}
 		return byteBuffer.array();
 	}

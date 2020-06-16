@@ -59,7 +59,7 @@ public class UdpLink implements Runnable{
 			
 			int numberOfItems = 7;
 			int bytesPerBall = 28;
-			int numberOfEntities = data.length / bytesPerBall;
+			int numberOfEntities = newData.length / bytesPerBall;
 			
 			// update balls
 			float currentBall[] = new float[numberOfItems];
@@ -67,8 +67,9 @@ public class UdpLink implements Runnable{
 				int offset = i * numberOfItems;
 				
 				//Put all data into currentBall.
-				for(int j = 0; j < numberOfItems; j++)
-					currentBall[j] = ballData[offset + j];
+				for(int j = 0; j < numberOfItems; j++) {
+						currentBall[j] = ballData[offset + j];
+					}
 				
 				main.balls.setBallData(currentBall);
 			}
@@ -93,7 +94,9 @@ public class UdpLink implements Runnable{
 		this.ipv4Address = ipv4Address;
 		
 		try {
-			this.socket = new DatagramSocket();
+			this.socket = new DatagramSocket(serverLink.getMyPort());
+			System.out.println("Server port: " + socket.getPort());
+			System.out.println("socket port" + socket.getLocalPort());
 			
 		} catch (SocketException e) {
 			e.printStackTrace();

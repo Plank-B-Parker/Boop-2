@@ -38,7 +38,7 @@ public class ClientAccept implements Runnable{
 				// creates new client with a unique ID
 				Client client = createNewClient();
 				
-				System.out.println("Block");
+				System.out.println("Blocking after new client creation");
 				
 				// Blocking method
 				Socket socket = serverSocket.accept();
