@@ -187,6 +187,10 @@ public class main {
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
+				//Remove this later:
+				System.out.println("num packets sent: " + udp.sentPackets);
+				udp.sentPackets = 0;
+				
 				TPS = ticks;
 				FPS = frames;
 				ticks = 0;
@@ -331,7 +335,7 @@ public class main {
 			}
 		}
 		
-		System.out.println("num Packets after sending: " + numPackets);
+		//System.out.println("num Packets after sending: " + numPackets);
 	}
 	
 	public static byte[] floatsToBytes(float[] floats) {

@@ -52,11 +52,13 @@ public class UDP implements Runnable{
 		}
 	}
 	
+	volatile public int sentPackets = 0;
 	public void sendData(byte[] data, InetAddress ipAddress, int port) {
 		DatagramPacket packet = new DatagramPacket(data, data.length, ipAddress, port);
 		
 		try {
 			socket.send(packet);
+			sentPackets++;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
