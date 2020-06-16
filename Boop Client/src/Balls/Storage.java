@@ -26,13 +26,13 @@ public class Storage {
 		
 		synchronized (balls) {
 			for(Ball ball: balls) {
-				ball.phys.calcAcc(balls);
+				//ball.phys.calcAcc(balls);
 			}
 		}
 		
 		synchronized (balls) {
 			for(Ball ball: balls) {
-				ball.phys.update(dt);
+				//ball.phys.update(dt);
 			}
 		}
 		
@@ -40,6 +40,10 @@ public class Storage {
 	
 	public void setBallData(float data[]) {
 		int ID = (int)data[0];
+		
+		if(ID == 0) {
+			return;
+		}
 		
 		boolean ballFound = false;
 		for (Ball ball: balls) {
@@ -55,7 +59,7 @@ public class Storage {
 	
 	public void renderBalls(Graphics2D g, float dt) {
 		float energy = 0;
-		
+		//System.out.println("num ball: " + balls.size());
 		synchronized (balls) {
 			for (Ball ball: balls) {
 				ball.render(g, dt);

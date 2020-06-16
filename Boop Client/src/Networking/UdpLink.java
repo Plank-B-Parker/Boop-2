@@ -29,6 +29,8 @@ public class UdpLink implements Runnable{
 		threadUDP = new Thread(this, "UDP-Thread");
 	}
 
+	
+	volatile public int numPackets = 0;
 	@Override
 	public void run() {
 		while (serverLink.connected) {
@@ -38,11 +40,12 @@ public class UdpLink implements Runnable{
 			
 			try {
 				socket.receive(packet);
+				handleData(packet.getData());
+				numPackets++;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			
-			handleData(packet.getData());
 			
 		}
 		

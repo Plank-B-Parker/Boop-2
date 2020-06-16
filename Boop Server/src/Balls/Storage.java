@@ -53,8 +53,23 @@ public class Storage {
 	}
 	
 	public void add(Ball b) {
+		b.setID(createNewBallID());
 		balls.add(b);
-		b.setID(balls.size()-1);
+	}
+	
+	private int createNewBallID() {
+		int ID;
+		boolean validID = true;
+		do {
+			ID = (int) (Math.random() * 100000000);
+			for (int i = 0; i < balls.size(); i++) {
+				if (balls.get(i).getID() == ID) {
+					validID = false;
+				}
+			}
+		} while (!validID); // While ID is not valid
+		
+		return ID;
 	}
 	
 	private int removedCount = 0;

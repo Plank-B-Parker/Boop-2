@@ -52,7 +52,7 @@ public class main {
 		
 		
 		
-		for(int i = 0; i < 200; i++) {
+		for(int i = 0; i < 98; i++) {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -80,7 +80,7 @@ public class main {
 		
 		
 		
-		for(int i = 0; i < 10; i++) {
+		for(int i = 0; i < 0; i++) {
 			Ball ball = new Ball(2);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -280,19 +280,21 @@ public class main {
 		// replace 10 with the max number of packets required TODO
 		byte[][][] data = new byte[clients.length][10][UDP.MAX_PAYLOAD_SIZE];
 		
-		
 		for (int i = 0; i < clients.length; i++) {
 			List<Ball> inRange = new ArrayList<>();
 			
 			for (Ball ball: allBalls) {
 				// check if ball is in client area (simple rect)
-				if (ball.phys.pos.x + ball.getRad() >= clients[i].topLeftCorner.x &&
-					ball.phys.pos.x - ball.getRad() <= clients[i].botRightCorner.x &&
-					ball.phys.pos.y + ball.getRad() >= clients[i].botRightCorner.y &&
-					ball.phys.pos.y - ball.getRad() <= clients[i].topLeftCorner.y) {
-						inRange.add(ball);	
-				}
+//				if (ball.phys.pos.x + ball.getRad() >= clients[i].topLeftCorner.x &&
+//					ball.phys.pos.x - ball.getRad() <= clients[i].botRightCorner.x &&
+//					ball.phys.pos.y - ball.getRad() <= clients[i].botRightCorner.y &&
+//					ball.phys.pos.y + ball.getRad() >= clients[i].topLeftCorner.y) {
+//						inRange.add(ball);	
+//				}
+				inRange.add(ball);	
 			}
+			
+		//	System.out.println("num balls sent: " + inRange.size());
 			
 			int numberOfPackets = (int) Math.ceil((double) inRange.size() / ballsPerPacket);
 			int floatsPerPacket = ballsPerPacket * numberOfItems;
@@ -320,12 +322,16 @@ public class main {
 			
 		}
 		
+		int numPackets = 0;
 		// Send packets to client
 		for (int i = 0; i < clients.length; i++) {
 			for (int j = 0; j < data[i].length; j++) {
 				udp.sendData(UDP.addPacketTypeToData((byte) 2, data[i][j]), clients[i].getIpv4Address(), clients[i].getClientPort());
+				numPackets++;
 			}
 		}
+		
+		System.out.println("num Packets after sending: " + numPackets);
 	}
 	
 	public static byte[] floatsToBytes(float[] floats) {

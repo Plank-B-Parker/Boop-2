@@ -89,6 +89,11 @@ public class main {
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
+				//Get rid of this later:
+				System.out.println(udpLink.numPackets);
+				udpLink.numPackets = 0;
+				
+				
 				TPS = ticks;
 				FPS = frames;
 				ticks = 0;
