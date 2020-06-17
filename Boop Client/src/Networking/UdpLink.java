@@ -6,9 +6,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 
-import Balls.Ball;
 import Mian.main;
 
 public class UdpLink implements Runnable{
@@ -18,6 +18,9 @@ public class UdpLink implements Runnable{
 	private DatagramSocket socket;
 	private InetAddress ipv4Address;
 	public static final int MAX_PAYLOAD_SIZE = 1400;
+	
+	//Contains all the packets sent from server before they are processed.
+	private ArrayList<byte[]> updateQueue = new ArrayList<>();
 	
 	public Thread threadUDP;
 	main main;
@@ -41,6 +44,7 @@ public class UdpLink implements Runnable{
 			try {
 				socket.receive(packet);
 				handleData(packet.getData());
+				//updateQueue.add(packet.getData());
 				numPackets++;
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -49,6 +53,20 @@ public class UdpLink implements Runnable{
 			
 		}
 		
+	}
+	
+	public void processServerUpdate() {
+		int numPackets = updateQueue.size();
+		
+		byte[][] updates = new byte[numPackets][];
+		updateQueue.toArray(updates);
+		updateQueue = new ArrayList<>();
+		System.out.println("num Packets: " + numPackets);
+		
+		for(int i = 0; i < numPackets; i++) {
+			byte[] data = updates[i];
+			handleData(data);
+		}
 	}
 	
 	

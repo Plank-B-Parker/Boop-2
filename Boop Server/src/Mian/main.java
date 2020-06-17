@@ -52,7 +52,7 @@ public class main {
 		
 		
 		
-		for(int i = 0; i < 98; i++) {
+		for(int i = 0; i < 200; i++) {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -80,7 +80,7 @@ public class main {
 		
 		
 		
-		for(int i = 0; i < 0; i++) {
+		for(int i = 0; i < 10; i++) {
 			Ball ball = new Ball(2);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -303,13 +303,15 @@ public class main {
 			int numberOfPackets = (int) Math.ceil((double) inRange.size() / ballsPerPacket);
 			int floatsPerPacket = ballsPerPacket * numberOfItems;
 			int packetsFilled = 0;
+			int lastBall = 0;
 			
 			float[][] floatData = new float[numberOfPackets][floatsPerPacket];
 			
 			while (packetsFilled < numberOfPackets) {
-				for (int b1 = 0, b2 = 0; b1 < ballsPerPacket && b2 < inRange.size(); b1++, b2++) {
+				for (int b1 = 0, b2 = lastBall; b1 < ballsPerPacket && b2 < inRange.size(); b1++, b2++) {
 					Ball ball = inRange.get(b2);
 					int offset = numberOfItems *  b1;
+					lastBall++;
 					
 					floatData[packetsFilled][offset] = ball.getID();
 					floatData[packetsFilled][offset + 1] = ball.getType();

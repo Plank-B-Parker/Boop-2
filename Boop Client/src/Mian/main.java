@@ -81,7 +81,7 @@ public class main {
 			
 			// Code branch occurs 30 times a second
 			if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 2) {
-				
+				udpLink.processServerUpdate();
 				// Send data and other stuff here
 			}
 			
