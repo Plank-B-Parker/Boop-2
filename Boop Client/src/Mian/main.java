@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Random;
 
-import Balls.Ball;
 import Balls.Storage;
+import Math.Vec2f;
 import Networking.ServerLink;
 import Networking.UdpLink;
 
@@ -23,6 +23,9 @@ public class main {
 	public UdpLink udpLink;
 	
 	public Storage balls = new Storage();
+	
+	public Vec2f pos;
+	
 	
 	public main() {
 		
@@ -89,10 +92,6 @@ public class main {
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
-				//Get rid of this later:
-				System.out.println(udpLink.numPackets);
-				udpLink.numPackets = 0;
-				
 				
 				TPS = ticks;
 				FPS = frames;

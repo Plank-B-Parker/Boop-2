@@ -53,6 +53,11 @@ public class Ball {
 	}
 	
 	public void render(Graphics2D g, float dt) {
+		render1(g,dt);
+	}
+	
+	//Render method below renders whole server.
+	public void renderServer(Graphics2D g, float dt) {
 		Vec2f pos = phys.pos;
 		Vec2f vel = phys.pos;
 		
@@ -60,9 +65,9 @@ public class Ball {
 		float y = pos.y;
 		
 		//Scaling for screen.
-		int X = (int)((x + 1)*0.5 * Display.WINDOW_HEIGHT);
-		int Y = (int)((y + 1)*0.5 * Display.WINDOW_HEIGHT);
-		int Rad = (int)(0.5*rad * Display.WINDOW_HEIGHT);
+		int X = (int)((x + 1)*0.5*Display.WINDOW_HEIGHT);
+		int Y = (int)((y + 1)*0.5*Display.WINDOW_HEIGHT);
+		int Rad = (int)(0.5*rad*Display.WINDOW_HEIGHT);
 		
 		//Second set of coordinates for edge.
 		int X2 = X;
@@ -83,15 +88,44 @@ public class Ball {
 		}
 		
 		g.setColor(colour);
+		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
+		if(X2 != X || Y2 != Y) {
+			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
+		}
+	}
+	
+	private Vec2f tempV1 = new Vec2f();
+	public void render1(Graphics2D g, float dt) {
+		Vec2f pos = phys.pos;
+		
+		float serverHeight = Display.screenHeightOnServer;
+		float serverWidth = Display.screenHeightOnServer*Display.aspectRatio;
+		
+		//top left of the screen on the server
+		float topLeftX = Display.centreInServer.x - serverWidth/2;
+		float topLeftY = Display.centreInServer.y - serverHeight/2;
+		
+		Vec2f topLeft = tempV1;
+		topLeft.set(topLeftX, topLeftY);
+		
+		//Ratio of each coordinate to width/height on server
+		Vec2f ratioPos = Vec2f.disp(tempV1, pos, topLeft);
+		ratioPos.x = ratioPos.x/serverWidth;
+		ratioPos.y = ratioPos.y/serverHeight;
+		
+		//Scaling for screen.
+		int X = (int)((ratioPos.x * Display.WINDOW_WIDTH));
+		int Y = (int)((ratioPos.y * Display.WINDOW_HEIGHT));
+		int Rad = (int)(0.5*rad/serverHeight * Display.WINDOW_HEIGHT);
+		
+		
+		g.setColor(colour);
 //		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
 //		if(X2 != X || Y2 != Y) {
 //			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
 //		}
 		
 		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
-		if(X2 != X || Y2 != Y) {
-			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
-		}
 	}
 	
 	
@@ -143,7 +177,7 @@ public class Ball {
 		case 3:
 			phys.mass = 1;
 			phys.bounciness = 0.1f;
-			rad = 0.1f;
+			rad = 0.01f;
 			colour = Color.ORANGE;
 			break;
 		case 4:

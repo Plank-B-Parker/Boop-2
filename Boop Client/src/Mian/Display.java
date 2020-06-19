@@ -9,11 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.InterfaceAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -24,6 +20,8 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
+import Math.Vec2f;
+
 public class Display implements ActionListener{
 	main main;
 	Canvas canvas;
@@ -33,6 +31,10 @@ public class Display implements ActionListener{
 	public static final Font COMBOBOX_FONT = new Font("Calibri", Font.PLAIN, 16);
 	public static final Font HEADER_FONT = new Font("Calibri", Font.PLAIN, 22);
 	
+	//Scaling and offset for rendering.
+	public static Vec2f centreInServer = new Vec2f(); 		//Where the centre of the screen is on the server.
+	public static float screenHeightOnServer = 0.1f*0.5f; 	//The height of the screen on the server.
+	public static final float aspectRatio = 1280f/720f;
 	
 	public Display(main main, Canvas canvas) {
 		this.main = main;

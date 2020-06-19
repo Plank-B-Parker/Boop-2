@@ -59,7 +59,6 @@ public class Storage {
 	
 	public void renderBalls(Graphics2D g, float dt) {
 		float energy = 0;
-		//System.out.println("num ball: " + balls.size());
 		synchronized (balls) {
 			for (Ball ball: balls) {
 				ball.render(g, dt);

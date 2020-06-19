@@ -50,6 +50,36 @@ public class Vec2f {
 		result.y = A.y - B.y;
 	}
 	
+	/**
+	 * Calculates minimum distance between two points on a torus/doughnut.
+	 * @param result
+	 * @param pos2
+	 * @param pos1
+	 */
+	public static Vec2f disp(Vec2f result, Vec2f pos2, Vec2f pos1) {
+		float x = pos2.x - pos1.x;
+		float y = pos2.y - pos1.y;
+		
+		if(x > 1) {
+			x = x-2;
+		}
+		if(x < -1) {
+			x = x+2;
+		}
+		
+		if(y > 1) {
+			y = y-2;
+		}
+		if(y < -1) {
+			y = y+2;
+		}
+		
+		result.x = x;
+		result.y = y;
+		
+		return result;
+	}
+	
 	/**Scales A by k and stores value in result.
 	 * No new Object created.
 	 * @param result

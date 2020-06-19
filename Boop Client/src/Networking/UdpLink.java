@@ -33,7 +33,6 @@ public class UdpLink implements Runnable{
 	}
 
 	
-	volatile public int numPackets = 0;
 	@Override
 	public void run() {
 		while (serverLink.connected) {
@@ -45,7 +44,6 @@ public class UdpLink implements Runnable{
 				socket.receive(packet);
 				handleData(packet.getData());
 				//updateQueue.add(packet.getData());
-				numPackets++;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -61,7 +59,6 @@ public class UdpLink implements Runnable{
 		byte[][] updates = new byte[numPackets][];
 		updateQueue.toArray(updates);
 		updateQueue = new ArrayList<>();
-		System.out.println("num Packets: " + numPackets);
 		
 		for(int i = 0; i < numPackets; i++) {
 			byte[] data = updates[i];

@@ -31,10 +31,8 @@ public class Client implements Runnable{
 	
 	Thread clientThread;
 	
-	public Vec2f topLeftCorner = new Vec2f();
-	public float width = 0.4f;
-	public float height = 0.225f;
-	public Vec2f botRightCorner = new Vec2f();
+	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
+	public float radOfInf =  0.5f;        	//radius of region balls are sent to client.
 	
 	
 	public Client() {
@@ -44,10 +42,7 @@ public class Client implements Runnable{
 		
 		Random random = new Random();
 		
-//		topLeftCorner.set(random.nextFloat() - width, random.nextFloat() - height);
-//		botRightCorner.set(topLeftCorner.x + width, topLeftCorner.y + height);
-		topLeftCorner.set(0.0f, 0.1f);
-		botRightCorner.set(topLeftCorner.x + width, topLeftCorner.y + height);
+		centrePos.set(0.25f, -0.25f);
 		
 	}
 	
@@ -92,12 +87,11 @@ public class Client implements Runnable{
 		out = new DataOutputStream(myClientSocket.getOutputStream());
 		out.writeLong(ID);
 		
-		float[] clientPosData = new float[5];
-		clientPosData[1] = topLeftCorner.x;
-		clientPosData[2] = topLeftCorner.y;
-		clientPosData[3] = width;
-		clientPosData[4] = height;
-		clientPosData[0] = (float) 4 * 4; // 4 floats * 4 bytes = 16 byte payload (length)
+		float[] clientPosData = new float[4];
+		clientPosData[1] = centrePos.x;
+		clientPosData[2] = centrePos.y;
+		clientPosData[3] = radOfInf;
+		clientPosData[0] = (float) 3 * 4; // 3 floats * 4 bytes = 12 byte payload (length)
 		
 		byte[] clientPos = main.floatsToBytes(clientPosData);
 		clientPos = UDP.addPacketTypeToData((byte) 70, clientPos);

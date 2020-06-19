@@ -80,7 +80,7 @@ public class main {
 		
 		
 		
-		for(int i = 0; i < 10; i++) {
+		for(int i = 0; i < 0; i++) {
 			Ball ball = new Ball(2);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -250,12 +250,11 @@ public class main {
 		}
 		g.setColor(Color.RED);
 		for (Client client: clientAcceptor.clients) {
-			int x = (int) ((client.topLeftCorner.x + 1) * 0.5 * windowHeight);
-			int y = (int) ((client.topLeftCorner.y + 1) * 0.5 * windowHeight);
-			int width = (int) ((client.width) * windowHeight);
-			int height = (int) ((client.height) * windowHeight);
+			int x = (int) ((client.centrePos.x + 1) * 0.5 * windowHeight);
+			int y = (int) ((client.centrePos.y + 1) * 0.5 * windowHeight);
+			int rad = (int) ((client.radOfInf) * windowHeight);
 			
-			g.drawRect(x, y, width, height);
+			g.drawOval(x - rad, y - rad, 2*rad, 2*rad);
 		}
 	}
 

@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import Math.Vec2f;
+import Mian.Display;
 import Mian.main;
 
 public class ServerLink implements Runnable{
@@ -34,11 +35,6 @@ public class ServerLink implements Runnable{
 	public LinkedBlockingQueue<byte[]> dataBuffer;
 	
 	main main;
-	
-	public Vec2f topLeftCorner = new Vec2f();
-	public float width = 0;
-	public float height = 0;
-	public Vec2f botRightCorner = new Vec2f();
 	
 	public ServerLink(main main){
 		this.main = main;
@@ -100,12 +96,10 @@ public class ServerLink implements Runnable{
 		for (byte[] data: dataBuffer) {
 			switch (data[0]) {
 			case 70:
-				topLeftCorner.x = convertBytestoFloat(data, 1);
-				topLeftCorner.y = convertBytestoFloat(data, 5);
-				width = convertBytestoFloat(data, 9);
-				height = convertBytestoFloat(data, 13);
-				botRightCorner.x = topLeftCorner.x + width;
-				botRightCorner.y = topLeftCorner.y + height;
+				Display.centreInServer.x = convertBytestoFloat(data, 1);
+				Display.centreInServer.y = convertBytestoFloat(data, 5);
+				Display.screenHeightOnServer = 2f*convertBytestoFloat(data, 9);
+				System.out.println("TCP WORKS");
 				break;
 			default:
 				return;
