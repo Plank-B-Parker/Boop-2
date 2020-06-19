@@ -120,11 +120,6 @@ public class Ball {
 		
 		
 		g.setColor(colour);
-//		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
-//		if(X2 != X || Y2 != Y) {
-//			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
-//		}
-		
 		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
 	}
 	

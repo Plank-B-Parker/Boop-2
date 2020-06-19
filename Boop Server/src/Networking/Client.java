@@ -32,7 +32,7 @@ public class Client implements Runnable{
 	Thread clientThread;
 	
 	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
-	public float radOfInf =  0.5f;        	//radius of region balls are sent to client.
+	public float radOfInf =  0.25f;        	//radius of region balls are sent to client.
 	
 	
 	public Client() {

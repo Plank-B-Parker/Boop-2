@@ -99,7 +99,6 @@ public class ServerLink implements Runnable{
 				Display.centreInServer.x = convertBytestoFloat(data, 1);
 				Display.centreInServer.y = convertBytestoFloat(data, 5);
 				Display.screenHeightOnServer = 2f*convertBytestoFloat(data, 9);
-				System.out.println("TCP WORKS");
 				break;
 			default:
 				return;
