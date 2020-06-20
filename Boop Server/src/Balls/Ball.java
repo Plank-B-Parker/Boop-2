@@ -109,7 +109,7 @@ public class Ball {
 		case 3:
 			phys.mass = 1;
 			phys.bounciness = 0.1f;
-			rad = 0.1f;
+			rad = 0.01f;
 			colour = Color.ORANGE;
 			break;
 		case 4:

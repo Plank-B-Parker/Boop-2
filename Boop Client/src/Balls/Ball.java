@@ -94,29 +94,32 @@ public class Ball {
 		}
 	}
 	
-	private Vec2f tempV1 = new Vec2f();
+	private static Vec2f tempV1 = new Vec2f();
+	private static Vec2f tempV2 = new Vec2f();
 	public void render1(Graphics2D g, float dt) {
 		Vec2f pos = phys.pos;
 		
-		float serverHeight = Display.screenHeightOnServer;
-		float serverWidth = Display.screenHeightOnServer*Display.aspectRatio;
+		//Width, height on server space.
+		Vec2f serverWidthHeight = tempV2;
+		serverWidthHeight.set(Display.screenHeightOnServer*Display.aspectRatio/2, Display.screenHeightOnServer/2);
 		
 		//top left of the screen on the server
-		float topLeftX = Display.centreInServer.x - serverWidth/2;
-		float topLeftY = Display.centreInServer.y - serverHeight/2;
-		
 		Vec2f topLeft = tempV1;
-		topLeft.set(topLeftX, topLeftY);
 		
+		//topLeft = centre - (width/2,height/2)
+		topLeft.set(Display.centreInServer.x, Display.centreInServer.y);
+		Vec2f.disp(topLeft, topLeft, serverWidthHeight);
+		
+		Vec2f.scale(serverWidthHeight, serverWidthHeight, 2);
 		//Ratio of each coordinate to width/height on server
 		Vec2f ratioPos = Vec2f.disp(tempV1, pos, topLeft);
-		ratioPos.x = ratioPos.x/serverWidth;
-		ratioPos.y = ratioPos.y/serverHeight;
+		ratioPos.x = ratioPos.x/serverWidthHeight.x;
+		ratioPos.y = ratioPos.y/serverWidthHeight.y;
 		
 		//Scaling for screen.
 		int X = (int)((ratioPos.x * Display.WINDOW_WIDTH));
 		int Y = (int)((ratioPos.y * Display.WINDOW_HEIGHT));
-		int Rad = (int)(0.5*rad/serverHeight * Display.WINDOW_HEIGHT);
+		int Rad = (int)(rad/serverWidthHeight.y * Display.WINDOW_HEIGHT);
 		
 		
 		g.setColor(colour);
