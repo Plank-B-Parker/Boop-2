@@ -21,6 +21,7 @@ import Balls.Ball;
 import Balls.Storage;
 import Debug.Key;
 import Debug.Keyboard;
+import Math.Bitmaths;
 import Networking.Client;
 import Networking.ClientAccept;
 import Networking.UDP;
@@ -321,7 +322,7 @@ public class main {
 					floatData[packetsFilled][offset + 6] = ball.getOwnerID();
 					
 				}
-				data[i][packetsFilled] = floatsToBytes(floatData[packetsFilled]);
+				data[i][packetsFilled] = Bitmaths.floatArrayToBytes(floatData[packetsFilled]);
 				packetsFilled++;
 			}
 			
@@ -331,32 +332,12 @@ public class main {
 		// Send packets to client
 		for (int i = 0; i < clients.length; i++) {
 			for (int j = 0; j < data[i].length; j++) {
-				udp.sendData(UDP.addPacketTypeToData((byte) 2, data[i][j]), clients[i].getIpv4Address(), clients[i].getClientPort());
+				udp.sendData(Bitmaths.pushByteToData((byte) 2, data[i][j]), clients[i].getIpv4Address(), clients[i].getClientPort());
 				numPackets++;
 			}
 		}
 		
 		//System.out.println("num Packets after sending: " + numPackets);
-	}
-	
-	public static byte[] floatsToBytes(float[] floats) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(floats.length * 4);
-		FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
-		
-		for (float i: floats) {
-			floatBuffer.put(i);
-		}
-		return byteBuffer.array();
-	}
-	
-	public static byte[] intsToBytes(int[] ints) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(ints.length * 4);
-		IntBuffer intBuffer = byteBuffer.asIntBuffer();
-		
-		for (int i: ints) {
-			intBuffer.put(i);
-		}
-		return byteBuffer.array();
 	}
 	
 	public static void main(String args[]){

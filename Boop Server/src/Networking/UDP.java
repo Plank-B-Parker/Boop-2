@@ -64,15 +64,6 @@ public class UDP implements Runnable{
 		}
 	}
 	
-	public static byte[] addPacketTypeToData(byte packetType, byte[] data) {
-		byte[] newData = new byte[data.length + 1];
-		System.arraycopy(data, 0, newData, 1, data.length);
-		
-		newData[0] = packetType;
-		
-		return newData;
-	}
-	
 	public void startUDP() {
 		threadUDP.start();
 	}

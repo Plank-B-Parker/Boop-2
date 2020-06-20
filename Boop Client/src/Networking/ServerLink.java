@@ -12,6 +12,7 @@ import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import Math.Bitmaths;
 import Math.Vec2f;
 import Mian.Display;
 import Mian.main;
@@ -96,9 +97,9 @@ public class ServerLink implements Runnable{
 		for (byte[] data: dataBuffer) {
 			switch (data[0]) {
 			case 70:
-				Display.centreInServer.x = convertBytestoFloat(data, 1);
-				Display.centreInServer.y = convertBytestoFloat(data, 5);
-				Display.screenHeightOnServer = 2f*convertBytestoFloat(data, 9);
+				Display.centreInServer.x = Bitmaths.bytesToFloat(data, 1);
+				Display.centreInServer.y = Bitmaths.bytesToFloat(data, 5);
+				Display.screenHeightOnServer = 2f*Bitmaths.bytesToFloat(data, 9);
 				break;
 			default:
 				return;
@@ -129,17 +130,6 @@ public class ServerLink implements Runnable{
 		
 		connected = true;
 		threadTCP.start();
-	}
-	
-	public static int convertBytestoInt(byte[] bytes, int start) {
-		return  ((int) bytes[start] << 24) + ((int) bytes[start + 1] << 16) + ((int) bytes[start + 2] << 8) + bytes[start + 3];
-	}
-	
-	public static float convertBytestoFloat(byte[] bytes, int start) {
-	    int intBits = 
-	    		// Bit shifting and 
-	    	      bytes[start] << 24 | (bytes[start + 1] & 0xFF) << 16 | (bytes[start + 2] & 0xFF) << 8 | (bytes[start + 3] & 0xFF);
-	    return Float.intBitsToFloat(intBits); 
 	}
 
 	public int getMyPort() {

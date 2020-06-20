@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import Math.Bitmaths;
 import Math.Vec2f;
 import Mian.main;
 
@@ -93,8 +94,8 @@ public class Client implements Runnable{
 		clientPosData[3] = radOfInf;
 		clientPosData[0] = (float) 3 * 4; // 3 floats * 4 bytes = 12 byte payload (length)
 		
-		byte[] clientPos = main.floatsToBytes(clientPosData);
-		clientPos = UDP.addPacketTypeToData((byte) 70, clientPos);
+		byte[] clientPos = Bitmaths.floatArrayToBytes(clientPosData);
+		clientPos = Bitmaths.pushByteToData((byte) 70, clientPos);
 		
 		
 		out.write(clientPos);
