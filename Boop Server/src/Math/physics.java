@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Iterator;
 
 import Balls.Ball;
+import Balls.Storage;
 
 public class physics {
 	
@@ -94,15 +95,15 @@ public class physics {
 	 * Checks and resolves collisions with all balls in the list.
 	 * @param balls: A list of balls that could be colliding.
 	 */
-	public static void checkCollision(List<Ball> balls) {
+	public static void checkCollision(Storage balls) {
 		Vec2f disp = temp1;
 		
 		synchronized (balls) {
-			for(int i = 0; i < balls.size() - 1; i++) {
-				Ball ball = balls.get(i);
+			for(int i = 0; i < balls.numBalls - 1; i++) {
+				Ball ball = balls.getBall(i);
 				//Go through every ball after current ball in list.
-				for(int j = i + 1; j < balls.size(); j++) {
-					Ball otherBall = balls.get(j);
+				for(int j = i + 1; j < balls.numBalls; j++) {
+					Ball otherBall = balls.getBall(j);
 					
 					disp(disp, otherBall.phys.pos, ball.phys.pos);
 					float minimumDistance = ball.getRad() + otherBall.getRad();
@@ -243,7 +244,7 @@ public class physics {
 	
 	private static int removeCount = 0;
 	// Makes a ball explode into a given number of parts with a given amount of extra energy
-	private void explode(List<Ball> balls, int parts, float energy) {
+	private void explode(Storage balls, int parts, float energy) {
 		
 		// Remove the ball that is exploding
 		balls.remove(owner);
@@ -284,10 +285,12 @@ public class physics {
 	}
 	
 	//Produces a shock wave that makes the balls move.
-	private static void shockwave(List<Ball> balls, Vec2f centre, float impulse) {
+	private static void shockwave(Storage balls, Vec2f centre, float impulse) {
 
 		synchronized (balls) {
-			for(Ball ball: balls) {
+			for(int i = 0; i < balls.numBalls; i++) {
+				Ball ball = balls.getBall(i);
+				
 				Vec2f disp = temp3;
 				Vec2f.sub(disp, ball.phys.pos, centre);
 				float distCubed = disp.lengthSq();

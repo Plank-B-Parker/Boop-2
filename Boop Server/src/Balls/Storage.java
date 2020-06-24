@@ -14,6 +14,8 @@ import Mian.main;
 
 public class Storage {
 
+	public int numBalls = 0;
+	
 	private List<Ball> balls = new ArrayList<>();
 	private List<Ball> removedBalls = new ArrayList<>();
 	
@@ -22,7 +24,7 @@ public class Storage {
 	}
 	
 	public void updateBalls(float dt) {
-		physics.checkCollision(balls);
+		physics.checkCollision(this);
 		
 		synchronized (balls) {
 			for(Ball ball: balls) {
@@ -55,6 +57,7 @@ public class Storage {
 	public void add(Ball b) {
 		b.setID(createNewBallID());
 		balls.add(b);
+		numBalls++;
 	}
 	
 	private int createNewBallID() {
@@ -75,13 +78,14 @@ public class Storage {
 	private int removedCount = 0;
 	public void remove(Ball b) {
 		balls.remove(b);
+		numBalls--;
 		//Top secret: Classified code right here.
 		removedBalls.add(b);
 		System.out.println(removedCount++);
 	}
 	
-	public Ball getBall(int ID) {
-		return balls.get(ID);
+	public Ball getBall(int index) {
+		return balls.get(index);
 	}
 	
 	public Collection<Ball> getBalls() {
