@@ -14,6 +14,7 @@ import Math.Vec2f;
 import Mian.main;
 
 public class Client implements Runnable{
+	public static final byte DISCONNECT_ID = -5;
 	
 	private Socket myClientSocket;
 	
@@ -55,6 +56,7 @@ public class Client implements Runnable{
 				dataBuffer.add(recieveData());
 			} catch (IOException e) {
 				e.printStackTrace();
+				disconnect();
 			}
 		}
 	}
@@ -107,10 +109,17 @@ public class Client implements Runnable{
 		clientThread.start();
 	}
 	
-	public void disconnect() throws IOException{
-		if (!myClientSocket.isClosed()) {
+	public void disconnect(){
+		if (!myClientSocket.isClosed() && connected) {
 			connected = false;
-			myClientSocket.close();
+			byte[] disconnect = {DISCONNECT_ID};
+			try {
+				out.write(disconnect);
+				myClientSocket.close();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			System.out.println("Client " + ID + " has Disconnected");
 			try {
 				clientThread.join();
 			} catch (InterruptedException e) {
@@ -135,5 +144,9 @@ public class Client implements Runnable{
 
 	public InetAddress getIpv4Address() {
 		return ipv4Address;
+	}
+	
+	public boolean isConnected() {
+		return connected;
 	}
 }

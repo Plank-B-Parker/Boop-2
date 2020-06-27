@@ -13,10 +13,10 @@ import Mian.main;
 
 public class UdpLink implements Runnable{
 	
-	private ServerLink serverLink;
 	private int port;
 	private DatagramSocket socket;
 	private InetAddress ipv4Address;
+	volatile boolean connected = false;
 	public static final int MAX_PAYLOAD_SIZE = 1400;
 	
 	//Contains all the packets sent from server before they are processed.
@@ -25,17 +25,17 @@ public class UdpLink implements Runnable{
 	public Thread threadUDP;
 	main main;
 	
-	public UdpLink(ServerLink serverLink, main main) {
-		this.serverLink = serverLink;
+	public UdpLink(main main) {
 		this.main = main;
 		
 		threadUDP = new Thread(this, "UDP-Thread");
+		threadUDP.setDaemon(true);
 	}
 
 	
 	@Override
 	public void run() {
-		while (serverLink.connected) {
+		while (connected) {
 			byte[] data = new byte[MAX_PAYLOAD_SIZE];
 			
 			DatagramPacket packet = new DatagramPacket(data, data.length);
@@ -46,6 +46,7 @@ public class UdpLink implements Runnable{
 				//updateQueue.add(packet.getData());
 			} catch (IOException e) {
 				e.printStackTrace();
+				closeConnection();
 			}
 			
 			
@@ -54,6 +55,8 @@ public class UdpLink implements Runnable{
 	}
 	
 	public void processServerUpdate() {
+		if (! connected) return;
+		
 		int numPackets = updateQueue.size();
 		
 		byte[][] updates = new byte[numPackets][];
@@ -108,18 +111,43 @@ public class UdpLink implements Runnable{
 		}
 	}
 
-	public void connectToServerUDP(InetAddress ipv4Address) {
+	public void connectToServerUDP(InetAddress ipv4Address, int localPort) {
 		this.ipv4Address = ipv4Address;
 		
 		try {
-			this.socket = new DatagramSocket(serverLink.getMyPort());
-			System.out.println("Server port: " + socket.getPort());
-			System.out.println("socket port" + socket.getLocalPort());
+			this.socket = new DatagramSocket(localPort);
+			
+			System.out.println("My port: " + socket.getLocalPort());
 			
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
 		
+		this.connected = true;
 		threadUDP.start();
+	}
+	
+	private void closeConnection() {
+		this.connected = false;
+		
+		if (! socket.isClosed()) {
+			socket.close();
+			System.out.println("closed UDP Socket");
+		} 
+	}
+	
+	public void stopRunningUDP() {
+		if (! connected && ! threadUDP.isAlive()) return;
+		
+		connected = false;
+		try {
+			closeConnection();
+			System.out.println("Thread UDP joining");
+			threadUDP.join();
+			System.out.println("ThreadUDP has been killed");
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			threadUDP.interrupt();
+		}
 	}
 }

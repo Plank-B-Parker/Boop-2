@@ -37,6 +37,8 @@ public class main {
 	
 	public static final boolean deterministicPhysics = true;
 	
+	private int Counter = 0;
+	
 	public main() {
 		
 		keyboard = new Keyboard(this);
@@ -181,7 +183,14 @@ public class main {
 			// Code branch occurs 30 times a second
 			if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 2) {
 				// Send data and other stuff here
+				
+				// check if clients are connected then remove them from list
+				clientAcceptor.checkClientsConnection();
+				
+				// send ballz
 				sendTestBalls();
+				
+				Counter++;
 			}
 			
 			render(timeAfterLastTick/1000f);

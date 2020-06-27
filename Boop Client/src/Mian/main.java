@@ -22,6 +22,8 @@ public class main {
 	public ServerLink serverLink;
 	public UdpLink udpLink;
 	
+	public volatile boolean disconnectedByServer = false;
+	
 	public Storage balls = new Storage();
 	
 	public Vec2f pos;
@@ -48,7 +50,7 @@ public class main {
 	
 	public void setupConnections() {
 		serverLink = new ServerLink(this);
-		udpLink = new UdpLink(serverLink, this);
+		udpLink = new UdpLink(this);
 	}
 	
 	private int FPS = 0;
@@ -84,6 +86,10 @@ public class main {
 			
 			// Code branch occurs 30 times a second
 			if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 2) {
+				if (disconnectedByServer) {
+					disconnectServer();
+					disconnectedByServer = false;
+				} 
 				udpLink.processServerUpdate();
 				// Send data and other stuff here
 			}
@@ -145,11 +151,13 @@ public class main {
 	
 	public void connectToServer(InetAddress ipV4Address) throws IOException {
 		serverLink.connectToServer(ipV4Address);
-		udpLink.connectToServerUDP(ipV4Address);
+		udpLink.connectToServerUDP(ipV4Address, serverLink.getMyPort());
 	}
 	
 	public void disconnectServer() {
-		
+		serverLink.stopRunningTCP();
+		udpLink.stopRunningUDP();
+		System.out.println("Successfully disconnected");
 	}
 	
 	public void startGame() {
@@ -163,7 +171,6 @@ public class main {
 	public void stopGame() {
 		// disconnect
 		running = false;
-		
 	}
 	
 	

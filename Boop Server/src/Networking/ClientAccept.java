@@ -78,18 +78,22 @@ public class ClientAccept implements Runnable{
 	
 	public void terminateServer() {
 		serverON = false;
-		try {
-			disconnectAllClients();
-		} catch (IOException e) {
-			e.printStackTrace();
+		disconnectAllClients();
+	}
+	
+	public void checkClientsConnection() {
+		Client[] localClients = clients.toArray(new Client[clients.size()]);
+		
+		for (Client client: localClients) {
+			if (! client.isConnected()) clients.remove(client);
 		}
 	}
 	
-	public void disconnectClient(Client client) throws IOException{
-		
+	public void disconnectClient(Client client){
+		client.disconnect();
 	}
 	
-	public void disconnectAllClients() throws IOException {
+	public void disconnectAllClients(){
 		for (Client client: clients) {
 			client.disconnect();
 		}

@@ -23,6 +23,7 @@ public class ServerLink implements Runnable{
 	private int myPort = 0;
 	
 	public static final int PORT = 23000;
+	public static final byte DISCONNECT_ID = -5;
 	
 	public long ID = -1;
 	
@@ -43,6 +44,7 @@ public class ServerLink implements Runnable{
 		dataBuffer = new LinkedBlockingQueue<>(60);
 		
 		threadTCP = new Thread(this, "TCP-Thread");
+		threadTCP.setDaemon(true);
 	}
 
 	@Override
@@ -54,14 +56,14 @@ public class ServerLink implements Runnable{
 				// Read data in stream and store in buffer	
 				byte[] data = recieveData();
 				if (data.length != 0) dataBuffer.add(data);
+				handleAllTCPData();
 				
 			} catch (IOException e) {
 				e.printStackTrace();
-				connected = false;
-				// close connection method here
+				closeConnection();
+				main.disconnectedByServer = true;
 			}
 			
-			handleAllTCPData();
 		}
 	}
 	
@@ -70,6 +72,7 @@ public class ServerLink implements Runnable{
 	private byte[] recieveData() throws IOException {
 		int packetID = in.read();
 		if (packetID == -1) return new byte[0];
+		if (packetID == DISCONNECT_ID) throw new IOException();
 		float len = in.readFloat();
 		System.out.println("Payload length: " + len);
 		
@@ -130,6 +133,33 @@ public class ServerLink implements Runnable{
 		
 		connected = true;
 		threadTCP.start();
+	}
+	
+	private void closeConnection(){
+		connected = false;
+		try {
+			if (! socketTCP.isClosed()) {
+				socketTCP.close();
+				System.out.println("Closed TCP socket");
+			} 
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void stopRunningTCP() {
+		if (! connected && ! threadTCP.isAlive()) return;
+		
+		connected = false;
+		try {
+			closeConnection();
+			System.out.println("ThreadTCP Joining");
+			threadTCP.join();
+			System.out.println("ThreadTCP has been killed");
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			threadTCP.interrupt();
+		}
 	}
 
 	public int getMyPort() {
