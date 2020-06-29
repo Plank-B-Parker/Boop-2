@@ -4,6 +4,9 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.MouseInfo;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferStrategy;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -21,7 +24,9 @@ import Balls.Ball;
 import Balls.Storage;
 import Debug.Key;
 import Debug.Keyboard;
+import Debug.Mouse;
 import Math.Bitmaths;
+import Math.Vec2f;
 import Networking.Client;
 import Networking.ClientAccept;
 import Networking.UDP;
@@ -32,6 +37,9 @@ public class main {
 	private Canvas canvas = new Canvas();
 	public Storage storage = new Storage();
 	public Keyboard keyboard;
+	public Mouse mouse;
+	
+	private Ball debug_ball = new Ball(1);
 	
 	BufferStrategy bs;
 	
@@ -42,18 +50,19 @@ public class main {
 	public main() {
 		
 		keyboard = new Keyboard(this);
+		mouse = new Mouse();
 		
 		//Add keyboard listener.
 		canvas.addKeyListener(keyboard);
+		canvas.addMouseMotionListener(mouse);
 		
+		storage.add(debug_ball);
 		
 		Random random;
 		
 		// If the physics is deterministic, use a a set seed. Otherwise, use a random seed.
 		if (deterministicPhysics) random = new Random(3);
 		else random = new Random();
-		
-		
 		
 		for(int i = 0; i < 200; i++) {
 			Ball ball = new Ball(1);
@@ -239,6 +248,9 @@ public class main {
 			
 			if (keyboard.isActive(Key.SPACE)) renderGrid(g2d);
 			
+			if (keyboard.isActive(Key.G)) debugBall();
+			else debug_ball.setPos(-10, -10);
+			
 			storage.renderBalls(g2d, dt);
 			
 			drawPerformance(g2d);
@@ -275,6 +287,13 @@ public class main {
 		g2d.drawString("Ticks: " + TPS, 50, 75);
 		
 		g2d.drawString("TX: " + packetsSentPerSec, 140, 50);
+	}
+	
+	private void debugBall() {
+		Vec2f pos = mouse.getMousePos();
+		float x = pos.x / windowHeight * 2 - 1;
+		float y = pos.y / windowHeight * 2 - 1;
+		debug_ball.setPos(x, y);
 	}
 	
 	private void sendTestBalls() {

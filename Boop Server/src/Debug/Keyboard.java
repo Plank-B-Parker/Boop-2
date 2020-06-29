@@ -46,6 +46,10 @@ public class Keyboard implements KeyListener{
 				handleKeyPress(Key.L);
 				break;
 				
+			case KeyEvent.VK_G:
+				handleKeyPress(Key.G);
+				break;
+				
 			default:
 				System.out.println("Not valid key");
 		}
@@ -63,6 +67,9 @@ public class Keyboard implements KeyListener{
 				break;
 			case KeyEvent.VK_L:
 				handleKeyRelease(Key.L);
+				break;
+			case KeyEvent.VK_G:
+				handleKeyRelease(Key.G);
 				break;
 				
 			default:

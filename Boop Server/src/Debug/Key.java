@@ -5,7 +5,8 @@ import java.awt.event.KeyEvent;
 public enum Key {
 	SPACE("Debug Grid", KeyEvent.VK_SPACE, false, true, -1),
 	K("Paused", KeyEvent.VK_K, false, true, -1),
-	L("Step-Forward", KeyEvent.VK_L, false, false, -1);
+	L("Step-Forward", KeyEvent.VK_L, false, false, -1),
+	G("Pointer Ball", KeyEvent.VK_G, false, true, -1);
 	
 	
 	private String name;
