@@ -274,7 +274,7 @@ public class main {
 		for (Client client: clientAcceptor.clients) {
 			int x = (int) ((client.centrePos.x + 1) * 0.5 * windowHeight);
 			int y = (int) ((client.centrePos.y + 1) * 0.5 * windowHeight);
-			int rad = (int) ((client.radOfInf) * windowHeight);
+			int rad = (int) ((client.radOfInf) * 0.5 * windowHeight);
 			
 			g.drawOval(x - rad, y - rad, 2*rad, 2*rad);
 		}

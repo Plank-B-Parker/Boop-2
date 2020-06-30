@@ -53,7 +53,7 @@ public class Ball {
 	}
 	
 	public void render(Graphics2D g, float dt) {
-		render2(g,dt);
+		render3(g,dt);
 	}
 	
 	//Render method below renders whole server.
@@ -108,7 +108,7 @@ public class Ball {
 		
 		//topLeft = centre - (width/2,height/2)
 		topLeft.set(Display.centreInServer.x, Display.centreInServer.y);
-		Vec2f.disp(topLeft, topLeft, serverWidthHeight);
+		Vec2f.sub(topLeft, topLeft, serverWidthHeight);
 		
 		Vec2f.scale(serverWidthHeight, serverWidthHeight, 2);
 		//Ratio of each coordinate to width/height on server
@@ -121,6 +121,44 @@ public class Ball {
 		int Y = (int)((ratioPos.y * Display.WINDOW_HEIGHT));
 		int Rad = (int)(rad/serverWidthHeight.y * Display.WINDOW_HEIGHT);
 		
+		
+		g.setColor(colour);
+		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
+	}
+	
+	public void render3(Graphics2D g, float dt) {
+		float posX = phys.pos.x;
+		float posY = phys.pos.y;
+		
+		float serverWidth = Display.screenHeightOnServer*Display.aspectRatio;
+		float serverHeight = Display.screenHeightOnServer;
+		
+		System.out.println("height on server:" + serverHeight);
+		
+		float topLeftX = Display.centreInServer.x - serverWidth/2;
+		float topLeftY = Display.centreInServer.y - serverHeight/2;
+		
+		float x = posX - topLeftX;
+		float y = posY - topLeftY;
+		
+		if(x > 1) {
+			x = x-2;
+		}
+		if(x < -1) {
+			x = x+2;
+		}
+		
+		if(y > 1) {
+			y = y-2;
+		}
+		if(y < -1) {
+			y = y+2;
+		}
+		
+		int X = (int)(Display.WINDOW_WIDTH*x/serverWidth);
+		int Y = (int)(Display.WINDOW_HEIGHT*y/serverHeight);
+		
+		int Rad = (int)(Display.WINDOW_HEIGHT*rad/serverHeight);
 		
 		g.setColor(colour);
 		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
