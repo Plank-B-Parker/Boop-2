@@ -53,9 +53,8 @@ public class Ball {
 	}
 	
 	//Render method below renders whole server.
-	public void renderServer(Graphics2D g, float dt) {
-		Vec2f pos = phys.pos;
-		Vec2f vel = phys.pos;
+	public void render(Graphics2D g, float dt) {
+		Vec2f pos = phys.clientPos;
 		
 		float x = pos.x;
 		float y = pos.y;
@@ -88,12 +87,50 @@ public class Ball {
 		if(X2 != X || Y2 != Y) {
 			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
 		}
+		
+		render3(g,dt);
+	}
+	
+	public void render3(Graphics2D g, float dt) {
+		Vec2f pos = phys.pos;
+		
+		float x = pos.x;
+		float y = pos.y;
+		
+		//Scaling for screen.
+		int X = (int)((x + 1)*0.5*Display.WINDOW_HEIGHT);
+		int Y = (int)((y + 1)*0.5*Display.WINDOW_HEIGHT);
+		int Rad = (int)(0.5*rad*Display.WINDOW_HEIGHT);
+		
+		//Second set of coordinates for edge.
+		int X2 = X;
+		int Y2 = Y;
+		
+		if(x + rad > 1) {
+			X2 = X - Display.WINDOW_HEIGHT;
+		}
+		else if(x - rad < -1) {
+			X2 = X + Display.WINDOW_HEIGHT;
+		}
+		
+		if(y + rad > 1) {
+			Y2 = Y - Display.WINDOW_HEIGHT;
+		}
+		else if(y - rad < -1) {
+			Y2 = Y + Display.WINDOW_HEIGHT;
+		}
+		
+		g.setColor(Color.red);
+		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
+		if(X2 != X || Y2 != Y) {
+			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
+		}
 	}
 	
 	
-	public void render(Graphics2D g, float dt) {
-		float posX = phys.pos.x;
-		float posY = phys.pos.y;
+	public void render2(Graphics2D g, float dt) {
+		float posX = phys.clientPos.x;
+		float posY = phys.clientPos.y;
 		
 		float serverWidth = Display.screenHeightOnServer*Display.aspectRatio;
 		float serverHeight = Display.screenHeightOnServer;

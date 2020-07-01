@@ -36,6 +36,9 @@ public class Client implements Runnable{
 	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
 	public float radOfInf =  0.5f;        	//radius of region balls are sent to client.
 	
+	private long lastTime = 0;					//Last time when balls were sent;
+	public float timeBetweenUpdates = 1f;	//Time between the balls being sent;
+	
 	
 	public Client() {
 		clientThread = new Thread(this, "Client-Thread");
@@ -44,7 +47,7 @@ public class Client implements Runnable{
 		
 		Random random = new Random();
 		
-		centrePos.set(-1f, -0.25f);
+		centrePos.set(0f, 0f);
 		
 	}
 	
@@ -128,6 +131,20 @@ public class Client implements Runnable{
 			}
 
 		}
+	}
+	
+	/**
+	 * Checks if client is ready for balls to be sent.
+	 * @return
+	 */
+	public boolean isReadyForUpdate() {
+		long currentTime = System.currentTimeMillis();
+		float dt = currentTime - lastTime;
+		if(dt > timeBetweenUpdates*1000) {
+			lastTime = currentTime;
+			return true;
+		}
+		return false;
 	}
 	
 	public void setIdentity(long id) {

@@ -73,10 +73,7 @@ public class physics {
 		//Decrease error between client pos and pos.
 		Vec2f posError = temp1;
 		disp(posError, pos, clientPos);
-		Vec2f.increment(clientPos, clientPos, posError, dt/timeLeftForCorrection);
-		timeLeftForCorrection -= dt;
-		if(timeLeftForCorrection <= 0)
-			timeLeftForCorrection = timeForCorrection;
+		Vec2f.increment(clientPos, clientPos, posError, dt);
 		
 		//Set pos to be between -1 and 1;
 		normalisePos();
@@ -255,6 +252,16 @@ public class physics {
 			pos.y = -1 + pos.y%1f;
 		if(pos.y < -1)
 			pos.y = 1 + pos.y%1f;
+		
+		if(clientPos.x > 1) 
+			clientPos.x = -1 + clientPos.x%1f;
+		if(clientPos.x < -1)
+			clientPos.x = 1 + clientPos.x%1f;
+		
+		if(clientPos.y > 1) 
+			clientPos.y = -1 + clientPos.y%1f;
+		if(clientPos.y < -1)
+			clientPos.y = 1 + clientPos.y%1f;
 	}
 	
 	

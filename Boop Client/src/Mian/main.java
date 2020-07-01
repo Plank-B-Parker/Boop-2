@@ -114,7 +114,7 @@ public class main {
 	}
 	
 	private void fixedUpdate(float dt) {
-		
+		balls.updateBalls(dt);
 		
 	}
 	

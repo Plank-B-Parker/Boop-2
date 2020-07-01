@@ -26,13 +26,13 @@ public class Storage {
 		
 		synchronized (balls) {
 			for(Ball ball: balls) {
-				//ball.phys.calcAcc(balls);
+				ball.phys.calcAcc(balls);
 			}
 		}
 		
 		synchronized (balls) {
 			for(Ball ball: balls) {
-				//ball.phys.update(dt);
+				ball.phys.update(dt);
 			}
 		}
 		

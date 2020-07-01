@@ -64,7 +64,7 @@ public class main {
 		if (deterministicPhysics) random = new Random(3);
 		else random = new Random();
 		
-		for(int i = 0; i < 200; i++) {
+		for(int i = 0; i < 100; i++) {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -73,26 +73,9 @@ public class main {
 			storage.add(ball);
 		}
 		
-//		for(int i = 1; i <= 10; i++) {
-//			for(int j = 1; j <= 10; j++) {
-//				Ball ball = new Ball(1);
-//				Ball ball2 = new Ball(1);
-//				Ball ball3 = new Ball(1);
-//				Ball ball4 = new Ball(1);
-//				ball.setPos(i*0.1f, j*0.1f);
-//				ball2.setPos(-i*0.1f, j*0.1f);
-//				ball3.setPos(i*0.1f, -j*0.1f);
-//				ball4.setPos(-i*0.1f, -j*0.1f);
-//				balls.add(ball);
-//				balls.add(ball2);
-//				balls.add(ball3);
-//				balls.add(ball4);
-//			}
-//		}
 		
 		
-		
-		for(int i = 0; i < 10; i++) {
+		for(int i = 0; i < 0; i++) {
 			Ball ball = new Ball(2);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -101,19 +84,19 @@ public class main {
 			storage.add(ball);
 		}
 		
-//		Ball a = new Ball(2);
-//		a.setPos(-1f, 0);
-//		a.setVel(1f, 0);
+//		Ball a = new Ball(1);
+//		a.setPos(-0.75f, 0);
+//		a.setVel(0.1f, 0);
 //		a.phys.acc.x = 0f;
-//		balls.add(a);
+//		storage.add(a);
 //		
-//		Ball b = new Ball(2);
-//		b.setPos(0.04f, 0);
+//		Ball b = new Ball(1);
+//		b.setPos(0f, 0);
 //		b.setVel(0,0);
-//		balls.add(b);
-		
-//		balls.getBall(0).setVel(0, 0.1f);
-//		balls.getBall(1).setVel(0, -0.1f);
+//		storage.add(b);
+//		
+//		storage.getBall(0).setVel(0, 0.1f);
+//		storage.getBall(1).setVel(0, -0.1f);
 		
 	}
 	
@@ -313,6 +296,11 @@ public class main {
 		byte[][][] data = new byte[clients.length][10][UDP.MAX_PAYLOAD_SIZE];
 		
 		for (int i = 0; i < clients.length; i++) {
+			
+			Client client = clients[i];
+			//Check if client is ready;
+			if(!client.isReadyForUpdate()) continue;
+			
 			List<Ball> inRange = new ArrayList<>();
 			
 			for (Ball ball: allBalls) {
