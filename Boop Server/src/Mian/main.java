@@ -75,7 +75,7 @@ public class main {
 		
 		
 		
-		for(int i = 0; i < 0; i++) {
+		for(int i = 0; i < 10; i++) {
 			Ball ball = new Ball(2);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);

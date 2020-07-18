@@ -9,22 +9,27 @@ import Mian.Display;
 import Mian.main;
 
 public class Ball {
-	// COPIED from server file
 	
-	//ID of -1 means ball is empty.
+	//ID of -1 means ball is empty, -2 means it's client created.
 	private int ID = -1;
 	private int type;
 	private float rad;
 	private Color colour;
 	private int ownerID;
 	
+	private boolean timed = true;
+	private long timeAlive = 0;
+	
 	//Contains physics attributes: pos, vel.
 	public physics phys = new physics(this);
 	
-	//Careful with ball creation on the client, I've set it up so that only existing balls can be created.
-	//Till we can figure out how to create balls on the client safely.
+	//For balls from server.
 	public Ball(float[] data) {
 		setBall(data);
+	}
+	
+	public Ball(int type) {
+		setType(type);
 	}
 	
 	//data[] = [ID, Type, posX, posY, velX, velY, ownerID]//
@@ -53,7 +58,7 @@ public class Ball {
 	}
 	
 	//Render method below renders whole server.
-	public void render(Graphics2D g, float dt) {
+	public void render2(Graphics2D g, float dt) {
 		Vec2f pos = phys.clientPos;
 		
 		float x = pos.x;
@@ -128,7 +133,7 @@ public class Ball {
 	}
 	
 	
-	public void render2(Graphics2D g, float dt) {
+	public void render(Graphics2D g, float dt) {
 		float posX = phys.clientPos.x;
 		float posY = phys.clientPos.y;
 		
@@ -162,9 +167,64 @@ public class Ball {
 		
 		g.setColor(colour);
 		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
+		
+		//render4(g,dt);
 	}
 	
+	public void render4(Graphics2D g, float dt) {
+		float posX = phys.pos.x;
+		float posY = phys.pos.y;
+		
+		float serverWidth = Display.screenHeightOnServer*Display.aspectRatio;
+		float serverHeight = Display.screenHeightOnServer;
+		
+		float x = posX - Display.centreInServer.x;
+		float y = posY - Display.centreInServer.y;
+		
+		if(x > 1) {
+			x = x-2;
+		}
+		if(x < -1) {
+			x = x+2;
+		}
+		
+		if(y > 1) {
+			y = y-2;
+		}
+		if(y < -1) {
+			y = y+2;
+		}
+		
+		x += serverWidth/2;
+		y += serverHeight/2;
+		
+		int X = (int)(Display.WINDOW_WIDTH*x/serverWidth);
+		int Y = (int)(Display.WINDOW_HEIGHT*y/serverHeight);
+		
+		int Rad = (int)(Display.WINDOW_HEIGHT*rad/serverHeight);
+		
+		g.setColor(Color.red);
+		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
+	}
 	
+	//For checking if ball hasn't been updated in a while.
+	public void updateTimer(float dt) {
+		if(timed) {
+			timeAlive += dt;
+		}
+	}
+	public void resetTimer() {
+		timeAlive = 0;
+	}
+	public float getTimeAlive() {
+		return timeAlive;
+	}
+	public void startTimer() {
+		timed = true;
+	}
+	public void stopTimer(){
+		timed = false;
+	}
 	public void updateBall(float[] data) {
 		type = (int)data[1];
 		float x = data[2];
