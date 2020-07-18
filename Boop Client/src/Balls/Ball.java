@@ -93,7 +93,7 @@ public class Ball {
 			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
 		}
 		
-		render3(g,dt);
+		//render3(g,dt);
 	}
 	
 	public void render3(Graphics2D g, float dt) {

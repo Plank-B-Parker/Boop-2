@@ -78,7 +78,7 @@ public class Storage {
 		float energy = 0;
 		synchronized (balls) {
 			for (Ball ball: balls) {
-				ball.render(g, dt);
+				ball.render2(g, dt);
 				energy += ball.phys.calcEnergy(balls);
 			}
 		}

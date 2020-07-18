@@ -304,14 +304,13 @@ public class main {
 			List<Ball> inRange = new ArrayList<>();
 			
 			for (Ball ball: allBalls) {
-				// check if ball is in client area (simple rect)
-//				if (ball.phys.pos.x + ball.getRad() >= clients[i].topLeftCorner.x &&
-//					ball.phys.pos.x - ball.getRad() <= clients[i].botRightCorner.x &&
-//					ball.phys.pos.y - ball.getRad() <= clients[i].botRightCorner.y &&
-//					ball.phys.pos.y + ball.getRad() >= clients[i].topLeftCorner.y) {
-//						inRange.add(ball);	
-//				}
-				inRange.add(ball);	
+				// check if ball is in client area (simple circ)
+				//TODO: use disp method to find differnce.
+				float dx = ball.phys.pos.x - clients[i].centrePos.x;
+				float dy = ball.phys.pos.y - clients[i].centrePos.y;
+				if (dx*dx + dy*dy <= (client.radOfInf + ball.getRad())*(client.radOfInf + ball.getRad())) {
+					inRange.add(ball);	
+				}	
 			}
 			
 		//	System.out.println("num balls sent: " + inRange.size());
