@@ -247,7 +247,7 @@ public class physics {
 	private void explode(Storage balls, int parts, float energy) {
 		
 		// Remove the ball that is exploding
-		balls.remove(owner);
+		owner.remove();
 		removeCount++;
 		System.out.println(removeCount);
 		

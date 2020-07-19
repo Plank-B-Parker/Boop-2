@@ -37,6 +37,16 @@ public class Storage {
 				ball.phys.update(dt);
 			}
 		}
+
+		List<Ball>ballsToRemove = new ArrayList<Ball>();
+		synchronized (balls) {
+			for(Ball ball: balls) {
+				if(ball.getID() != -1) {
+					if(ball.toBeRemoved()) ballsToRemove.add(ball);
+				}
+			}
+			for(Ball ball: ballsToRemove) remove(ball);
+		}
 		
 	}
 	

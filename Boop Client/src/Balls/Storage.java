@@ -46,7 +46,7 @@ public class Storage {
 			for(Ball ball: balls) {
 				if(ball.getID() != -1) {
 					ball.updateTimer(dt);
-					if(ball.getTimeAlive() > timeBeforeRemovingAbandonedBall) ballsToRemove.add(ball);
+					if(ball.getTimeAlive() > timeBeforeRemovingAbandonedBall || ball.toBeRemoved()) ballsToRemove.add(ball);
 				}
 			}
 			for(Ball ball: ballsToRemove) remove(ball);

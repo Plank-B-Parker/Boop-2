@@ -16,6 +16,8 @@ public class Ball {
 	private Color colour;
 	private int ownerID;
 	
+	private boolean toBeRemoved = false;
+
 	//Contains physics attributes: pos, vel.
 	public physics phys = new physics(this);
 		
@@ -143,6 +145,14 @@ public class Ball {
 	
 	public void setID(int ID) {
 		this.ID = ID;
+	}
+
+	public void remove() {
+		toBeRemoved = true;
+	}
+
+	public boolean toBeRemoved(){
+		return toBeRemoved;
 	}
 
 }
