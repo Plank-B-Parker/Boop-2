@@ -10,7 +10,7 @@ import java.util.Random;
 public class ClientAccept implements Runnable{
 	
 	ServerSocket serverSocket;
-	public static final int PORT = 23000;
+	public static final int PORT = 2300;
 	Thread clientAcceptor;
 	static volatile boolean serverON = false;
 	

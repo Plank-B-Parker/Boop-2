@@ -22,7 +22,7 @@ public class ServerLink implements Runnable{
 	Socket socketTCP;
 	private int myPort = 0;
 	
-	public static final int PORT = 23000;
+	public static final int PORT = 2300;
 	public static final byte DISCONNECT_ID = -5;
 	
 	public long ID = -1;
