@@ -26,7 +26,7 @@ public class Storage {
 	}
 	
 	public void updateBalls(float dt) {
-		physics.checkCollision(balls);
+		physics.checkCollision(this);
 		
 		synchronized (balls) {
 			for(Ball ball: balls) {
@@ -123,6 +123,10 @@ public class Storage {
 	
 	public Ball getBall(int index) {
 		return balls.get(index);
+	}
+	
+	public int getBallListSize() {
+		return balls.size();
 	}
 
 }

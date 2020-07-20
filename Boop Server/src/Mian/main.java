@@ -84,19 +84,16 @@ public class main {
 			storage.add(ball);
 		}
 		
-//		Ball a = new Ball(1);
+//		Ball a = new Ball(2);
 //		a.setPos(-0.75f, 0);
 //		a.setVel(0.1f, 0);
 //		a.phys.acc.x = 0f;
 //		storage.add(a);
 //		
-//		Ball b = new Ball(1);
-//		b.setPos(0f, 0);
+//		Ball b = new Ball(2);
+//		b.setPos(0.5f, 0);
 //		b.setVel(0,0);
 //		storage.add(b);
-//		
-//		storage.getBall(0).setVel(0, 0.1f);
-//		storage.getBall(1).setVel(0, -0.1f);
 		
 	}
 	
