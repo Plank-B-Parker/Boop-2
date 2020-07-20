@@ -18,7 +18,7 @@ public class Ball {
 	private int ownerID;
 	
 	private boolean timed = true;
-	private long timeAlive = 0;
+	private float timeAlive = 0;
 
 	private boolean toBeRemoved = false;
 	
@@ -44,6 +44,7 @@ public class Ball {
 		phys.vel.set(data[4], data[5]);
 		ownerID = (int)data[6];
 		
+		resetTimer();
 		//Determine radius from type.
 	}
 	
@@ -94,6 +95,11 @@ public class Ball {
 		if(X2 != X || Y2 != Y) {
 			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
 		}
+		
+		/////FOR DEBUGGING: TIMER
+//		g.setColor(Color.WHITE);
+//		g.drawString("t:" + (float)(Math.round(100*timeAlive))/100f, X, Y);
+		////////
 		
 		//render3(g,dt);
 	}
@@ -237,6 +243,8 @@ public class Ball {
 		
 		setPos(x,y);
 		setVel(velx, vely);
+		
+		resetTimer();
 	}
 
 	public int getID() {

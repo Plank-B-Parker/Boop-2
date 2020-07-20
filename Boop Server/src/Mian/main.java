@@ -308,6 +308,22 @@ public class main {
 				//TODO: use disp method to find differnce.
 				float dx = ball.phys.pos.x - clients[i].centrePos.x;
 				float dy = ball.phys.pos.y - clients[i].centrePos.y;
+
+				//Finds minimum difference in position.
+				if(dx > 1) {
+					dx = dx-2;
+				}
+				if(dx < -1) {
+					dx = dx+2;
+				}
+				
+				if(dy > 1) {
+					dy = dy-2;
+				}
+				if(dy < -1) {
+					dy = dy+2;
+				}
+				
 				if (dx*dx + dy*dy <= (client.radOfInf + ball.getRad())*(client.radOfInf + ball.getRad())) {
 					inRange.add(ball);	
 				}	

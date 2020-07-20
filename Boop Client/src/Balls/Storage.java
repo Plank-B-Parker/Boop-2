@@ -12,13 +12,14 @@ import Math.physics;
 public class Storage {
 	// COPIED from server file
 
+	public int numBalls = 0;
+	
 	private List<Ball> balls = new ArrayList<>();
-	private List<Integer> clientCreatedBalls = new ArrayList<>();
 	//List of slots that are empty in the balls list.
 	private Stack<Integer> emptySlots = new Stack<>();
 	private List<Ball> removedBalls = new ArrayList<>();
 	
-	private float timeBeforeRemovingAbandonedBall = 2;
+	private float timeBeforeRemovingAbandonedBall = 5;
 	
 	public Storage() {
 		balls = Collections.synchronizedList(balls);
@@ -65,7 +66,6 @@ public class Storage {
 		for (Ball ball: balls) {
 			if (ball.getID() == ID) {
 				ball.updateBall(data);
-				ball.resetTimer();
 				ballFound = true;
 			}
 		}
@@ -78,6 +78,7 @@ public class Storage {
 		float energy = 0;
 		synchronized (balls) {
 			for (Ball ball: balls) {
+				if(ball.getID() == -1) continue;
 				ball.render2(g, dt);
 				energy += ball.phys.calcEnergy(balls);
 			}
@@ -98,16 +99,18 @@ public class Storage {
 		}
 		Ball ball = new Ball(data);
 		balls.add(ball);
+		numBalls++;
 	}
 	
 	//Handles client created balls.
 	public void add(Ball ball) {
 		//Add index of new ball to client created balls index list.
-		clientCreatedBalls.add(balls.size());
+		emptySlots.add(balls.size());
 		
 		balls.add(ball);
 		//Client created balls have an index of -2.
 		ball.setID(-2);
+		numBalls++;
 	}
 
 	public void remove(Ball b) {
@@ -115,10 +118,11 @@ public class Storage {
 		//Add an empty slot
 		emptySlots.push(index);
 		b.setID(-1);
+		numBalls--;
 	}
 	
-	public Ball getBall(int ID) {
-		return balls.get(ID);
+	public Ball getBall(int index) {
+		return balls.get(index);
 	}
 
 }
