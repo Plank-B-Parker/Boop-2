@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
@@ -22,7 +23,7 @@ public class ServerLink implements Runnable{
 	Socket socketTCP;
 	private int myPort = 0;
 	
-	public static final int PORT = 2300;
+	public static final int SERVER_PORT = 2300;
 	public static final byte DISCONNECT_ID = -5;
 	
 	public long ID = -1;
@@ -60,8 +61,8 @@ public class ServerLink implements Runnable{
 				
 			} catch (IOException e) {
 				e.printStackTrace();
-				closeConnection();
 				main.disconnectedByServer = true;
+				closeConnection();
 			}
 			
 		}
@@ -123,13 +124,14 @@ public class ServerLink implements Runnable{
 		}
 	}
 	
-	public void connectToServer(InetAddress ipV4Address) throws IOException{
-		socketTCP = new Socket(ipV4Address, PORT);
+	public void connectToServer(InetAddress serverIP) throws IOException{
+		socketTCP = new Socket(serverIP, SERVER_PORT);
 		
 		in = new DataInputStream(socketTCP.getInputStream());
 		out = new DataOutputStream(socketTCP.getOutputStream());
 		
 		myPort = socketTCP.getLocalPort();
+		System.out.println("my TCP port: " + myPort);
 		
 		connected = true;
 		threadTCP.start();
@@ -150,11 +152,14 @@ public class ServerLink implements Runnable{
 	public void stopRunningTCP() {
 		if (! connected && ! threadTCP.isAlive()) return;
 		
+		// Kills thread if not already dead
 		connected = false;
 		try {
 			closeConnection();
 			System.out.println("ThreadTCP Joining");
+			// Wait for thread to die
 			threadTCP.join();
+			// Death confirmed
 			System.out.println("ThreadTCP has been killed");
 		} catch (InterruptedException e) {
 			e.printStackTrace();

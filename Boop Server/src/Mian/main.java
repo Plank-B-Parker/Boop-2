@@ -45,8 +45,6 @@ public class main {
 	
 	public static final boolean deterministicPhysics = true;
 	
-	private int Counter = 0;
-	
 	public main() {
 		
 		keyboard = new Keyboard(this);
@@ -129,6 +127,7 @@ public class main {
 	private int TPS = 0;
 	private int FPS = 0;
 	private int packetsSentPerSec = 0;
+	private int packetsRecievedPerSec = 0;
 	
 	public void mainLoop() {
 		running = true;
@@ -136,17 +135,18 @@ public class main {
 		final double MS_PER_UPDATE = 1000.0 / 60.0;
 		long previous = System.currentTimeMillis();
 		long timeAfterLastTick = 0;
+		long timeAfterLastTransmit = 0;
 		double timer = System.currentTimeMillis();
 		
 		int ticks = 0;
 		int frames = 0;
-		int packetsSent = 0; 
 		
 		while(running) {
 			long current = System.currentTimeMillis();
 			long elapsed = current - previous;
 			previous = current;
 			timeAfterLastTick += elapsed;
+			timeAfterLastTransmit += elapsed;
 			
 			processInputs();
 			
@@ -169,8 +169,8 @@ public class main {
 				ticks++;
 			}
 			
-			// Code branch occurs 30 times a second
-			if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 2) {
+			// 30 transmits per second
+			while (timeAfterLastTransmit >= MS_PER_UPDATE * 2) {
 				// Send data and other stuff here
 				
 				// check if clients are connected then remove them from list
@@ -179,17 +179,15 @@ public class main {
 				// send ballz
 				sendTestBalls();
 				
-				Counter++;
+				timeAfterLastTransmit -= MS_PER_UPDATE * 2;
 			}
 			
 			render(timeAfterLastTick/1000f);
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
-				//Remove this later:
-				System.out.println("num packets sent: " + udp.sentPackets);
-				udp.sentPackets = 0;
-				
+				packetsRecievedPerSec = udp.recievedPacketsUDP.getAndSet(0);
+				packetsSentPerSec = udp.sentPacketsUDP.getAndSet(0);
 				TPS = ticks;
 				FPS = frames;
 				ticks = 0;
@@ -266,7 +264,8 @@ public class main {
 		g2d.drawString("FPS: " + FPS, 50, 50);
 		g2d.drawString("Ticks: " + TPS, 50, 75);
 		
-		g2d.drawString("TX: " + packetsSentPerSec, 140, 50);
+		g2d.drawString("Tx: " + packetsSentPerSec, 140, 50);
+		g2d.drawString("Rx: " + packetsRecievedPerSec, 140, 75);
 	}
 	
 	private void debugBall() {
@@ -290,7 +289,7 @@ public class main {
 		// Store balls within a certain area around the client screen inside the Client class TODO
 		
 		// replace 10 with the max number of packets required TODO
-		byte[][][] data = new byte[clients.length][10][UDP.MAX_PAYLOAD_SIZE];
+		byte[][][] data = new byte[clients.length][10][UDP.MAX_PAYLOAD_SIZE - 1];
 		
 		for (int i = 0; i < clients.length; i++) {
 			
@@ -356,12 +355,10 @@ public class main {
 			
 		}
 		
-		int numPackets = 0;
 		// Send packets to client
 		for (int i = 0; i < clients.length; i++) {
 			for (int j = 0; j < data[i].length; j++) {
 				udp.sendData(Bitmaths.pushByteToData((byte) 2, data[i][j]), clients[i].getIpv4Address(), clients[i].getClientPort());
-				numPackets++;
 			}
 		}
 		

@@ -108,6 +108,10 @@ public class Client implements Runnable{
 		ipv4Address = socket.getInetAddress();
 		clientPort = socket.getPort();
 		
+		System.out.println("Client ID: " + ID);
+		System.out.println("Client port: " + clientPort);
+		System.out.println("Client ip: " + ipv4Address);
+		
 		connected = true;
 		clientThread.start();
 	}

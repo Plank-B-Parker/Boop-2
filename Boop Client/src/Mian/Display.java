@@ -169,11 +169,16 @@ public class Display implements ActionListener{
 			if (action.equals(Actions.START.name())) {
 				String ipV4Address = (String) ipInput.getEditor().getItem();
 				InetAddress ip = isIPValid(ipV4Address);
-				if (ip != null) {
-					main.connectToServer(ip);
-					showGame();
+				if (ip == null) {
+					showPopUp("Invalid ip address entered", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
 				}
-				else {showPopUp("Invalid ip address entered", "Error", JOptionPane.ERROR_MESSAGE);}
+				else if (! ip.isReachable(3000)) {
+					showPopUp("IP cannot be reached", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				main.connectToServer(ip);
+				showGame();
 			}
 			
 			else if (action.equals(Actions.CLOSE.name())) {

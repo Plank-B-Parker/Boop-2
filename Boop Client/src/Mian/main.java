@@ -56,6 +56,7 @@ public class main {
 	private int FPS = 0;
 	private int TPS = 0;
 	private int packetsSentPerSec = 0;
+	private int packetsRecievedPerSec = 0;
 	
 	public void mainLoop() {
 		
@@ -66,7 +67,6 @@ public class main {
 	    
 	    int ticks = 0;
 	    int frames = 0;
-	    int packetsSent = 0;
 	    
 	    while(running) {
 	    	long current = System.currentTimeMillis();
@@ -98,7 +98,8 @@ public class main {
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
-				
+				packetsRecievedPerSec = udpLink.recievedPacketsUDP.getAndSet(0);
+				packetsSentPerSec = udpLink.sentPacketsUDP.getAndSet(0);
 				TPS = ticks;
 				FPS = frames;
 				ticks = 0;
@@ -146,12 +147,14 @@ public class main {
 		g2d.drawString("fps: " + FPS, 50, 50);
 		g2d.drawString("ticks: " + TPS, 50, 75);
 		
-		g2d.drawString("tx: " + packetsSentPerSec, 140, 50);
+		g2d.drawString("Tx: " + packetsSentPerSec, 140, 50);
+		g2d.drawString("Rx: " + packetsRecievedPerSec, 140, 75);
 	}
 	
-	public void connectToServer(InetAddress ipV4Address) throws IOException {
-		serverLink.connectToServer(ipV4Address);
-		udpLink.connectToServerUDP(ipV4Address, serverLink.getMyPort());
+	// Called by the Display Class when user starts game
+	public void connectToServer(InetAddress serverIP) throws IOException {
+		serverLink.connectToServer(serverIP);
+		udpLink.connectToServerUDP(serverIP, serverLink.getMyPort());
 	}
 	
 	public void disconnectServer() {

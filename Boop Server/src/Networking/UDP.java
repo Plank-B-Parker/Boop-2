@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class UDP implements Runnable{
 	
@@ -12,6 +13,9 @@ public class UDP implements Runnable{
 	public static final int MAX_PAYLOAD_SIZE = 1400;
 	
 	Thread threadUDP;
+	
+	public AtomicInteger recievedPacketsUDP = new AtomicInteger(0);
+	public AtomicInteger sentPacketsUDP = new AtomicInteger(0);
 	
 	public UDP() {
 		
@@ -34,6 +38,7 @@ public class UDP implements Runnable{
 			
 			try {
 				socket.receive(packet);
+				recievedPacketsUDP.incrementAndGet();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -52,13 +57,12 @@ public class UDP implements Runnable{
 		}
 	}
 	
-	volatile public int sentPackets = 0;
 	public void sendData(byte[] data, InetAddress ipAddress, int port) {
 		DatagramPacket packet = new DatagramPacket(data, data.length, ipAddress, port);
 		
 		try {
 			socket.send(packet);
-			sentPackets++;
+			sentPacketsUDP.incrementAndGet();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

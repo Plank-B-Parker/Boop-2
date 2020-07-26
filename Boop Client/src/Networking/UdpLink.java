@@ -5,24 +5,27 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import Math.Bitmaths;
 import Mian.main;
 
 public class UdpLink implements Runnable{
 	
-	private int port;
 	private DatagramSocket socket;
-	private InetAddress ipv4Address;
+	private InetAddress serverIP;
 	volatile boolean connected = false;
 	public static final int MAX_PAYLOAD_SIZE = 1400;
 	
 	//Contains all the packets sent from server before they are processed.
 	private ArrayList<byte[]> updateQueue = new ArrayList<>();
 	
-	public Thread threadUDP;
+	private Thread threadUDP;
 	main main;
 	
 	public UdpLink(main main) {
@@ -31,7 +34,9 @@ public class UdpLink implements Runnable{
 		threadUDP = new Thread(this, "UDP-Thread");
 		threadUDP.setDaemon(true);
 	}
-
+	
+	public AtomicInteger recievedPacketsUDP = new AtomicInteger(0);
+	public AtomicInteger sentPacketsUDP = new AtomicInteger(0);
 	
 	@Override
 	public void run() {
@@ -39,14 +44,18 @@ public class UdpLink implements Runnable{
 			byte[] data = new byte[MAX_PAYLOAD_SIZE];
 			
 			DatagramPacket packet = new DatagramPacket(data, data.length);
-			
 			try {
 				socket.receive(packet);
+				recievedPacketsUDP.incrementAndGet();
 				handleData(packet.getData());
 				//updateQueue.add(packet.getData());
 			} catch (IOException e) {
 				e.printStackTrace();
-				closeConnection();
+				if (e.getClass() == SocketTimeoutException.class) {
+					System.out.println("UDP Socket Timeout");
+				}
+				else {closeConnection();}
+				
 			}
 			
 			
@@ -102,24 +111,36 @@ public class UdpLink implements Runnable{
 	}
 	
 	public void sendData(byte[] data) {
-		DatagramPacket packet = new DatagramPacket(data, data.length, ipv4Address, port);
+		DatagramPacket packet = new DatagramPacket(data, data.length, serverIP, ServerLink.SERVER_PORT);
 		
 		try {
 			socket.send(packet);
+			sentPacketsUDP.incrementAndGet();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void connectToServerUDP(InetAddress ipv4Address, int localPort) {
-		this.ipv4Address = ipv4Address;
+	public void connectToServerUDP(InetAddress serverIPaddress, int localPort) {
+		this.serverIP = serverIPaddress;
 		
 		try {
 			this.socket = new DatagramSocket(localPort);
+			this.socket.setSoTimeout(5000);
 			
-			System.out.println("My port: " + socket.getLocalPort());
+			System.out.println("My UDP port: " + socket.getLocalPort());
+			System.out.println("My Local IP: " + InetAddress.getLocalHost());
+			
+			byte[] test = Bitmaths.intToBytes(localPort);
+			byte[] test2 = Bitmaths.pushByteToData((byte) 2, test);
+			
+			sendData(test2);
+			sendData(test2);
 			
 		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -139,11 +160,14 @@ public class UdpLink implements Runnable{
 	public void stopRunningUDP() {
 		if (! connected && ! threadUDP.isAlive()) return;
 		
+		// Kills thread if not already dead
 		connected = false;
 		try {
 			closeConnection();
 			System.out.println("Thread UDP joining");
+			// Wait for thread to die
 			threadUDP.join();
+			// Death confirmed
 			System.out.println("ThreadUDP has been killed");
 		} catch (InterruptedException e) {
 			e.printStackTrace();

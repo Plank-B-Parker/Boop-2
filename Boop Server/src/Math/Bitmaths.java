@@ -49,11 +49,11 @@ public final class Bitmaths {
 		return ByteBuffer.wrap(bytes).asFloatBuffer().array();
 	}
 	
-	public static float bytesToInt(byte[] bytes) {
+	public static int bytesToInt(byte[] bytes) {
 		return ByteBuffer.wrap(bytes).getInt();
 	}
 	
-	public static float bytesToInt(byte[] bytes, int offset) {
+	public static int bytesToInt(byte[] bytes, int offset) {
 		if (offset > bytes.length - 4) return -1;
 		return ByteBuffer.wrap(bytes).getInt(offset);
 	}
