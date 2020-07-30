@@ -132,7 +132,7 @@ public class UdpLink implements Runnable{
 			System.out.println("My Local IP: " + InetAddress.getLocalHost());
 			
 			byte[] test = Bitmaths.intToBytes(localPort);
-			byte[] test2 = Bitmaths.pushByteToData((byte) 2, test);
+			byte[] test2 = Bitmaths.pushByteToData((byte) 10, test);
 			
 			sendData(test2);
 			sendData(test2);

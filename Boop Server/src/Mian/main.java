@@ -29,6 +29,7 @@ import Math.Bitmaths;
 import Math.Vec2f;
 import Networking.Client;
 import Networking.ClientAccept;
+import Networking.Packet;
 import Networking.UDP;
 
 public class main {
@@ -282,14 +283,16 @@ public class main {
 		System.arraycopy(clientAcceptor.clients.toArray(), 0, clients, 0, clientAcceptor.clients.size());
 		
 		// sends data to all clients at the same time
-		int bytesPerBall = 28;
-		int numberOfItems = 7;
-		int ballsPerPacket = (UDP.MAX_PAYLOAD_SIZE - 1) / bytesPerBall; // 50 @ payloadSize = 28
+		int bytesPerBall = Packet.NEW_BALLS.getMaxPayload() / Packet.NEW_BALLS.getNumObj();
+		int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
+		int ballsPerPacket = Packet.NEW_BALLS.getNumObj();
 		
 		// Store balls within a certain area around the client screen inside the Client class TODO
 		
 		// replace 10 with the max number of packets required TODO
-		byte[][][] data = new byte[clients.length][10][UDP.MAX_PAYLOAD_SIZE - 1];
+		byte[][][] data = new byte[clients.length][allBalls.size() / ballsPerPacket][UDP.MAX_PAYLOAD_SIZE - 1];
+		
+		int[] clientMaxPackets = new int[clients.length];
 		
 		for (int i = 0; i < clients.length; i++) {
 			
@@ -332,6 +335,8 @@ public class main {
 			int packetsFilled = 0;
 			int lastBall = 0;
 			
+			clientMaxPackets[i] = numberOfPackets;
+			
 			float[][] floatData = new float[numberOfPackets][floatsPerPacket];
 			
 			while (packetsFilled < numberOfPackets) {
@@ -354,15 +359,23 @@ public class main {
 			}
 			
 		}
-		
+		// data[i].length
+		// clientMaxPackets[i]
 		// Send packets to client
 		for (int i = 0; i < clients.length; i++) {
-			for (int j = 0; j < data[i].length; j++) {
+			for (int j = 0; j < clientMaxPackets[i]; j++) {
 				udp.sendData(Bitmaths.pushByteToData((byte) 2, data[i][j]), clients[i].getIpv4Address(), clients[i].getClientPort());
 			}
 		}
 		
 		//System.out.println("num Packets after sending: " + numPackets);
+	}
+	
+	// This method will send all balls the same as the above method
+	// but will send the data to the client as soon as its ready
+	// (delay between sending per client)
+	private void sendTestBalls2() {
+		
 	}
 	
 	public static void main(String args[]){

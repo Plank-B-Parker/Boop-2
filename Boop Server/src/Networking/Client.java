@@ -37,8 +37,8 @@ public class Client implements Runnable{
 	public float radOfInf =  0.5f;        	//radius of region balls are sent to client.
 	
 	private long lastTime = 0;					//Last time when balls were sent;
-	public float timeBetweenUpdates = 1f;	//Time between the balls being sent;
-	
+	private float timeBetweenUpdates = 1f;	//Time between the balls being sent;
+	private float delayUntilFirstSend = 3500;
 	
 	public Client() {
 		clientThread = new Thread(this, "Client-Thread");
@@ -143,11 +143,16 @@ public class Client implements Runnable{
 	 */
 	public boolean isReadyForUpdate() {
 		long currentTime = System.currentTimeMillis();
-		float dt = currentTime - lastTime;
-		if(dt > timeBetweenUpdates*1000) {
+		long dt = currentTime - lastTime;
+		if (lastTime == 0) {
+			lastTime = currentTime;
+			dt = currentTime - lastTime;
+		}
+		if(dt > timeBetweenUpdates*1000 && delayUntilFirstSend <= 0) {
 			lastTime = currentTime;
 			return true;
 		}
+		delayUntilFirstSend -= dt;
 		return false;
 	}
 	

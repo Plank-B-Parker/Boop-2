@@ -7,6 +7,8 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import Math.Bitmaths;
+
 public class UDP implements Runnable{
 	
 	DatagramSocket socket;
@@ -42,15 +44,17 @@ public class UDP implements Runnable{
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			
-			handleData(data);
+			handleData(packet);
 		}
 		
 	}
 	
-	private void handleData(byte[] data) {
-		switch (data[0]) {
-		case 2:
+	private void handleData(DatagramPacket packet) {
+		switch (packet.getData()[0]) {
+		case 10:
+			byte[] test = Bitmaths.intToBytes(packet.getPort());
+			byte[] test2 = Bitmaths.pushByteToData((byte) 10, test);
+			sendData(test2, packet.getAddress(), packet.getPort());
 			break;
 		default:
 			return;
