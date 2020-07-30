@@ -173,10 +173,10 @@ public class Display implements ActionListener{
 					showPopUp("Invalid ip address entered", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				else if (! ip.isReachable(3000)) {
-					showPopUp("IP cannot be reached", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
+//				else if (! ip.isReachable(3000)) {
+//					showPopUp("IP cannot be reached", "Error", JOptionPane.ERROR_MESSAGE);
+//					return;
+//				}
 				main.connectToServer(ip);
 				showGame();
 			}
