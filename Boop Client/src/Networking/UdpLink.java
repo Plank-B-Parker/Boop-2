@@ -87,8 +87,8 @@ public class UdpLink implements Runnable{
 			float[] ballData = new float[newData.length / 4];
 			ByteBuffer.wrap(newData).asFloatBuffer().get(ballData);
 			
-			int numberOfItems = 7;
-			int bytesPerBall = 28;
+			int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
+			int bytesPerBall = Packet.NEW_BALLS.getMaxPayload() / Packet.NEW_BALLS.getNumObj();
 			int numberOfEntities = newData.length / bytesPerBall;
 			
 			// update balls

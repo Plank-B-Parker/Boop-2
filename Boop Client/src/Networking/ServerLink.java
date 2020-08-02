@@ -24,7 +24,6 @@ public class ServerLink implements Runnable{
 	private int myPort = 0;
 	
 	public static final int SERVER_PORT = 2300;
-	public static final byte DISCONNECT_ID = -5;
 	
 	public long ID = -1;
 	
@@ -71,14 +70,14 @@ public class ServerLink implements Runnable{
 	// TCP stream information is set out as (byte PacketID, int length ..... rest of data
 	
 	private byte[] recieveData() throws IOException {
-		int packetID = in.read();
+		byte packetID = in.readByte();
 		if (packetID == -1) return new byte[0];
-		if (packetID == DISCONNECT_ID) throw new IOException();
+		if (packetID == Packet.DISCONNECT.getPacketID()) throw new IOException();
 		float len = in.readFloat();
 		System.out.println("Payload length: " + len);
 		
 		byte[] data = new byte[(int)len + 1];
-		data[0] = (byte) packetID;
+		data[0] = packetID;
 		
 		byte[] payload = in.readNBytes((int)len);
 		
@@ -141,6 +140,8 @@ public class ServerLink implements Runnable{
 		connected = false;
 		try {
 			if (! socketTCP.isClosed()) {
+				byte[] disconnect = {Packet.DISCONNECT.getPacketID()};
+				out.write(disconnect);
 				socketTCP.close();
 				System.out.println("Closed TCP socket");
 			} 

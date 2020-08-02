@@ -54,6 +54,7 @@ public class UDP implements Runnable{
 		case 10:
 			byte[] test = Bitmaths.intToBytes(packet.getPort());
 			byte[] test2 = Bitmaths.pushByteToData((byte) 10, test);
+			System.out.println(packet.getPort());
 			sendData(test2, packet.getAddress(), packet.getPort());
 			break;
 		default:

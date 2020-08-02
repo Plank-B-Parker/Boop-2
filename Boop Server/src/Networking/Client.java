@@ -14,7 +14,6 @@ import Math.Vec2f;
 import Mian.main;
 
 public class Client implements Runnable{
-	public static final byte DISCONNECT_ID = -5;
 	
 	private Socket myClientSocket;
 	
@@ -65,11 +64,13 @@ public class Client implements Runnable{
 	}
 	
 	public byte[] recieveData() throws IOException{
-		int packetID = in.read();
+		byte packetID = in.readByte();
+		if (packetID == Packet.DISCONNECT.getPacketID()) throw new IOException();
+		
 		int len = in.readInt();
 		
 		byte[] data = new byte[len + 1];
-		data[0] = (byte) packetID;
+		data[0] = packetID;
 		
 		byte[] payload = in.readNBytes(len);
 		
@@ -119,7 +120,7 @@ public class Client implements Runnable{
 	public void disconnect(){
 		if (!myClientSocket.isClosed() && connected) {
 			connected = false;
-			byte[] disconnect = {DISCONNECT_ID};
+			byte[] disconnect = {Packet.DISCONNECT.getPacketID()};
 			try {
 				out.write(disconnect);
 				myClientSocket.close();
