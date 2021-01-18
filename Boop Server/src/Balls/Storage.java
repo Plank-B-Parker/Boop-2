@@ -70,19 +70,9 @@ public class Storage {
 		numBalls++;
 	}
 	
+	int maxID = 0;
 	private int createNewBallID() {
-		int ID;
-		boolean validID = true;
-		do {
-			ID = (int) (Math.random() * 100000000);
-			for (int i = 0; i < balls.size(); i++) {
-				if (balls.get(i).getID() == ID) {
-					validID = false;
-				}
-			}
-		} while (!validID); // While ID is not valid
-		
-		return ID;
+		return ++maxID;
 	}
 	
 	private int removedCount = 0;
