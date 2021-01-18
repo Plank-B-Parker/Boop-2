@@ -291,8 +291,8 @@ public class main {
 		
 		// Store balls within a certain area around the client screen inside the Client class TODO
 		
-		// replace 10 with the max number of packets required TODO
-		byte[][][] data = new byte[clients.length][allBalls.size() / ballsPerPacket][UDP.MAX_PAYLOAD_SIZE - 1];
+		int packetsNo = (int) Math.ceil((float) allBalls.size() / (float) ballsPerPacket);
+		byte[][][] data = new byte[clients.length][packetsNo][UDP.MAX_PAYLOAD_SIZE - 1];
 		
 		int[] clientMaxPackets = new int[clients.length];
 		
