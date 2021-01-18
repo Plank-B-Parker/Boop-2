@@ -56,6 +56,8 @@ public class main {
 		canvas.addMouseMotionListener(mouse);
 		
 		storage.add(debug_ball);
+		//temporary
+		debug_ball.setID(-5);
 		
 		Random random;
 		

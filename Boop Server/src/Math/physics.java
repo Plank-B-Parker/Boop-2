@@ -77,10 +77,12 @@ public class physics {
 	 */
 	public void calcAcc(List<Ball> balls) {
 		acc.set(0, 0);
+		
 		//Strong mid range attractive force.
 		addAttraction(acc, balls, 1f, owner.getRad()*5, 0.5f);
 		//weaker small range repulsive force
 		addAttraction(acc, balls, -10f, owner.getRad(), owner.getRad()*5f);
+		
 		//Drag force to stop spinning.
 		addDrag(acc);
 	}
@@ -209,7 +211,8 @@ public class physics {
 		synchronized (balls) {
 			for(Ball ball: balls) {
 				//Skip if the other ball is this ball.
-				if(ball == owner) 
+				//Temporary, get rid of "ball.getID() != -5"
+				if(ball == owner || ball.getID() != -5) 
 					continue;
 				Vec2f disp = temp1;
 				disp(disp, ball.phys.pos, pos);
