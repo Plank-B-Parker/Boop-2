@@ -62,32 +62,36 @@ public class Ball {
 	
 	//Render method below renders whole server.
 	public void render2(Graphics2D g, float dt) {
+
 		Vec2f pos = phys.clientPos;
 		
-		float x = pos.x;
-		float y = pos.y;
+		float x = pos.x - Display.centreInServer.x;
+		float y = pos.y - Display.centreInServer.y;
+
+		double a = Math.sqrt(2) / 4;
+		double b = Math.sqrt(2);
 		
 		//Scaling for screen.
-		int X = (int)((x + 1)*0.5*Display.WINDOW_HEIGHT);
-		int Y = (int)((y + 1)*0.5*Display.WINDOW_HEIGHT);
-		int Rad = (int)(0.5*rad*Display.WINDOW_HEIGHT);
+		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);
+		int Y = (int)(((y + a)*b*Display.WINDOW_WIDTH) - (Display.WINDOW_WIDTH - Display.WINDOW_HEIGHT)/2);
+		int Rad = (int)(b*rad*Display.WINDOW_WIDTH);
 		
 		//Second set of coordinates for edge.
 		int X2 = X;
 		int Y2 = Y;
 		
 		if(x + rad > 1) {
-			X2 = X - Display.WINDOW_HEIGHT;
+			X2 = X - Display.WINDOW_WIDTH;
 		}
 		else if(x - rad < -1) {
-			X2 = X + Display.WINDOW_HEIGHT;
+			X2 = X + Display.WINDOW_WIDTH;
 		}
 		
 		if(y + rad > 1) {
-			Y2 = Y - Display.WINDOW_HEIGHT;
+			Y2 = Y - Display.WINDOW_WIDTH;
 		}
 		else if(y - rad < -1) {
-			Y2 = Y + Display.WINDOW_HEIGHT;
+			Y2 = Y + Display.WINDOW_WIDTH;
 		}
 		
 		g.setColor(colour);
