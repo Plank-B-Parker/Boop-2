@@ -14,16 +14,27 @@ public class VecPool{
 		
 	}
 	
+	/**
+	 * Call this method before getting any temporary variables from this class.
+	 * Ideally at start of the method where temporary variable is used.
+	 */
 	public void startOfMethod() {
 		vecsToClear.push(0);
 	}
 	
+	/**
+	 * Call this method before the return of the function where temporary variable is being used. 
+	 */
 	public void endOfMethod() {
 		cleanVecs();
 	}
 	
 	////////////////////////////////////////////
 
+	/**
+	 * Returns a temporary vector to be used.
+	 * @return a Vec2f object.
+	 */
 	public Vec2f getVec() {
 		Vec2f vec = null;
 		
