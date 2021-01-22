@@ -13,13 +13,21 @@ public class physics {
 	//If they go above 1, then loop back to -1.
 	//If they go below -1, they loop to 1. 
 	public Vec2f pos = new Vec2f();
-	//Client sees client pos.
-	public Vec2f clientPos = new Vec2f();
 	public Vec2f vel = new Vec2f();
 	public Vec2f acc = new Vec2f();
+	
+	//Client sees client pos.
+	public Vec2f clientPos = new Vec2f();
+	public Vec2f clientVel = new Vec2f();
+	public Vec2f clientAcc = new Vec2f();
+	
+	//Coefficients to control how responsive client is.
+	private float cA = 0.01f; //acceleration coefficient.
+	private float cV = -0.25f; //damping coefficient.
+	
 	public float mass;
 	public float mag = 0.02f;
-	public float bounciness;
+	public float bounciness = 1f;
 	private static float dragCoefficient = 10f;
 	
 	public float timeForCorrection = 1f/15f;
@@ -28,9 +36,7 @@ public class physics {
 	public Ball owner;
 	
 	//Temp variables to avoid object creation;
-	final private static Vec2f temp1 = new Vec2f();
-	final private static Vec2f temp2 = new Vec2f();
-	final private static Vec2f temp3 = new Vec2f();
+	static VecPool tempVecs = new VecPool();
 	
 	public physics(Ball owner) {
 		this.owner = owner;
@@ -43,10 +49,13 @@ public class physics {
 	 * @return
 	 */
 	public float calcEnergy(List<Ball> balls) {
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
 		float KE = 0.5f*mass*vel.lengthSq();
 		float PE = 0;
 		
-		Vec2f disp = temp1;
+		Vec2f disp = tempVecs.getVec();
 
 		synchronized (balls) {
 			for (Ball ball: balls) {
@@ -58,7 +67,11 @@ public class physics {
 			}
 		}
 		
+		/////////////////////////
+		tempVecs.endOfMethod();
+		
 		return PE + KE;
+		
 	}
 	
 	/**
@@ -66,17 +79,27 @@ public class physics {
 	 * @param dt: Time step.
 	 */
 	public void update(float dt) {
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
 		Vec2f.increment(vel, vel, acc, dt);
 		Vec2f.increment(pos, pos, vel, dt);
-		Vec2f.increment(clientPos, clientPos, vel, dt);
+		
+		
+		calcClientCorrAcc(dt);
+		Vec2f.increment(clientVel, clientVel, clientAcc, dt);
+		Vec2f.increment(clientPos, clientPos, clientVel, dt);
 		
 		//Decrease error between client pos and pos.
-		Vec2f posError = temp1;
-		disp(posError, pos, clientPos);
-		Vec2f.increment(clientPos, clientPos, posError, dt);
+//		Vec2f posError = tempVecs.getVec();
+//		disp(posError, pos, clientPos);
+//		Vec2f.increment(clientPos, clientPos, posError, dt);
 		
 		//Set pos to be between -1 and 1;
 		normalisePos();
+		
+		/////////////////////////
+		tempVecs.endOfMethod(); 
 	}
 	
 	//Might try a more accurate integration method if I figure it out.
@@ -96,6 +119,36 @@ public class physics {
 		addAttraction(acc, balls, -10f, owner.getRad(), owner.getRad()*5f);
 		//Drag force to stop spinning.
 		addDrag(acc);
+		
+	}
+	
+	//Uses implicit method for fun. 
+	//But is a bit more complicated, ask Ibraheem for details.
+	private void calcClientCorrAcc(float dt) {
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
+		//cl_acc = (acc - (cV/cA)*(vel - cl_vel) + (1/cA)*(pos - "cl_pos"))/(1 - dt/cA + (dt^2)*(cV/cA)) 
+
+		// -(cV/cA)*(vel - cl_vel)
+		Vec2f velTerm = Vec2f.sub(tempVecs.getVec(), vel, clientVel);
+		Vec2f.scale(velTerm, velTerm, -cV/cA);
+		
+		//(1/cA)*(pos - "cl_pos")
+		Vec2f cl_pos = Vec2f.increment(tempVecs.getVec(), clientPos, clientVel, dt);
+		Vec2f posTerm = Vec2f.sub(tempVecs.getVec(), pos, cl_pos);
+		Vec2f.scale(posTerm, posTerm, 1f/cA);
+		
+		//1/(1 - dt/cA + (dt^2)*(cV/cA)
+		float scale = 1f/(1 + dt/cA + dt*dt*cV/cA);
+		
+		//Put all terms together in clientAcc.
+		Vec2f.add(clientAcc, acc, velTerm);
+		Vec2f.add(clientAcc, clientAcc, posTerm);
+		Vec2f.scale(clientAcc, clientAcc, scale);
+		
+		///////////////////////
+		tempVecs.endOfMethod();
 	}
 	
 	//Drag force.
@@ -109,7 +162,10 @@ public class physics {
 	 * @param balls: A list of balls that could be colliding.
 	 */
 	public static void checkCollision(Storage balls) {
-		Vec2f disp = temp1;
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
+		Vec2f disp = tempVecs.getVec();
 		
 		synchronized (balls) {
 			for(int i = 0; i < balls.getBallListSize() - 1; i++) {
@@ -147,8 +203,8 @@ public class physics {
 					
 					// If the types of each ball are exploding types, explode them into 16 smaller balls with 2J of explosion power
 					if (ball.getType() == 2 && otherBall.getType() == 2) {
-						Vec2f pos1 = temp1;
-						Vec2f pos2 = temp2;
+						Vec2f pos1 = tempVecs.getVec();
+						Vec2f pos2 = tempVecs.getVec();
 						
 						pos1 = ball.phys.pos.copy();
 						pos2 = otherBall.phys.pos.copy();
@@ -162,6 +218,9 @@ public class physics {
 				}
 			}
 		}
+		
+		///////////////////////
+		tempVecs.endOfMethod();
 	}
 	
 	//Calculates impulse of a collision.
@@ -221,13 +280,15 @@ public class physics {
 	 * @param maxDist: Balls farther than this wont be affected.
 	 */
 	private void addAttraction(Vec2f acc, List<Ball> balls, float attractionStrength, float minDist, float maxDist) {
-
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
 		synchronized (balls) {
 			for(Ball ball: balls) {
 				//Skip if the other ball is this ball.
-				if(ball == owner) 
+				if(ball == owner || ball.getID() != -5) 
 					continue;
-				Vec2f disp = temp1;
+				Vec2f disp = tempVecs.getVec();
 				disp(disp, ball.phys.pos, pos);
 				
 				//If distance is less than minDist then skip.
@@ -242,6 +303,9 @@ public class physics {
 				Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
 			}
 		}
+		
+		///////////////////////
+		tempVecs.endOfMethod();
 	}
 	
 	//Sets pos components to go between -1 and 1.
@@ -271,6 +335,8 @@ public class physics {
 	private static int removeCount = 0;
 	// Makes a ball explode into a given number of parts with a given amount of extra energy
 	private void explode(Storage balls, int parts, float energy) {
+		tempVecs.startOfMethod();
+		/////////////////////////
 		
 		// Calculate the new radius and mass of each smaller ball part
 		float newRad = (float) (owner.getRad() / Math.sqrt(parts));
@@ -295,7 +361,7 @@ public class physics {
 			ball.setRad(newRad);
 			ball.phys.mass = newMass;
 			
-			Vec2f direction = temp1;
+			Vec2f direction = tempVecs.getVec();
 			direction.x = (float)Math.cos(angleDif * i);
 			direction.y = (float)Math.sin(angleDif * i);
 			
@@ -310,17 +376,22 @@ public class physics {
 		owner.remove();
 		removeCount++;
 		System.out.println(removeCount);
+		
+		/////////////////////////
+		tempVecs.endOfMethod();
 	}
 	
 	//Produces a shock wave that makes the balls move.
 	private static void shockwave(Storage balls, Vec2f centre, float impulse) {
-
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
 		synchronized (balls) {
 			for(int i = 0; i < balls.getBallListSize(); i++) {
 				Ball ball = balls.getBall(i);
 				if(ball.getID() == -1) continue;
 				
-				Vec2f disp = temp3;
+				Vec2f disp = tempVecs.getVec();
 				Vec2f.sub(disp, ball.phys.pos, centre);
 				float distCubed = disp.lengthSq();
 				distCubed *= Math.sqrt(distCubed);
@@ -328,6 +399,9 @@ public class physics {
 				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed + 0.01f));
 			}
 		}
+		
+		///////////////////////
+		tempVecs.endOfMethod();
 	}
 	
 }

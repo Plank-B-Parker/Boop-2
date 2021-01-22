@@ -17,7 +17,7 @@ public class physics {
 	public Vec2f acc = new Vec2f();
 	public float mass;
 	public float mag = 0.02f;
-	public float bounciness;
+	public float bounciness = 1f;
 	private static float dragCoefficient = 10f;
 	
 	public Ball owner;

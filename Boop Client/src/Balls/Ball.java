@@ -180,7 +180,7 @@ public class Ball {
 		g.setColor(colour);
 		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
 		
-		//render4(g,dt);
+		render4(g,dt);
 	}
 	
 	public void render4(Graphics2D g, float dt) {

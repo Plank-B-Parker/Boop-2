@@ -33,10 +33,11 @@ public class Vec2f {
 	 * @param A
 	 * @param B
 	 */
-	public static void add(Vec2f result, Vec2f A, Vec2f B) {
+	public static Vec2f add(Vec2f result, Vec2f A, Vec2f B) {
 		result.x = A.x + B.x;
 		result.y = A.y + B.y;
 		
+		return result;
 	}
 	
 	/**Subtracts A by B and stores value in result.
@@ -45,9 +46,11 @@ public class Vec2f {
 	 * @param A
 	 * @param B
 	 */
-	public static void sub(Vec2f result, Vec2f A, Vec2f B) {
+	public static Vec2f sub(Vec2f result, Vec2f A, Vec2f B) {
 		result.x = A.x - B.x;
 		result.y = A.y - B.y;
+		
+		return result;
 	}
 	
 	/**
@@ -86,9 +89,11 @@ public class Vec2f {
 	 * @param A
 	 * @param B
 	 */
-	public static void scale(Vec2f result, Vec2f A, float k) {
+	public static Vec2f scale(Vec2f result, Vec2f A, float k) {
 		result.x = A.x*k;
 		result.y = A.y*k;
+		
+		return result;
 	}
 	
 	/**
@@ -98,9 +103,11 @@ public class Vec2f {
 	 * @param B
 	 * @param k
 	 */
-	public static void increment(Vec2f result, Vec2f A, Vec2f B, float k) {
+	public static Vec2f increment(Vec2f result, Vec2f A, Vec2f B, float k) {
 		result.x = A.x + k*B.x;
 		result.y = A.y + k*B.y;
+		
+		return result;
 	}
 	
 	/**
