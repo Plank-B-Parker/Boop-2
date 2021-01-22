@@ -7,6 +7,8 @@ import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -22,13 +24,14 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
+
 import Math.Vec2f;
 
 public class Display implements ActionListener{
 	main main;
 	Canvas canvas;
 	JComboBox<String> ipInput;
-	public static final int WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
+	public static int WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
 	public static final Font TEXT_FONT = new Font("Calibri", Font.PLAIN, 18);
 	public static final Font COMBOBOX_FONT = new Font("Calibri", Font.PLAIN, 16);
 	public static final Font HEADER_FONT = new Font("Calibri", Font.PLAIN, 22);
@@ -36,7 +39,7 @@ public class Display implements ActionListener{
 	//Scaling and offset for rendering.
 	public static Vec2f centreInServer = new Vec2f(); 		//Where the centre of the screen is on the server.
 	public static float screenHeightOnServer = 0f; 	//The height of the screen on the server.
-	public static final float aspectRatio = WINDOW_WIDTH/WINDOW_HEIGHT;
+	public static float aspectRatio = WINDOW_WIDTH/WINDOW_HEIGHT;
 	
 	public Display(main main, Canvas canvas) {
 		this.main = main;
@@ -55,6 +58,14 @@ public class Display implements ActionListener{
 	
 	public void createWindow() {
 		JFrame frame = new JFrame("Client");
+
+		frame.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent componentEvent) {
+				WINDOW_HEIGHT = frame.getHeight();
+				WINDOW_WIDTH = frame.getWidth();
+				aspectRatio = WINDOW_WIDTH/WINDOW_HEIGHT;
+			}
+		});
 		
 		canvas.setSize(1920, 1080);
 		canvas.setBackground(Color.BLACK);
