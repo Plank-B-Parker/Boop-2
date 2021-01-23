@@ -1,20 +1,20 @@
-package Debug;
+package debug;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.EnumMap;
 import java.util.Map;
 
-import Mian.main;
+import main.Main;
 
 public class Keyboard implements KeyListener{
-	public main main;
+	public Main main;
 	
 	private Map<Key, Boolean> keymap = new EnumMap<>(Key.class);
 	private Map<Key, Boolean> keyReleased = new EnumMap<>(Key.class);
 	private Map<Key, Integer> keyCountMap = new EnumMap<>(Key.class);
 	
-	public Keyboard(main main) {
+	public Keyboard(Main main) {
 		this.main = main;
 		setupKeyMaps();
 	}

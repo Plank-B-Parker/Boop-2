@@ -1,4 +1,4 @@
-package Networking;
+package networking;
 
 public enum Packet {
 	NEW_BALLS((byte) 2, 1372, 49, 7),

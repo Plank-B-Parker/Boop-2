@@ -1,4 +1,4 @@
-package Mian;
+package main;
 
 import java.awt.Canvas;
 import java.awt.Color;
@@ -21,20 +21,19 @@ import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 
+import balls.Ball;
+import balls.Storage;
+import debug.Key;
+import debug.Keyboard;
+import debug.Mouse;
+import math.Bitmaths;
+import math.Vec2f;
+import networking.Client;
+import networking.ClientAccept;
+import networking.Packet;
+import networking.UDP;
 
-import Balls.Ball;
-import Balls.Storage;
-import Debug.Key;
-import Debug.Keyboard;
-import Debug.Mouse;
-import Math.Bitmaths;
-import Math.Vec2f;
-import Networking.Client;
-import Networking.ClientAccept;
-import Networking.Packet;
-import Networking.UDP;
-
-public class main {
+public class Main {
 	
 	public static final int windowWidth = 1280, windowHeight = 720;
 	private Canvas canvas = new Canvas();
@@ -48,7 +47,7 @@ public class main {
 	
 	public static final boolean deterministicPhysics = true;
 	
-	public main() {
+	public Main() {
 		
 		keyboard = new Keyboard(this);
 		mouse = new Mouse();
@@ -393,7 +392,7 @@ public class main {
 		Thread t = Thread.currentThread();
 		t.setName("Main-Loop");
 		
-		main main = new main();
+		Main main = new Main();
 		main.createDisplay();
 		main.setupConnections();
 		main.mainLoop();

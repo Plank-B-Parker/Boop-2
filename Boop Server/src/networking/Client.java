@@ -1,4 +1,4 @@
-package Networking;
+package networking;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -9,9 +9,9 @@ import java.net.Socket;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import Math.Bitmaths;
-import Math.Vec2f;
-import Mian.main;
+import main.Main;
+import math.Bitmaths;
+import math.Vec2f;
 
 public class Client implements Runnable{
 	

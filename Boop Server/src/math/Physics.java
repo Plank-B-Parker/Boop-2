@@ -1,13 +1,14 @@
-package Math;
+package math;
 
 import java.awt.Color;
 import java.util.List;
+
+import balls.Ball;
+import balls.Storage;
+
 import java.util.Iterator;
 
-import Balls.Ball;
-import Balls.Storage;
-
-public class physics {
+public class Physics {
 	
 	//For pos, x and y go between -1 and 1.
 	//If they go above 1, then loop back to -1.
@@ -27,7 +28,7 @@ public class physics {
 	final private static Vec2f temp2 = new Vec2f();
 	final private static Vec2f temp3 = new Vec2f();
 	
-	public physics(Ball owner) {
+	public Physics(Ball owner) {
 		this.owner = owner;
 	}
 	

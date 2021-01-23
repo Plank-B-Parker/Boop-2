@@ -1,4 +1,4 @@
-package Networking;
+package networking;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -7,7 +7,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import Math.Bitmaths;
+import math.Bitmaths;
 
 public class UDP implements Runnable{
 	

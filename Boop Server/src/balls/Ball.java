@@ -1,12 +1,12 @@
-package Balls;
+package balls;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.List;
 
-import Math.Vec2f;
-import Math.physics;
-import Mian.main;
+import main.Main;
+import math.Vec2f;
+import math.Physics;
 
 public class Ball {
 
@@ -19,7 +19,7 @@ public class Ball {
 	private boolean toBeRemoved = false;
 
 	//Contains physics attributes: pos, vel.
-	public physics phys = new physics(this);
+	public Physics phys = new Physics(this);
 		
 	
 	public Ball(int type) {
@@ -46,26 +46,26 @@ public class Ball {
 		float y = pos.y;
 		
 		//Scaling for screen.
-		int X = (int)((x + 1)*0.5*main.windowHeight);
-		int Y = (int)((y + 1)*0.5*main.windowHeight);
-		int Rad = (int)(0.5*rad*main.windowHeight);
+		int X = (int)((x + 1)*0.5*Main.windowHeight);
+		int Y = (int)((y + 1)*0.5*Main.windowHeight);
+		int Rad = (int)(0.5*rad*Main.windowHeight);
 		
 		//Second set of coordinates for edge.
 		int X2 = X;
 		int Y2 = Y;
 		
 		if(x + rad > 1) {
-			X2 = X - main.windowHeight;
+			X2 = X - Main.windowHeight;
 		}
 		else if(x - rad < -1) {
-			X2 = X + main.windowHeight;
+			X2 = X + Main.windowHeight;
 		}
 		
 		if(y + rad > 1) {
-			Y2 = Y - main.windowHeight;
+			Y2 = Y - Main.windowHeight;
 		}
 		else if(y - rad < -1) {
-			Y2 = Y + main.windowHeight;
+			Y2 = Y + Main.windowHeight;
 		}
 		
 		g.setColor(colour);

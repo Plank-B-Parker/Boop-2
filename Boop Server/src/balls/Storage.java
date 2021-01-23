@@ -1,4 +1,4 @@
-package Balls;
+package balls;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -8,9 +8,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import Math.Vec2f;
-import Math.physics;
-import Mian.main;
+import main.Main;
+import math.Vec2f;
+import math.Physics;
 
 public class Storage {
 
@@ -24,7 +24,7 @@ public class Storage {
 	}
 	
 	public void updateBalls(float dt) {
-		physics.checkCollision(this);
+		Physics.checkCollision(this);
 		
 		synchronized (balls) {
 			for(Ball ball: balls) {

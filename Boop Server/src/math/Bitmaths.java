@@ -1,4 +1,4 @@
-package Math;
+package math;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;

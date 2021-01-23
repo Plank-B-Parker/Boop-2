@@ -1,9 +1,9 @@
-package Debug;
+package debug;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 
-import Math.Vec2f;
+import math.Vec2f;
 
 public class Mouse implements MouseMotionListener{
 	
