@@ -33,7 +33,6 @@ public class Keyboard implements KeyListener{
 	public void keyPressed(KeyEvent e) {
 		switch(e.getKeyCode()) {
 			case KeyEvent.VK_W:
-			System.out.println("WWWWWWWWWWWWWWWW");
 				handleKeyPress(Key.W);
 				break;
 				
@@ -59,7 +58,6 @@ public class Keyboard implements KeyListener{
 	public void keyReleased(KeyEvent e) {
 		switch(e.getKeyCode()) {
 			case KeyEvent.VK_W:
-				System.out.println("wwwwwwwwwwwwwwwwww");
 				handleKeyRelease(Key.W);
 				break;
 			case KeyEvent.VK_A:
