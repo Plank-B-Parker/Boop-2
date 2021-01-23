@@ -1,11 +1,11 @@
-package Balls;
+package balls;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-import Math.Vec2f;
-import Math.physics;
-import Mian.main;
+import main.Main;
+import math.Vec2f;
+import math.Physics;
 import display.Display;
 
 public class Ball {
@@ -23,7 +23,7 @@ public class Ball {
 	private boolean toBeRemoved = false;
 	
 	//Contains physics attributes: pos, vel.
-	public physics phys = new physics(this);
+	public Physics phys = new Physics(this);
 	
 	//For balls from server.
 	public Ball(float[] data) {

@@ -9,9 +9,9 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 
-import Mian.Actions;
+import main.Actions;
 
-public class StartMenu extends card{
+public class StartMenu extends Card{
 
 	/**
 	 * 

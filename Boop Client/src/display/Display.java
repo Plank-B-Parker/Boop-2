@@ -24,13 +24,12 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
-
-import Math.Vec2f;
-import Mian.Actions;
-import Mian.main;
+import main.Actions;
+import main.Main;
+import math.Vec2f;
 
 public class Display implements ActionListener{
-	main main;
+	Main main;
 	Canvas canvas;
 	JComboBox<String> ipInput;
 	public static int WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
@@ -43,7 +42,7 @@ public class Display implements ActionListener{
 	public static float screenHeightOnServer = 0f; 	//The height of the screen on the server.
 	public static float aspectRatio = WINDOW_WIDTH/WINDOW_HEIGHT;
 	
-	public Display(main main, Canvas canvas) {
+	public Display(Main main, Canvas canvas) {
 		this.main = main;
 		this.canvas = canvas;
 		

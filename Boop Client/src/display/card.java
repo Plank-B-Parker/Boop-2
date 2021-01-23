@@ -6,7 +6,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
-public abstract class card extends JPanel{
+public abstract class Card extends JPanel{
 
 	Display display;
 	
@@ -15,7 +15,7 @@ public abstract class card extends JPanel{
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public card(Display display) {
+	public Card(Display display) {
 		init(display);
 		this.display = display;
 	}

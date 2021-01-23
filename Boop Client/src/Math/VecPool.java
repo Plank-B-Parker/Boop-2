@@ -1,4 +1,4 @@
-package Math;
+package math;
 
 import java.util.ArrayList;
 import java.util.Stack;

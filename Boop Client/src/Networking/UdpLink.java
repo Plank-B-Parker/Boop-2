@@ -1,4 +1,4 @@
-package Networking;
+package networking;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import Math.Bitmaths;
-import Mian.main;
+import main.Main;
+import math.Bitmaths;
 
 public class UdpLink implements Runnable{
 	
@@ -26,9 +26,9 @@ public class UdpLink implements Runnable{
 	private ArrayList<byte[]> updateQueue = new ArrayList<>();
 	
 	private Thread threadUDP;
-	main main;
+	Main main;
 	
-	public UdpLink(main main) {
+	public UdpLink(Main main) {
 		this.main = main;
 		
 		threadUDP = new Thread(this, "UDP-Thread");

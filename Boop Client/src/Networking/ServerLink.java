@@ -1,4 +1,4 @@
-package Networking;
+package networking;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -13,9 +13,9 @@ import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import Math.Bitmaths;
-import Math.Vec2f;
-import Mian.main;
+import main.Main;
+import math.Bitmaths;
+import math.Vec2f;
 import display.Display;
 
 public class ServerLink implements Runnable{
@@ -36,9 +36,9 @@ public class ServerLink implements Runnable{
 	
 	public LinkedBlockingQueue<byte[]> dataBuffer;
 	
-	main main;
+	Main main;
 	
-	public ServerLink(main main){
+	public ServerLink(Main main){
 		this.main = main;
 		
 		dataBuffer = new LinkedBlockingQueue<>(60);

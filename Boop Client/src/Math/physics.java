@@ -1,11 +1,11 @@
-package Math;
+package math;
 
 import java.util.List;
 
-import Balls.Ball;
-import Balls.Storage;
+import balls.Ball;
+import balls.Storage;
 
-public class physics {
+public class Physics {
 	// COPIED from server file
 	
 	
@@ -38,7 +38,7 @@ public class physics {
 	//Temp variables to avoid object creation;
 	static VecPool tempVecs = new VecPool();
 	
-	public physics(Ball owner) {
+	public Physics(Ball owner) {
 		this.owner = owner;
 	}
 	
