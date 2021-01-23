@@ -83,7 +83,10 @@ public class Display implements ActionListener{
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
-				main.disconnectServer();
+				if (main.serverLink.getServerConnection()) {
+					main.disconnectServer();
+				}
+				
 				System.exit(0);
 			}
 		});

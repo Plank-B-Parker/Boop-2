@@ -118,12 +118,14 @@ public class Client implements Runnable{
 	}
 	
 	public void disconnect(){
-		if (!myClientSocket.isClosed() && connected) {
+		if (connected) {
 			connected = false;
-			byte[] disconnect = {Packet.DISCONNECT.getPacketID()};
 			try {
-				out.write(disconnect);
-				myClientSocket.close();
+				if (!myClientSocket.isClosed()) {
+					byte[] disconnect = {Packet.DISCONNECT.getPacketID()};
+					out.write(disconnect);
+					myClientSocket.close();
+				}
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}

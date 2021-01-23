@@ -151,17 +151,14 @@ public class UdpLink implements Runnable{
 	private void closeConnection() {
 		this.connected = false;
 		
-		if (! socket.isClosed()) {
-			socket.close();
-			System.out.println("closed UDP Socket");
-		} 
+		socket.close();
+		System.out.println("closed UDP Socket");
 	}
 	
 	public void stopRunningUDP() {
 		if (! connected && ! threadUDP.isAlive()) return;
 		
 		// Kills thread if not already dead
-		connected = false;
 		try {
 			closeConnection();
 			System.out.println("Thread UDP joining");
@@ -174,4 +171,9 @@ public class UdpLink implements Runnable{
 			threadUDP.interrupt();
 		}
 	}
+	
+	public boolean isSocketClosed() {
+		return ((socket != null) && socket.isClosed());
+	}
+	
 }

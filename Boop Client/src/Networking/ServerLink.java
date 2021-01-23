@@ -27,7 +27,7 @@ public class ServerLink implements Runnable{
 	
 	public long ID = -1;
 	
-	volatile boolean connected = false;
+	volatile boolean serverConnection = false;
 	
 	DataInputStream in;
 	DataOutputStream out;
@@ -51,7 +51,7 @@ public class ServerLink implements Runnable{
 	public void run() {
 		readIDfromServer();
 		
-		while(connected) {
+		while(serverConnection) {
 			try {
 				// Read data in stream and store in buffer	
 				byte[] data = recieveData();
@@ -72,7 +72,12 @@ public class ServerLink implements Runnable{
 	private byte[] recieveData() throws IOException {
 		byte packetID = in.readByte();
 		if (packetID == -1) return new byte[0];
-		if (packetID == Packet.DISCONNECT.getPacketID()) throw new IOException();
+		
+		if (packetID == Packet.DISCONNECT.getPacketID()) {
+			main.disconnectedByServer = true;
+			return new byte[0];
+		}
+		
 		float len = in.readFloat();
 		System.out.println("Payload length: " + len);
 		
@@ -132,29 +137,26 @@ public class ServerLink implements Runnable{
 		myPort = socketTCP.getLocalPort();
 		System.out.println("my TCP port: " + myPort);
 		
-		connected = true;
+		serverConnection = true;
 		threadTCP.start();
 	}
 	
 	private void closeConnection(){
-		connected = false;
+		
 		try {
-			if (! socketTCP.isClosed()) {
-				byte[] disconnect = {Packet.DISCONNECT.getPacketID()};
-				out.write(disconnect);
-				socketTCP.close();
-				System.out.println("Closed TCP socket");
-			} 
+			serverConnection = false;
+			
+			socketTCP.close();
+			System.out.println("Closed TCP socket");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public void stopRunningTCP() {
-		if (! connected && ! threadTCP.isAlive()) return;
+		if (! serverConnection && ! threadTCP.isAlive()) return;
 		
 		// Kills thread if not already dead
-		connected = false;
 		try {
 			closeConnection();
 			System.out.println("ThreadTCP Joining");
@@ -170,6 +172,14 @@ public class ServerLink implements Runnable{
 
 	public int getMyPort() {
 		return myPort;
+	}
+	
+	public boolean isSocketClosed() {
+		return ((socketTCP != null) && socketTCP.isClosed());
+	}
+	
+	public boolean getServerConnection() {
+		return serverConnection;
 	}
 	
 }

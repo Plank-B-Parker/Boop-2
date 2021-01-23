@@ -79,6 +79,12 @@ public class ClientAccept implements Runnable{
 	public void terminateServer() {
 		serverON = false;
 		disconnectAllClients();
+		try {
+			serverSocket.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void checkClientsConnection() {

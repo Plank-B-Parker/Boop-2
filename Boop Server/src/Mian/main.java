@@ -7,6 +7,8 @@ import java.awt.Graphics2D;
 import java.awt.MouseInfo;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -110,9 +112,16 @@ public class main {
 		frame.getContentPane().add(canvas);
 		frame.setResizable(true);
 		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent we) {
+				clientAcceptor.terminateServer();
+				udp.disconnect();
+				System.exit(0);
+			}
+		});
 		frame.validate();
+		frame.setVisible(true);
 	}
 	
 	ClientAccept clientAcceptor;

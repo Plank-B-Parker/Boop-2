@@ -86,11 +86,14 @@ public class main {
 			
 			// Code branch occurs 30 times a second
 			if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 2) {
-				if (disconnectedByServer) {
+				if (disconnectedByServer && serverLink.getServerConnection()) {
 					disconnectServer();
 					disconnectedByServer = false;
-				} 
-				udpLink.processServerUpdate();
+				}
+				
+				if (serverLink.getServerConnection()) {
+					udpLink.processServerUpdate();
+				}
 				// Send data and other stuff here
 			}
 			

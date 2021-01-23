@@ -41,10 +41,12 @@ public class UDP implements Runnable{
 			try {
 				socket.receive(packet);
 				recievedPacketsUDP.incrementAndGet();
+				handleData(packet);
 			} catch (IOException e) {
 				e.printStackTrace();
+				System.out.println("UDP problem");
+				break;
 			}
-			handleData(packet);
 		}
 		
 	}
@@ -79,8 +81,8 @@ public class UDP implements Runnable{
 	
 	public void disconnect(){
 		try {
-			threadUDP.join();
 			socket.close();
+			threadUDP.join();
 		} catch (InterruptedException e) {
 			threadUDP.interrupt();
 			e.printStackTrace();
