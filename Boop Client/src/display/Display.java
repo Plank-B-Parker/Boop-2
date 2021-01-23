@@ -1,4 +1,4 @@
-package Mian;
+package display;
 
 import java.awt.Canvas;
 import java.awt.CardLayout;
@@ -26,6 +26,8 @@ import javax.swing.WindowConstants;
 
 
 import Math.Vec2f;
+import Mian.Actions;
+import Mian.main;
 
 public class Display implements ActionListener{
 	main main;
@@ -241,7 +243,7 @@ public class Display implements ActionListener{
 		cl.show(cards, "options");
 	}
 	
-	private void showPopUp(String message, String title, int messageType) {
+	public void showPopUp(String message, String title, int messageType) {
 		if (cards.isVisible()) {
 			JOptionPane.showMessageDialog(cards, message, title, messageType);
 		}

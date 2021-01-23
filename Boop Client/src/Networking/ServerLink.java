@@ -15,8 +15,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import Math.Bitmaths;
 import Math.Vec2f;
-import Mian.Display;
 import Mian.main;
+import display.Display;
 
 public class ServerLink implements Runnable{
 	

@@ -5,8 +5,8 @@ import java.awt.Graphics2D;
 
 import Math.Vec2f;
 import Math.physics;
-import Mian.Display;
 import Mian.main;
+import display.Display;
 
 public class Ball {
 	
