@@ -29,8 +29,12 @@ public class Main {
 	
 	public Vec2f pos;
 	
+	private Keyboard keyboard;
 	
 	public Main() {
+
+		keyboard = new Keyboard();
+		canvas.addKeyListener(keyboard);
 		
 		Random random = new Random();
 		
@@ -93,6 +97,26 @@ public class Main {
 				}
 				
 				if (serverLink.getServerConnection()) {
+
+					Key[] keys = new Key[] {Key.W, Key.A, Key.S, Key.D};
+
+					for (int i = 0; i < keys.length; i++) {
+						Key key = keys[i];
+						if (keyboard.hasChanged(key)){
+							System.out.println("Key "+key.name()+" ID "+i+" has changed.");
+
+							if (keyboard.isActive(key)) {
+								System.out.println("Key "+key.name()+" ID "+i+" has been pressed.");
+								//TODO send key press
+							}
+
+							else {
+								System.out.println("Key "+key.name()+" ID "+i+" has been released.");
+								//TODO send key release
+							}
+						}
+					}
+
 					udpLink.processServerUpdate();
 				}
 				// Send data and other stuff here
