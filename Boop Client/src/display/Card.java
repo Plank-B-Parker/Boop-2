@@ -34,7 +34,7 @@ public abstract class Card extends JPanel{
 	 */
 	public abstract void processAction(String action) throws IOException;
 	
-	protected JButton createButton(int x, int y, int width, int height, String name, String action, Display display) {
+	protected JButton createButton(int x, int y, int width, int height, String name, String action) {
 		JButton button = new JButton(name);
 		button.setBounds(x, y, width, height);
 		button.addActionListener(display);
@@ -44,7 +44,7 @@ public abstract class Card extends JPanel{
 		return button;
 	}
 	
-	protected JComboBox<String> createStringComboBox(int x, int y, int width, int height, String action, Display display){
+	protected JComboBox<String> createStringComboBox(int x, int y, int width, int height, String action){
 		JComboBox<String> box = new JComboBox<>();
 		box.setBounds(x, y, width, height);
 		box.setSelectedIndex(-1);

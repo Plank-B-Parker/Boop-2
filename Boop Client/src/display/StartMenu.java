@@ -31,11 +31,11 @@ public class StartMenu extends Card{
 	}
 	
 	private void createComponents(Display display) {
-		JButton start = createButton(590, 300, 100, 60, "Start", Actions.START.name(), display);
-		JButton exit = createButton(590, 400, 100, 60, "Exit", Actions.CLOSE.name(), display);
+		JButton start = createButton(590, 300, 100, 60, "Start", Actions.START.name());
+		JButton exit = createButton(590, 400, 100, 60, "Exit", Actions.CLOSE.name());
 		start.setFont(Display.TEXT_FONT);
 		exit.setFont(Display.TEXT_FONT);
-		ipInput = createStringComboBox(700, 200, 100, 30, null, display);
+		ipInput = createStringComboBox(700, 200, 100, 30, null);
 		ipInput.addItem("127.0.0.1");
 		ipInput.setEditable(true);
 		ipInput.setFont(Display.COMBOBOX_FONT);
