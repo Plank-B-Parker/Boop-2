@@ -9,15 +9,17 @@ import javax.swing.JPanel;
 public abstract class Card extends JPanel{
 
 	Display display;
+	private String name;
 	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public Card(Display display) {
-		init(display);
+	public Card(String name, Display display) {
 		this.display = display;
+		this.name = name;
+		init(display);
 	}
 	
 	
@@ -58,5 +60,12 @@ public abstract class Card extends JPanel{
 		return box;
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
 	
 }

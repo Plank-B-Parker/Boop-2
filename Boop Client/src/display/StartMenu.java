@@ -20,8 +20,8 @@ public class StartMenu extends Card{
 	
 	JComboBox<String> ipInput;
 	
-	public StartMenu(Display display) {
-		super(display);
+	public StartMenu(String name, Display display) {
+		super(name, display);
 	}
 
 	protected void init(Display display) {
@@ -59,7 +59,7 @@ public class StartMenu extends Card{
 //				return;
 //			}
 			display.main.connectToServer(ip);
-			display.showGame();
+			display.showCard("Game");
 		}
 		
 		else if (action.equals(Actions.CLOSE.name())) {
