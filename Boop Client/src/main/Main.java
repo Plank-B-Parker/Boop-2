@@ -146,7 +146,26 @@ public class Main {
 	
 	private void fixedUpdate(float dt) {
 		balls.updateBalls(dt);
-		
+		updatePos(dt);
+	}
+
+	float movementSpeed = 0.2f;
+	private void updatePos(float dt) {
+		if (keyboard.isActive(Key.W)) {
+			Display.centreInServer.y -= movementSpeed*dt;
+		}
+
+		if (keyboard.isActive(Key.A)) {
+			Display.centreInServer.x -= movementSpeed*dt;
+		}
+
+		if (keyboard.isActive(Key.S)) {
+			Display.centreInServer.y += movementSpeed*dt;
+		}
+
+		if (keyboard.isActive(Key.D)) {
+			Display.centreInServer.x += movementSpeed*dt;
+		}
 	}
 	
 	BufferStrategy bs;
