@@ -149,7 +149,7 @@ public class Main {
 		updatePos(dt);
 	}
 
-	float movementSpeed = 0.2f;
+	float movementSpeed = 0.1f;
 	private void updatePos(float dt) {
 		if (keyboard.isActive(Key.W)) {
 			Display.centreInServer.y -= movementSpeed*dt;
