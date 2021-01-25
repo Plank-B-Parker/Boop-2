@@ -1,6 +1,7 @@
 package networking;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -104,5 +105,14 @@ public class ClientAccept implements Runnable{
 			client.disconnect();
 		}
 		clients.clear();
+	}
+
+	public Client getClientByAddress(InetAddress address) {
+
+		for (Client client: clients) {
+			if (client.getIpv4Address().equals(address)) return client;
+		}
+
+		return null;
 	}
 }

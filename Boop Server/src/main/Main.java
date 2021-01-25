@@ -128,7 +128,7 @@ public class Main {
 	
 	public void setupConnections() {
 		clientAcceptor = new ClientAccept();
-		udp = new UDP();
+		udp = new UDP(clientAcceptor);
 		clientAcceptor.startServer();
 		udp.startUDP();
 	}
@@ -219,6 +219,10 @@ public class Main {
 	public void fixedUpdate(float dt) {
 		List<Client> clients = new ArrayList<>(clientAcceptor.clients.size());
 		clients = List.copyOf(clientAcceptor.clients);
+
+		for (Client client: clients) {
+			client.updatePos(dt);
+		}
 		
 		storage.updateBalls(dt);
 	}
@@ -286,6 +290,9 @@ public class Main {
 		debug_ball.setPos(x, y);
 	}
 	
+	/**
+	 * Sends the test balls to clients along with their client position
+	 */
 	private void sendTestBalls() {
 		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
 		Collection<Ball> allBalls = storage.getBalls();
@@ -309,6 +316,8 @@ public class Main {
 			Client client = clients[i];
 			//Check if client is ready;
 			if(!client.isReadyForUpdate()) continue;
+			
+			client.sendCentrePos();
 			
 			List<Ball> inRange = new ArrayList<>();
 			

@@ -98,22 +98,24 @@ public class Main {
 				
 				if (serverLink.getServerConnection()) {
 
+					// Checks if any hold keys have been pressed or released and sends any changes to the server
 					Key[] keys = new Key[] {Key.W, Key.A, Key.S, Key.D};
-
 					for (int i = 0; i < keys.length; i++) {
+
 						Key key = keys[i];
+						
 						if (keyboard.hasChanged(key)){
-							System.out.println("Key "+key.name()+" ID "+i+" has changed.");
+
+							// Sends the key number as a byte, with the 6th bit set to 1 if the key
+							// has been pressed or 0 if it has been released
+
+							byte data = (byte) i;
 
 							if (keyboard.isActive(key)) {
-								System.out.println("Key "+key.name()+" ID "+i+" has been pressed.");
-								//TODO send key press
+								data = (byte) (data | (1 << 6));
 							}
-
-							else {
-								System.out.println("Key "+key.name()+" ID "+i+" has been released.");
-								//TODO send key release
-							}
+							
+							udpLink.sendData(new byte[] {1, data});
 						}
 					}
 
