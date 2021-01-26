@@ -56,7 +56,7 @@ public class UDP implements Runnable{
 	
 	private void handleData(DatagramPacket packet) {
 
-		Client client = clientAcceptor.getClientByAddress(packet.getAddress());
+		Client client = clientAcceptor.getClientByAddressAndPort(packet.getAddress(), packet.getPort());
 
 		if (client == null) {
 			System.out.println("UDP packet sent from unknown client: "+packet.getAddress().toString());

@@ -107,10 +107,10 @@ public class ClientAccept implements Runnable{
 		clients.clear();
 	}
 
-	public Client getClientByAddress(InetAddress address) {
+	public Client getClientByAddressAndPort(InetAddress address, int port) {
 
 		for (Client client: clients) {
-			if (client.getIpv4Address().equals(address)) return client;
+			if (client.getIpv4Address().equals(address) && client.getClientPort() == port) return client;
 		}
 
 		return null;
