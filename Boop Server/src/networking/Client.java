@@ -193,18 +193,22 @@ public class Client implements Runnable{
 		
 		if (pressedKeys[0]) {
 			centrePos.y -= movementSpeed*dt;
+			if (centrePos.y < -1) centrePos.y += 2;
 		}
 
 		if (pressedKeys[1]) {
 			centrePos.x -= movementSpeed*dt;
+			if (centrePos.x < -1) centrePos.x += 2;
 		}
 
 		if (pressedKeys[2]) {
 			centrePos.y += movementSpeed*dt;
+			if (centrePos.y > 1) centrePos.y -= 2;
 		}
 
 		if (pressedKeys[3]) {
 			centrePos.x += movementSpeed*dt;
+			if (centrePos.x > 1) centrePos.x -= 2;
 		}
 
 	}

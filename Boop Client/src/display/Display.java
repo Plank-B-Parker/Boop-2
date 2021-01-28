@@ -39,7 +39,7 @@ public class Display implements ActionListener{
 	
 	//Scaling and offset for rendering.
 	public static Vec2f centreInServer = new Vec2f(); 		//Where the centre of the screen is on the server.
-	public static float screenHeightOnServer = 0f; 	//The height of the screen on the server.
+	public static float diameterInServer = 0f; 	//The height of the screen on the server.
 	public static float aspectRatio = WINDOW_WIDTH/WINDOW_HEIGHT;
 	
 	public Display(Main main, Canvas canvas) {
