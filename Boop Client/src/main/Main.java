@@ -98,23 +98,60 @@ public class Main {
 				
 				if (serverLink.getServerConnection()) {
 
+					// Checks if any hold keys have been pressed or released and sends any changes to the server
 					Key[] keys = new Key[] {Key.W, Key.A, Key.S, Key.D};
-
 					for (int i = 0; i < keys.length; i++) {
+
 						Key key = keys[i];
+						
 						if (keyboard.hasChanged(key)){
-							System.out.println("Key "+key.name()+" ID "+i+" has changed.");
+
+							// Sends the key number as a byte, with the 6th bit set to 1 if the key
+							// has been pressed or 0 if it has been released
+
+							byte data = (byte) i;
 
 							if (keyboard.isActive(key)) {
-								System.out.println("Key "+key.name()+" ID "+i+" has been pressed.");
-								//TODO send key press
+								data = (byte) (data | (1 << 6));
 							}
+							
+							udpLink.sendData(new byte[] {1, data});
+						}
+					}
 
-							else {
-								System.out.println("Key "+key.name()+" ID "+i+" has been released.");
-								//TODO send key release
+					udpLink.processServerUpdate();
+				}
+
+				// Code branch occurs 1 time a second
+				if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 60) {
+					if (disconnectedByServer && serverLink.getServerConnection()) {
+						disconnectServer();
+						disconnectedByServer = false;
+					}
+					
+					if (serverLink.getServerConnection()) {
+
+						// Checks if any hold keys have been pressed or released and sends any changes to the server
+						Key[] keys = new Key[] {Key.W, Key.A, Key.S, Key.D};
+						for (int i = 0; i < keys.length; i++) {
+
+							Key key = keys[i];
+							
+							if (keyboard.hasChanged(key)){
+
+								// Sends the key number as a byte, with the 6th bit set to 1 if the key
+								// has been pressed or 0 if it has been released
+
+								byte data = (byte) i;
+
+								if (keyboard.isActive(key)) {
+									data = (byte) (data | (1 << 6));
+								}
+								
+								udpLink.sendData(new byte[] {1, data});
 							}
 						}
+
 					}
 
 					udpLink.processServerUpdate();
@@ -144,7 +181,30 @@ public class Main {
 	
 	private void fixedUpdate(float dt) {
 		balls.updateBalls(dt);
-		
+		updatePos(dt);
+	}
+
+	float movementSpeed = 0.1f;
+	private void updatePos(float dt) {
+		if (keyboard.isActive(Key.W)) {
+			Display.centreInServer.y -= movementSpeed*dt;
+			if (Display.centreInServer.y < -1) Display.centreInServer.y += 2;
+		}
+
+		if (keyboard.isActive(Key.A)) {
+			Display.centreInServer.x -= movementSpeed*dt;
+			if (Display.centreInServer.x < -1) Display.centreInServer.x += 2;
+		}
+
+		if (keyboard.isActive(Key.S)) {
+			Display.centreInServer.y += movementSpeed*dt;
+			if (Display.centreInServer.y > 1) Display.centreInServer.y -= 2;
+		}
+
+		if (keyboard.isActive(Key.D)) {
+			Display.centreInServer.x += movementSpeed*dt;
+			if (Display.centreInServer.x > 1) Display.centreInServer.x -= 2;
+		}
 	}
 	
 	BufferStrategy bs;

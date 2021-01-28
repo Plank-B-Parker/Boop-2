@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 
 import main.Main;
 import math.Vec2f;
+import math.VecPool;
 import math.Physics;
 import display.Display;
 
@@ -21,6 +22,8 @@ public class Ball {
 	private float timeAlive = 0;
 
 	private boolean toBeRemoved = false;
+
+	private VecPool vecPool = new VecPool();
 	
 	//Contains physics attributes: pos, vel.
 	public Physics phys = new Physics(this);
@@ -63,13 +66,17 @@ public class Ball {
 	//Render method below renders whole server.
 	public void render2(Graphics2D g, float dt) {
 
-		Vec2f pos = phys.clientPos;
-		
-		float x = pos.x - Display.centreInServer.x;
-		float y = pos.y - Display.centreInServer.y;
+		vecPool.startOfMethod();
 
-		double a = Math.sqrt(2) / 4;
-		double b = Math.sqrt(2);
+		Vec2f pos = vecPool.getVec();
+
+		Vec2f.disp(pos, phys.clientPos, Display.centreInServer);
+
+		float x = pos.x;
+		float y = pos.y;
+
+		double a = Math.sqrt(2)*Display.diameterInServer / 4;
+		double b = Math.sqrt(2)/Display.diameterInServer;
 		
 		//Scaling for screen.
 		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);
@@ -104,8 +111,10 @@ public class Ball {
 //		g.setColor(Color.WHITE);
 //		g.drawString("t:" + (float)(Math.round(100*timeAlive))/100f, X, Y);
 		////////
+
+		vecPool.endOfMethod();
 		
-		//render3(g,dt);
+		// render3(g,dt);
 	}
 	
 	public void render3(Graphics2D g, float dt) {
@@ -149,8 +158,8 @@ public class Ball {
 		float posX = phys.clientPos.x;
 		float posY = phys.clientPos.y;
 		
-		float serverWidth = Display.screenHeightOnServer*Display.aspectRatio;
-		float serverHeight = Display.screenHeightOnServer;
+		float serverWidth = Display.diameterInServer*Display.aspectRatio;
+		float serverHeight = Display.diameterInServer;
 		
 		float x = posX - Display.centreInServer.x;
 		float y = posY - Display.centreInServer.y;
@@ -187,8 +196,8 @@ public class Ball {
 		float posX = phys.pos.x;
 		float posY = phys.pos.y;
 		
-		float serverWidth = Display.screenHeightOnServer*Display.aspectRatio;
-		float serverHeight = Display.screenHeightOnServer;
+		float serverWidth = Display.diameterInServer*Display.aspectRatio;
+		float serverHeight = Display.diameterInServer;
 		
 		float x = posX - Display.centreInServer.x;
 		float y = posY - Display.centreInServer.y;

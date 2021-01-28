@@ -38,6 +38,11 @@ public class Client implements Runnable{
 	private long lastTime = 0;					//Last time when balls were sent;
 	private float timeBetweenUpdates = 1f;	//Time between the balls being sent;
 	private float delayUntilFirstSend = 3500;
+
+	private float movementSpeed = 0.1f; //Speed that the client's centre moves
+
+	private boolean[] pressedKeys = new boolean[4]; // Array to track which keys are being pressed
+	
 	
 	public Client() {
 		clientThread = new Thread(this, "Client-Thread");
@@ -47,7 +52,6 @@ public class Client implements Runnable{
 		Random random = new Random();
 		
 		centrePos.set(0f, 0f);
-		
 	}
 	
 	@Override
@@ -177,5 +181,52 @@ public class Client implements Runnable{
 	
 	public boolean isConnected() {
 		return connected;
+	}
+
+	public void handleKey(boolean pressed, int key) {
+		if (key < 0 || key > 3) return;
+
+		pressedKeys[key] = pressed;
+	}
+
+	public void updatePos(float dt) {
+		
+		if (pressedKeys[0]) {
+			centrePos.y -= movementSpeed*dt;
+			if (centrePos.y < -1) centrePos.y += 2;
+		}
+
+		if (pressedKeys[1]) {
+			centrePos.x -= movementSpeed*dt;
+			if (centrePos.x < -1) centrePos.x += 2;
+		}
+
+		if (pressedKeys[2]) {
+			centrePos.y += movementSpeed*dt;
+			if (centrePos.y > 1) centrePos.y -= 2;
+		}
+
+		if (pressedKeys[3]) {
+			centrePos.x += movementSpeed*dt;
+			if (centrePos.x > 1) centrePos.x -= 2;
+		}
+
+	}
+
+	public void sendCentrePos() {
+		float[] clientPosData = new float[4];
+		clientPosData[1] = centrePos.x;
+		clientPosData[2] = centrePos.y;
+		clientPosData[3] = radOfInf;
+		clientPosData[0] = (float) 3 * 4; // 3 floats * 4 bytes = 12 byte payload (length)
+		
+		byte[] clientPos = Bitmaths.floatArrayToBytes(clientPosData);
+		clientPos = Bitmaths.pushByteToData((byte) 70, clientPos);
+		
+		try {
+			out.write(clientPos);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
