@@ -26,7 +26,7 @@ public class StartMenu extends Card{
 
 	protected void init(Display display) {
 		setLayout(null);
-		setBackground(Color.DARK_GRAY);
+		setBackground(new Color(255,255,255,0));
 		createComponents(display);
 	}
 	
