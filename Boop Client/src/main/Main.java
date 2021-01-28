@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Random;
 
+import balls.Storage;
+import display.Display;
 import math.Vec2f;
 import networking.ServerLink;
 import networking.UdpLink;
-import balls.Storage;
-import display.Display;
 
 public class Main {
 
@@ -154,14 +154,12 @@ public class Main {
 			canvas.createBufferStrategy(2);
 			return;
 		}
-		
 		do {
+			//having two graphics objects is really expensive.
 			Graphics2D g2d = (Graphics2D) bs.getDrawGraphics();
 			
-			g2d.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-			
+			g2d.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
 			balls.renderBalls(g2d, dt);
-			
 			drawPerformance(g2d);
 			
 			g2d.dispose();

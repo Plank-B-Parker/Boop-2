@@ -9,8 +9,13 @@ import main.Actions;
 
 public class OptionsMenu extends Card{
 
-	public OptionsMenu(Display display) {
-		super(display);
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public OptionsMenu(String name, Display display) {
+		super(name, display);
 	}
 
 	protected void init(Display display) {
