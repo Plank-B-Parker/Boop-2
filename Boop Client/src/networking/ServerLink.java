@@ -107,7 +107,7 @@ public class ServerLink implements Runnable{
 			case 70:
 				Display.centreInServer.x = Bitmaths.bytesToFloat(data, 1);
 				Display.centreInServer.y = Bitmaths.bytesToFloat(data, 5);
-				Display.diameterInServer = 2f*Bitmaths.bytesToFloat(data, 9); //TODO rename
+				Display.diameterInServer = 2f*Bitmaths.bytesToFloat(data, 9);
 				break;
 			default:
 				return;
