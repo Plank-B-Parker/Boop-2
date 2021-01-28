@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import math.Bitmaths;
@@ -12,12 +13,16 @@ import math.Bitmaths;
 public class UDP implements Runnable{
 	
 	DatagramSocket socket;
-	public static final int MAX_PAYLOAD_SIZE = 1400;
+
 	
 	Thread threadUDP;
 	
-	public AtomicInteger recievedPacketsUDP = new AtomicInteger(0);
-	public AtomicInteger sentPacketsUDP = new AtomicInteger(0);
+	ArrayList<InetAddress> confirmedIPs;
+	ArrayList<InetAddress> problemIPs;
+	ArrayList<InetAddress> maliciousIPs;
+	
+	public AtomicInteger RecievedPacketsUDP = new AtomicInteger(0);
+	public AtomicInteger SentPacketsUDP = new AtomicInteger(0);
 	
 	public UDP() {
 		
@@ -34,13 +39,14 @@ public class UDP implements Runnable{
 	@Override
 	public void run() {
 		while(ClientAccept.serverON) {
-			byte[] data = new byte[MAX_PAYLOAD_SIZE];
+			byte[] data = new byte[Packet.MAX_PAYLOAD_SIZE];
 			
 			DatagramPacket packet = new DatagramPacket(data, data.length);
 			
+			
 			try {
 				socket.receive(packet);
-				recievedPacketsUDP.incrementAndGet();
+				RecievedPacketsUDP.incrementAndGet();
 				handleData(packet);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -55,9 +61,12 @@ public class UDP implements Runnable{
 		switch (packet.getData()[0]) {
 		case 10:
 			byte[] test = Bitmaths.intToBytes(packet.getPort());
-			byte[] test2 = Bitmaths.pushByteToData((byte) 10, test);
+			test = Bitmaths.pushByteToData((byte) 10, test);
+			test = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(SentPacketsUDP.incrementAndGet()), test);
+			test = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(System.currentTimeMillis()), test);
+			
 			System.out.println(packet.getPort());
-			sendData(test2, packet.getAddress(), packet.getPort());
+			sendData(test, packet.getAddress(), packet.getPort());
 			break;
 		default:
 			return;
@@ -66,10 +75,12 @@ public class UDP implements Runnable{
 	
 	public void sendData(byte[] data, InetAddress ipAddress, int port) {
 		DatagramPacket packet = new DatagramPacket(data, data.length, ipAddress, port);
-		
+		packet.getAddress(); // check if packet is actually from a client
+		System.out.println("Packet sequence: " + + Bitmaths.bytesToInt(data, 8));
+		System.out.println("Total packets sent: " + SentPacketsUDP.get());
 		try {
 			socket.send(packet);
-			sentPacketsUDP.incrementAndGet();
+			SentPacketsUDP.incrementAndGet();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

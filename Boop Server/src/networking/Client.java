@@ -8,7 +8,9 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import jdk.jfr.Unsigned;
 import main.Main;
 import math.Bitmaths;
 import math.Vec2f;
@@ -38,6 +40,10 @@ public class Client implements Runnable{
 	private long lastTime = 0;					//Last time when balls were sent;
 	private float timeBetweenUpdates = 1f;	//Time between the balls being sent;
 	private float delayUntilFirstSend = 3500;
+	
+	
+	public AtomicInteger udpPacketsSent = new AtomicInteger(0);
+	public AtomicInteger udpPacketsRecieved = new AtomicInteger(0);
 	
 	public Client() {
 		clientThread = new Thread(this, "Client-Thread");

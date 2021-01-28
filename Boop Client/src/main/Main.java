@@ -62,6 +62,8 @@ public class Main {
 	private int TPS = 0;
 	private int packetsSentPerSec = 0;
 	private int packetsRecievedPerSec = 0;
+	private int packetsRecievedLastTotal = 0;
+	private int packetsSentLastTotal = 0;
 	
 	public void mainLoop() {
 		
@@ -126,8 +128,11 @@ public class Main {
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
-				packetsRecievedPerSec = udpLink.recievedPacketsUDP.getAndSet(0);
-				packetsSentPerSec = udpLink.sentPacketsUDP.getAndSet(0);
+				packetsRecievedPerSec = udpLink.recievedPacketsUDP.get() - packetsRecievedLastTotal;
+				packetsSentPerSec = udpLink.sentPacketsUDP.get() - packetsSentLastTotal;
+				
+				packetsRecievedLastTotal = udpLink.recievedPacketsUDP.get();
+				packetsSentLastTotal = udpLink.sentPacketsUDP.get();
 				TPS = ticks;
 				FPS = frames;
 				ticks = 0;

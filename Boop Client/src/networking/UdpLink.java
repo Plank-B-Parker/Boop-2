@@ -20,7 +20,6 @@ public class UdpLink implements Runnable{
 	private DatagramSocket socket;
 	private InetAddress serverIP;
 	volatile boolean connected = false;
-	public static final int MAX_PAYLOAD_SIZE = 1400;
 	
 	//Contains all the packets sent from server before they are processed.
 	private ArrayList<byte[]> updateQueue = new ArrayList<>();
@@ -41,12 +40,11 @@ public class UdpLink implements Runnable{
 	@Override
 	public void run() {
 		while (connected) {
-			byte[] data = new byte[MAX_PAYLOAD_SIZE];
+			byte[] data = new byte[Packet.MAX_PAYLOAD_SIZE];
 			
 			DatagramPacket packet = new DatagramPacket(data, data.length);
 			try {
 				socket.receive(packet);
-				recievedPacketsUDP.incrementAndGet();
 				handleData(packet.getData());
 				//updateQueue.add(packet.getData());
 			} catch (IOException e) {
@@ -80,9 +78,15 @@ public class UdpLink implements Runnable{
 	
 	
 	private void handleData(byte[] data) {
-		switch (data[0]) {
+		switch (data[12]) {
 		case 2:
-			byte[] newData = Arrays.copyOfRange(data, 1, data.length);
+			recievedPacketsUDP.incrementAndGet();
+			
+			long recieveTime = System.currentTimeMillis();
+			
+			byte[] newData = Arrays.copyOfRange(data, 13, data.length);
+			
+			long packetTime = Bitmaths.bytesToLong(data);
 			
 			float[] ballData = new float[newData.length / 4];
 			ByteBuffer.wrap(newData).asFloatBuffer().get(ballData);
@@ -102,6 +106,13 @@ public class UdpLink implements Runnable{
 					}
 				
 				main.balls.setBallData(currentBall);
+				
+				System.out.println("Packet number: " + Bitmaths.bytesToInt(data, 8));
+				System.out.println("Packets recieved: " + recievedPacketsUDP.get());
+				System.out.println("Time recieved packet: " + recieveTime);
+				System.out.println("Time packet Sent: " + packetTime);
+				System.out.println("Time Delta: " + (recieveTime - packetTime));
+				System.out.println("////////////////////////////////");
 			}
 			
 			break;

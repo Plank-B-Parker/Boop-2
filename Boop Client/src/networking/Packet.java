@@ -2,9 +2,12 @@ package networking;
 
 public enum Packet {
 	NEW_BALLS((byte) 2, 1372, 49, 7),
-	OLD_BALLS((byte) 3, 1392, 58, 6),
+	OLD_BALLS((byte) 3, 1368, 57, 6),
 	DISCONNECT((byte) -5, 0, 0, 0);
 	
+	
+	public static final int MAX_PAYLOAD_SIZE = 1400;
+	public static final int FREE_PAYLOAD_SIZE = 1387;
 	
 	private byte packetID = 0;
 	private int maxPayload = 0;
