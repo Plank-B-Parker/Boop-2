@@ -71,7 +71,7 @@ public class Client implements Runnable{
 	
 	public byte[] recieveData() throws IOException{
 		byte packetID = in.readByte();
-		if (packetID == Packet.DISCONNECT.getPacketID()) throw new IOException();
+		if (packetID == Packet.DISCONNECT.getID()) throw new IOException();
 		
 		int len = in.readInt();
 		
@@ -128,7 +128,7 @@ public class Client implements Runnable{
 			connected = false;
 			try {
 				if (!myClientSocket.isClosed()) {
-					byte[] disconnect = {Packet.DISCONNECT.getPacketID()};
+					byte[] disconnect = {Packet.DISCONNECT.getID()};
 					out.write(disconnect);
 					myClientSocket.close();
 				}

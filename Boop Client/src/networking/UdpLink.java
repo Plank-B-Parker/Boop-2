@@ -78,15 +78,11 @@ public class UdpLink implements Runnable{
 	
 	
 	private void handleData(byte[] data) {
-		switch (data[12]) {
-		case 2:
+		switch (data[4]) {
+		case 2: // New balls
 			recievedPacketsUDP.incrementAndGet();
 			
-			long recieveTime = System.currentTimeMillis();
-			
-			byte[] newData = Arrays.copyOfRange(data, 13, data.length);
-			
-			long packetTime = Bitmaths.bytesToLong(data);
+			byte[] newData = Arrays.copyOfRange(data, 5, data.length);
 			
 			float[] ballData = new float[newData.length / 4];
 			ByteBuffer.wrap(newData).asFloatBuffer().get(ballData);
@@ -107,15 +103,16 @@ public class UdpLink implements Runnable{
 				
 				main.balls.setBallData(currentBall);
 				
-				System.out.println("Packet number: " + Bitmaths.bytesToInt(data, 8));
+				System.out.println("Packet number: " + Bitmaths.bytesToInt(data, 0));
 				System.out.println("Packets recieved: " + recievedPacketsUDP.get());
-				System.out.println("Time recieved packet: " + recieveTime);
-				System.out.println("Time packet Sent: " + packetTime);
-				System.out.println("Time Delta: " + (recieveTime - packetTime));
 				System.out.println("////////////////////////////////");
 			}
 			
 			break;
+		case 7: // Clock synchronisation
+			recievedPacketsUDP.incrementAndGet();
+			break;
+			
 		default:
 			return;
 		}

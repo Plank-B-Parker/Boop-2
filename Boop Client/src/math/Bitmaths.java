@@ -17,9 +17,9 @@ public final class Bitmaths {
 		return ByteBuffer.wrap(bytes).getLong();
 	}
 	
-	public static long bytesToLong(byte[] bytes, int offset) {
-		if (offset > bytes.length - 8) return -1;
-		return ByteBuffer.wrap(bytes).getLong(offset);
+	public static long bytesToLong(byte[] bytes, int index) {
+		if (index > bytes.length - 8) return -1;
+		return ByteBuffer.wrap(bytes).getLong(index);
 	}
 	
 	public static byte[] longArrayToBytes(long[] longs) {
@@ -44,9 +44,9 @@ public final class Bitmaths {
 		return ByteBuffer.wrap(bytes).getFloat();
 	}
 	
-	public static float bytesToFloat(byte[] bytes, int offset) {
-		if (offset > bytes.length - 4) return -1;
-		return ByteBuffer.wrap(bytes).getFloat(offset);
+	public static float bytesToFloat(byte[] bytes, int index) {
+		if (index > bytes.length - 4) return -1;
+		return ByteBuffer.wrap(bytes).getFloat(index);
 	}
 	
 	public static byte[] floatArrayToBytes(float[] floats) {
@@ -71,9 +71,9 @@ public final class Bitmaths {
 		return ByteBuffer.wrap(bytes).getInt();
 	}
 	
-	public static int bytesToInt(byte[] bytes, int offset) {
-		if (offset > bytes.length - 4) return -1;
-		return ByteBuffer.wrap(bytes).getInt(offset);
+	public static int bytesToInt(byte[] bytes, int index) {
+		if (index > bytes.length - 4) return -1;
+		return ByteBuffer.wrap(bytes).getInt(index);
 	}
 	
 	public static byte[] intArrayToBytes(int[] ints) {

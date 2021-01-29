@@ -73,7 +73,7 @@ public class ServerLink implements Runnable{
 		byte packetID = in.readByte();
 		if (packetID == -1) return new byte[0];
 		
-		if (packetID == Packet.DISCONNECT.getPacketID()) {
+		if (packetID == Packet.DISCONNECT.getID()) {
 			main.disconnectedByServer = true;
 			return new byte[0];
 		}

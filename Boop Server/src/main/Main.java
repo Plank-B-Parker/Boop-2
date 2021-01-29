@@ -10,6 +10,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -46,6 +49,8 @@ public class Main {
 	BufferStrategy bs;
 	
 	public static final boolean deterministicPhysics = true;
+	
+	public static InetAddress serverIP = null;
 	
 	public Main() {
 		
@@ -127,8 +132,8 @@ public class Main {
 	UDP udp;
 	
 	public void setupConnections() {
-		clientAcceptor = new ClientAccept();
-		udp = new UDP();
+		clientAcceptor = new ClientAccept(serverIP);
+		udp = new UDP(clientAcceptor);
 		clientAcceptor.startServer();
 		udp.startUDP();
 	}
@@ -192,6 +197,7 @@ public class Main {
 				// send ballz
 				sendTestBalls2();
 				
+				
 				timeAfterLastTransmit -= MS_PER_UPDATE * 2;
 			}
 			
@@ -199,6 +205,7 @@ public class Main {
 			frames++;
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
+				clockSynchronise();
 				packetsRecievedPerSec = udp.RecievedPacketsUDP.get() - packetsRecievedLastTotal;
 				packetsSentPerSec = udp.SentPacketsUDP.get() - packetsSentLastTotal;
 				
@@ -476,17 +483,33 @@ public class Main {
 				// array to replace with header information
 				byte[] headerInfo = new byte[0];
 				
-				// Add packet id, packet sequence and ~ time sent
-				headerInfo = Bitmaths.pushByteToData(Packet.NEW_BALLS.getPacketID(), headerInfo);
+				// Add packet id and packet sequence
+				headerInfo = Bitmaths.pushByteToData(Packet.NEW_BALLS.getID(), headerInfo);
 				headerInfo = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(clients[i].udpPacketsSent.incrementAndGet()), headerInfo);
-				headerInfo = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(System.currentTimeMillis()), headerInfo);
 				
 				byte[] completePacket = Bitmaths.pushByteArrayToData(headerInfo, data[i][j]);
 				
 				udp.sendData(completePacket, clients[i].getIpv4Address(), clients[i].getClientPort());
 				
-				System.out.println("Time packet sent: " + System.currentTimeMillis());
 			}
+		}
+		
+	}
+	
+	/**
+	 * Synchronises the client's clock to the server.
+	 * This stops the client manipulating time and correctly works out time sensitive information.
+	 */
+	public void clockSynchronise() {
+		Client[] clients = new Client[clientAcceptor.clients.size()];
+		System.arraycopy(clientAcceptor.clients.toArray(), 0, clients, 0, clientAcceptor.clients.size());
+		
+		for (Client client : clients) {
+			byte[] data = Bitmaths.longToBytes(System.currentTimeMillis());
+			data = Bitmaths.pushByteToData(Packet.CLOCK_SYN.getID(), data);
+			data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(client.udpPacketsSent.incrementAndGet()), data);
+			
+			udp.sendData(data, client.getIpv4Address(), client.getClientPort());
 		}
 		
 	}
@@ -494,6 +517,17 @@ public class Main {
 	public static void main(String args[]){
 		Thread t = Thread.currentThread();
 		t.setName("Main-Loop");
+		
+		try {
+			if (args.length > 0) {
+				serverIP = InetAddress.getByName(args[0]);
+			} 
+			
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.out.println("Given IP not valid");
+			serverIP = null;
+		}
 		
 		Main main = new Main();
 		main.createDisplay();

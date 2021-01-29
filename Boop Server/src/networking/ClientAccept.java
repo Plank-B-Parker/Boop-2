@@ -1,6 +1,7 @@
 package networking;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -18,11 +19,12 @@ public class ClientAccept implements Runnable{
 	
 	Random random = new Random();
 	
-	public ClientAccept() {
+	public ClientAccept(InetAddress ipAddress) {
 		
 		try {
-			serverSocket = new ServerSocket(PORT);
+			serverSocket = new ServerSocket(PORT, 50, ipAddress);
 			
+			System.out.println("ServerIP: " + serverSocket.getLocalSocketAddress());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -104,5 +106,17 @@ public class ClientAccept implements Runnable{
 			client.disconnect();
 		}
 		clients.clear();
+	}
+	
+	public Client getClientbyIPAddress(InetAddress ipAddress){
+		Client client = null;
+		for (int i = 0; i < clients.size() - 1; i++) {
+			if (ipAddress == clients.get(i).getIpv4Address()) {
+				client = clients.get(i);
+				break;
+			}
+		}
+		
+		return client;
 	}
 }

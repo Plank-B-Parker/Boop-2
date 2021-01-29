@@ -65,12 +65,14 @@ public class Main {
 	private int packetsRecievedLastTotal = 0;
 	private int packetsSentLastTotal = 0;
 	
+	private int count = 0;
 	public void mainLoop() {
 		
 		final double MS_PER_UPDATE = 1000.0 / 60.0;
 		long previous = System.currentTimeMillis();
 		long timeAfterLastTick = 0;
 	    long timer = System.currentTimeMillis();
+	    long networkTimer = System.currentTimeMillis();
 	    
 	    int ticks = 0;
 	    int frames = 0;
@@ -92,7 +94,7 @@ public class Main {
 			}
 			
 			// Code branch occurs 30 times a second
-			if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 2) {
+			if (System.currentTimeMillis() - networkTimer >= MS_PER_UPDATE * 2) {
 				if (disconnectedByServer && serverLink.getServerConnection()) {
 					disconnectServer();
 					disconnectedByServer = false;
@@ -121,7 +123,8 @@ public class Main {
 
 					udpLink.processServerUpdate();
 				}
-				// Send data and other stuff here
+				
+				networkTimer += MS_PER_UPDATE * 2;
 			}
 			
 			render(timeAfterLastTick / 1000f);
@@ -135,6 +138,7 @@ public class Main {
 				packetsSentLastTotal = udpLink.sentPacketsUDP.get();
 				TPS = ticks;
 				FPS = frames;
+				count =0;
 				ticks = 0;
 				frames = 0;
 				timer += 1000;

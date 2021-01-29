@@ -2,12 +2,14 @@ package networking;
 
 public enum Packet {
 	NEW_BALLS((byte) 2, 1372, 49, 7),
-	OLD_BALLS((byte) 3, 1368, 57, 6),
+	OLD_BALLS((byte) 3, 1392, 58, 6),
+	CLOCK_SYN((byte) 7, 8, 1, 1),
+	ACK((byte) 8, 8, 1, 1),
 	DISCONNECT((byte) -5, 0, 0, 0);
 	
 	
 	public static final int MAX_PAYLOAD_SIZE = 1400;
-	public static final int FREE_PAYLOAD_SIZE = 1387;
+	public static final int FREE_PAYLOAD_SIZE = 1395;
 	
 	private byte packetID = 0;
 	private int maxPayload = 0;
@@ -21,7 +23,7 @@ public enum Packet {
 		this.numberOfItems = numberOfItems;
 	}
 
-	public byte getPacketID() {
+	public byte getID() {
 		return packetID;
 	}
 

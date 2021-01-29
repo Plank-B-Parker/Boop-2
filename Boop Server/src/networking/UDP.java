@@ -14,7 +14,6 @@ public class UDP implements Runnable{
 	
 	DatagramSocket socket;
 
-	
 	Thread threadUDP;
 	
 	ArrayList<InetAddress> confirmedIPs;
@@ -24,10 +23,12 @@ public class UDP implements Runnable{
 	public AtomicInteger RecievedPacketsUDP = new AtomicInteger(0);
 	public AtomicInteger SentPacketsUDP = new AtomicInteger(0);
 	
-	public UDP() {
-		
+	private ClientAccept clientAccept;
+	
+	public UDP(ClientAccept clientAccept) {
 		try {
 			this.socket = new DatagramSocket(ClientAccept.PORT);
+			this.clientAccept = clientAccept;
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
@@ -60,10 +61,12 @@ public class UDP implements Runnable{
 	private void handleData(DatagramPacket packet) {
 		switch (packet.getData()[0]) {
 		case 10:
+			
+			Client client = clientAccept.getClientbyIPAddress(packet.getAddress());
+			
 			byte[] test = Bitmaths.intToBytes(packet.getPort());
 			test = Bitmaths.pushByteToData((byte) 10, test);
-			test = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(SentPacketsUDP.incrementAndGet()), test);
-			test = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(System.currentTimeMillis()), test);
+			test = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(client.udpPacketsSent.incrementAndGet()), test);
 			
 			System.out.println(packet.getPort());
 			sendData(test, packet.getAddress(), packet.getPort());
@@ -76,14 +79,15 @@ public class UDP implements Runnable{
 	public void sendData(byte[] data, InetAddress ipAddress, int port) {
 		DatagramPacket packet = new DatagramPacket(data, data.length, ipAddress, port);
 		packet.getAddress(); // check if packet is actually from a client
-		System.out.println("Packet sequence: " + + Bitmaths.bytesToInt(data, 8));
-		System.out.println("Total packets sent: " + SentPacketsUDP.get());
 		try {
 			socket.send(packet);
 			SentPacketsUDP.incrementAndGet();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		int sequence = Bitmaths.bytesToInt(data);
+		System.out.println("Packet sequence: " + Bitmaths.bytesToInt(data));
+		System.out.println("Total packets sent: " + SentPacketsUDP.get());
 	}
 	
 	public void startUDP() {
