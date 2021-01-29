@@ -19,10 +19,10 @@ public class ClientAccept implements Runnable{
 	
 	Random random = new Random();
 	
-	public ClientAccept(InetAddress ipAddress) {
+	public ClientAccept() {
 		
 		try {
-			serverSocket = new ServerSocket(PORT, 50, ipAddress);
+			serverSocket = new ServerSocket(PORT);
 			
 			System.out.println("ServerIP: " + serverSocket.getLocalSocketAddress());
 		} catch (IOException e) {
@@ -107,16 +107,13 @@ public class ClientAccept implements Runnable{
 		}
 		clients.clear();
 	}
-	
-	public Client getClientbyIPAddress(InetAddress ipAddress){
-		Client client = null;
-		for (int i = 0; i < clients.size() - 1; i++) {
-			if (ipAddress == clients.get(i).getIpv4Address()) {
-				client = clients.get(i);
-				break;
-			}
+
+	public Client getClientByAddressAndPort(InetAddress address, int port) {
+
+		for (Client client: clients) {
+			if (client.getIpv4Address().equals(address) && client.getClientPort() == port) return client;
 		}
-		
-		return client;
+
+		return null;
 	}
 }

@@ -136,7 +136,7 @@ public class Physics {
 		
 		//(1/cA)*(pos - "cl_pos")
 		Vec2f cl_pos = Vec2f.increment(tempVecs.getVec(), clientPos, clientVel, dt);
-		Vec2f posTerm = Vec2f.sub(tempVecs.getVec(), pos, cl_pos);
+		Vec2f posTerm = Vec2f.disp(tempVecs.getVec(), pos, cl_pos);
 		Vec2f.scale(posTerm, posTerm, 1f/cA);
 		
 		//1/(1 - dt/cA + (dt^2)*(cV/cA)

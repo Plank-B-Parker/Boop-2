@@ -23,12 +23,14 @@ public class UDP implements Runnable{
 	public AtomicInteger RecievedPacketsUDP = new AtomicInteger(0);
 	public AtomicInteger SentPacketsUDP = new AtomicInteger(0);
 	
-	private ClientAccept clientAccept;
 	
-	public UDP(ClientAccept clientAccept) {
+	private ClientAccept clientAcceptor;
+
+	public UDP(ClientAccept clientAcceptor) {
+		this.clientAcceptor = clientAcceptor;
+		
 		try {
 			this.socket = new DatagramSocket(ClientAccept.PORT);
-			this.clientAccept = clientAccept;
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
@@ -44,7 +46,6 @@ public class UDP implements Runnable{
 			
 			DatagramPacket packet = new DatagramPacket(data, data.length);
 			
-			
 			try {
 				socket.receive(packet);
 				RecievedPacketsUDP.incrementAndGet();
@@ -59,10 +60,23 @@ public class UDP implements Runnable{
 	}
 	
 	private void handleData(DatagramPacket packet) {
+
+		Client client = clientAcceptor.getClientByAddressAndPort(packet.getAddress(), packet.getPort());
+
+		if (client == null) {
+			System.out.println("UDP packet sent from unknown client: "+packet.getAddress().toString());
+			return;
+		}
+
 		switch (packet.getData()[0]) {
+		case 1:
+			byte data = packet.getData()[1];
+			boolean pressed = 1 == ((data >> 6) & 1); // Determines whether a key has been pressed or released
+			data = (byte) (data & ~(1 << 6)); // Resets the pressed bit to revert to the key number
+			client.handleKey(pressed, data);
+			break;
 		case 10:
 			
-			Client client = clientAccept.getClientbyIPAddress(packet.getAddress());
 			
 			byte[] test = Bitmaths.intToBytes(packet.getPort());
 			test = Bitmaths.pushByteToData((byte) 10, test);

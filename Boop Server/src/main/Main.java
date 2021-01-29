@@ -132,7 +132,7 @@ public class Main {
 	UDP udp;
 	
 	public void setupConnections() {
-		clientAcceptor = new ClientAccept(serverIP);
+		clientAcceptor = new ClientAccept();
 		udp = new UDP(clientAcceptor);
 		clientAcceptor.startServer();
 		udp.startUDP();
@@ -517,17 +517,6 @@ public class Main {
 	public static void main(String args[]){
 		Thread t = Thread.currentThread();
 		t.setName("Main-Loop");
-		
-		try {
-			if (args.length > 0) {
-				serverIP = InetAddress.getByName(args[0]);
-			} 
-			
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			System.out.println("Given IP not valid");
-			serverIP = null;
-		}
 		
 		Main main = new Main();
 		main.createDisplay();
