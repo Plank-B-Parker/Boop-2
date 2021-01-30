@@ -13,7 +13,6 @@ import balls.Storage;
 import display.Display;
 import math.Bitmaths;
 import math.Vec2f;
-import math.VecPool;
 import networking.ServerLink;
 import networking.UdpLink;
 
@@ -33,8 +32,6 @@ public class Main {
 	
 	private Keyboard keyboard;
 	private Mouse mouse;
-	
-	private VecPool vecPool = new VecPool();
 	
 	public Main() {
 
