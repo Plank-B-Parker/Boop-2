@@ -39,7 +39,7 @@ public class Client implements Runnable{
 	private float timeBetweenUpdates = 1f;	//Time between the balls being sent;
 	private float delayUntilFirstSend = 3500;
 
-	private float movementSpeed = 0.1f; //Speed that the client's centre moves
+	private float movementSpeed = 0.3f; //Speed that the client's centre moves
 	private Vec2f velFromMouse = new Vec2f();
 
 	private boolean[] pressedKeys = new boolean[4]; // Array to track which keys are being pressed
