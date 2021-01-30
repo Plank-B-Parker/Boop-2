@@ -1,12 +1,9 @@
 package math;
 
-import java.awt.Color;
 import java.util.List;
 
 import balls.Ball;
 import balls.Storage;
-
-import java.util.Iterator;
 
 public class Physics {
 	
@@ -16,6 +13,7 @@ public class Physics {
 	public Vec2f pos = new Vec2f();
 	public Vec2f vel = new Vec2f();
 	public Vec2f acc = new Vec2f();
+	
 	public float mass;
 	public float mag = 0.02f;
 	public float bounciness = 1f;
@@ -24,9 +22,7 @@ public class Physics {
 	public Ball owner;
 	
 	//Temp variables to avoid object creation;
-	final private static Vec2f temp1 = new Vec2f();
-	final private static Vec2f temp2 = new Vec2f();
-	final private static Vec2f temp3 = new Vec2f();
+	static VecPool tempVecs = new VecPool();
 	
 	public Physics(Ball owner) {
 		this.owner = owner;
@@ -39,10 +35,13 @@ public class Physics {
 	 * @return
 	 */
 	public float calcEnergy(List<Ball> balls) {
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
 		float KE = 0.5f*mass*vel.lengthSq();
 		float PE = 0;
 		
-		Vec2f disp = temp1;
+		Vec2f disp = tempVecs.getVec();
 
 		synchronized (balls) {
 			for (Ball ball: balls) {
@@ -54,6 +53,9 @@ public class Physics {
 			}
 		}
 		
+		/////////////////////////
+		tempVecs.endOfMethod();
+		
 		return PE + KE;
 	}
 	
@@ -64,6 +66,8 @@ public class Physics {
 	public void update(float dt) {
 		Vec2f.increment(vel, vel, acc, dt);
 		Vec2f.increment(pos, pos, vel, dt);
+		
+		//Set pos to be between -1 and 1;
 		normalisePos();
 	}
 	
@@ -99,14 +103,21 @@ public class Physics {
 	 * @param balls: A list of balls that could be colliding.
 	 */
 	public static void checkCollision(Storage balls) {
-		Vec2f disp = temp1;
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
+		Vec2f disp = tempVecs.getVec();
 		
 		synchronized (balls) {
 			for(int i = 0; i < balls.numBalls - 1; i++) {
 				Ball ball = balls.getBall(i);
+				if(ball.getID() == -1) continue;
+				
 				//Go through every ball after current ball in list.
 				for(int j = i + 1; j < balls.numBalls; j++) {
 					Ball otherBall = balls.getBall(j);
+					
+					if(otherBall.getID() == -1) continue;
 					
 					disp(disp, otherBall.phys.pos, ball.phys.pos);
 					float minimumDistance = ball.getRad() + otherBall.getRad();
@@ -122,8 +133,8 @@ public class Physics {
 					Vec2f.scale(disp, disp, 1f/distance);
 					
 					//Move balls apart to stop overlap.
-					Vec2f.increment(ball.phys.pos, ball.phys.pos, disp, -overlap*0.5f);
-					Vec2f.increment(otherBall.phys.pos, otherBall.phys.pos, disp, overlap*0.5f);
+					ball.moveBall(disp, -overlap*0.5f);
+					otherBall.moveBall(disp, overlap*0.5f);
 					
 					float impulse = calcImpulse(ball, otherBall, disp);
 					
@@ -134,8 +145,8 @@ public class Physics {
 					
 					// If the types of each ball are exploding types, explode them into 16 smaller balls with 2J of explosion power
 					if (ball.getType() == 2 && otherBall.getType() == 2) {
-						Vec2f pos1 = temp1;
-						Vec2f pos2 = temp2;
+						Vec2f pos1 = tempVecs.getVec();
+						Vec2f pos2 = tempVecs.getVec();
 						
 						pos1 = ball.phys.pos.copy();
 						pos2 = otherBall.phys.pos.copy();
@@ -149,6 +160,9 @@ public class Physics {
 				}
 			}
 		}
+		
+		///////////////////////
+		tempVecs.endOfMethod();
 	}
 	
 	//Calculates impulse of a collision.
@@ -208,14 +222,16 @@ public class Physics {
 	 * @param maxDist: Balls farther than this wont be affected.
 	 */
 	private void addAttraction(Vec2f acc, List<Ball> balls, float attractionStrength, float minDist, float maxDist) {
-
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
 		synchronized (balls) {
 			for(Ball ball: balls) {
 				//Skip if the other ball is this ball.
 				//Temporary, get rid of "ball.getID() != -5"
 				if(ball == owner || ball.getID() != -5) 
 					continue;
-				Vec2f disp = temp1;
+				Vec2f disp = tempVecs.getVec();
 				disp(disp, ball.phys.pos, pos);
 				
 				//If distance is less than minDist then skip.
@@ -230,6 +246,9 @@ public class Physics {
 				Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
 			}
 		}
+		
+		///////////////////////
+		tempVecs.endOfMethod();
 	}
 	
 	//Sets pos components to go between -1 and 1.
@@ -249,6 +268,8 @@ public class Physics {
 	private static int removeCount = 0;
 	// Makes a ball explode into a given number of parts with a given amount of extra energy
 	private void explode(Storage balls, int parts, float energy) {
+		tempVecs.startOfMethod();
+		/////////////////////////
 		
 		// Remove the ball that is exploding
 		owner.remove();
@@ -273,29 +294,37 @@ public class Physics {
 		
 		// Spawn in the small balls
 		for (int i = 0; i < parts; i++) {
+			
 			Ball ball = new Ball(3);
 			ball.setRad(newRad);
 			ball.phys.mass = newMass;
 			
-			Vec2f direction = temp1;
+			Vec2f direction = tempVecs.getVec();
 			direction.x = (float)Math.cos(angleDif * i);
 			direction.y = (float)Math.sin(angleDif * i);
 			
 			//Increment: ballPos = pos + direction*polygonRad
-			Vec2f.increment(ball.phys.pos, pos, direction, polygonRad);
+			Vec2f ballPos = Vec2f.increment(tempVecs.getVec(), pos, direction, polygonRad);
+			ball.setPos(ballPos);
 			Vec2f.increment(ball.phys.vel, vel, direction, velAdd);
 			balls.add(ball);
 		}
+		
+		/////////////////////////
+		tempVecs.endOfMethod();
 	}
 	
 	//Produces a shock wave that makes the balls move.
 	private static void shockwave(Storage balls, Vec2f centre, float impulse) {
-
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
 		synchronized (balls) {
 			for(int i = 0; i < balls.numBalls; i++) {
 				Ball ball = balls.getBall(i);
+				if(ball.getID() == -1) continue;
 				
-				Vec2f disp = temp3;
+				Vec2f disp = tempVecs.getVec();
 				Vec2f.sub(disp, ball.phys.pos, centre);
 				float distCubed = disp.lengthSq();
 				distCubed *= Math.sqrt(distCubed);
@@ -303,6 +332,9 @@ public class Physics {
 				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed + 0.01f));
 			}
 		}
+		
+		///////////////////////
+		tempVecs.endOfMethod();
 	}
 	
 }

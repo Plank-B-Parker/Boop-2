@@ -75,6 +75,10 @@ public class Ball {
 		}
 	}
 	
+	public void moveBall(Vec2f direction, float scalar) {
+		Vec2f.increment(phys.pos, phys.pos, direction, scalar);
+	}
+	
 	public int getID() {
 		return ID;
 	}
@@ -84,9 +88,19 @@ public class Ball {
 		phys.pos.y = y;
 	}
 	
+	public void setPos(Vec2f pos) {
+		phys.pos.x = pos.x;
+		phys.pos.y = pos.y;
+	}
+	
 	public void setVel(float x, float y) {
 		phys.vel.x = x;
 		phys.vel.y = y;
+	}
+	
+	public void setVel(Vec2f vel) {
+		phys.vel.x = vel.x;
+		phys.vel.y = vel.y;
 	}
 	
 	public int getType() {

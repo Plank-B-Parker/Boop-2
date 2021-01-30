@@ -6,8 +6,6 @@ import balls.Ball;
 import balls.Storage;
 
 public class Physics {
-	// COPIED from server file
-	
 	
 	//For pos, x and y go between -1 and 1.
 	//If they go above 1, then loop back to -1.
@@ -16,22 +14,10 @@ public class Physics {
 	public Vec2f vel = new Vec2f();
 	public Vec2f acc = new Vec2f();
 	
-	//Client sees client pos.
-	public Vec2f clientPos = new Vec2f();
-	public Vec2f clientVel = new Vec2f();
-	public Vec2f clientAcc = new Vec2f();
-	
-	//Coefficients to control how responsive client is.
-	private float cA = 0.01f; //acceleration coefficient.
-	private float cV = -0.25f; //damping coefficient.
-	
 	public float mass;
 	public float mag = 0.02f;
 	public float bounciness = 1f;
 	private static float dragCoefficient = 10f;
-	
-	public float timeForCorrection = 1f/15f;
-	public float timeLeftForCorrection = 1f/15f;
 	
 	public Ball owner;
 	
@@ -71,7 +57,6 @@ public class Physics {
 		tempVecs.endOfMethod();
 		
 		return PE + KE;
-		
 	}
 	
 	/**
@@ -79,27 +64,11 @@ public class Physics {
 	 * @param dt: Time step.
 	 */
 	public void update(float dt) {
-		tempVecs.startOfMethod();
-		/////////////////////////
-		
 		Vec2f.increment(vel, vel, acc, dt);
 		Vec2f.increment(pos, pos, vel, dt);
 		
-		
-		calcClientCorrAcc(dt);
-		Vec2f.increment(clientVel, clientVel, clientAcc, dt);
-		Vec2f.increment(clientPos, clientPos, clientVel, dt);
-		
-		//Decrease error between client pos and pos.
-//		Vec2f posError = tempVecs.getVec();
-//		disp(posError, pos, clientPos);
-//		Vec2f.increment(clientPos, clientPos, posError, dt);
-		
 		//Set pos to be between -1 and 1;
 		normalisePos();
-		
-		/////////////////////////
-		tempVecs.endOfMethod(); 
 	}
 	
 	//Might try a more accurate integration method if I figure it out.
@@ -113,42 +82,14 @@ public class Physics {
 	 */
 	public void calcAcc(List<Ball> balls) {
 		acc.set(0, 0);
+		
 		//Strong mid range attractive force.
 		addAttraction(acc, balls, 1f, owner.getRad()*5, 0.5f);
 		//weaker small range repulsive force
 		addAttraction(acc, balls, -10f, owner.getRad(), owner.getRad()*5f);
+		
 		//Drag force to stop spinning.
 		addDrag(acc);
-		
-	}
-	
-	//Uses implicit method for fun. 
-	//But is a bit more complicated, ask Ibraheem for details.
-	private void calcClientCorrAcc(float dt) {
-		tempVecs.startOfMethod();
-		/////////////////////////
-		
-		//cl_acc = (acc - (cV/cA)*(vel - cl_vel) + (1/cA)*(pos - "cl_pos"))/(1 - dt/cA + (dt^2)*(cV/cA)) 
-
-		// -(cV/cA)*(vel - cl_vel)
-		Vec2f velTerm = Vec2f.sub(tempVecs.getVec(), vel, clientVel);
-		Vec2f.scale(velTerm, velTerm, -cV/cA);
-		
-		//(1/cA)*(pos - "cl_pos")
-		Vec2f cl_pos = Vec2f.increment(tempVecs.getVec(), clientPos, clientVel, dt);
-		Vec2f posTerm = Vec2f.disp(tempVecs.getVec(), pos, cl_pos);
-		Vec2f.scale(posTerm, posTerm, 1f/cA);
-		
-		//1/(1 - dt/cA + (dt^2)*(cV/cA)
-		float scale = 1f/(1 + dt/cA + dt*dt*cV/cA);
-		
-		//Put all terms together in clientAcc.
-		Vec2f.add(clientAcc, acc, velTerm);
-		Vec2f.add(clientAcc, clientAcc, posTerm);
-		Vec2f.scale(clientAcc, clientAcc, scale);
-		
-		///////////////////////
-		tempVecs.endOfMethod();
 	}
 	
 	//Drag force.
@@ -175,6 +116,7 @@ public class Physics {
 				//Go through every ball after current ball in list.
 				for(int j = i + 1; j < balls.getBallListSize(); j++) {
 					Ball otherBall = balls.getBall(j);
+					
 					if(otherBall.getID() == -1) continue;
 					
 					disp(disp, otherBall.phys.pos, ball.phys.pos);
@@ -191,8 +133,8 @@ public class Physics {
 					Vec2f.scale(disp, disp, 1f/distance);
 					
 					//Move balls apart to stop overlap.
-					Vec2f.increment(ball.phys.pos, ball.phys.pos, disp, -overlap*0.5f);
-					Vec2f.increment(otherBall.phys.pos, otherBall.phys.pos, disp, overlap*0.5f);
+					ball.moveBall(disp, -overlap*0.5f);
+					otherBall.moveBall(disp, overlap*0.5f);
 					
 					float impulse = calcImpulse(ball, otherBall, disp);
 					
@@ -286,6 +228,7 @@ public class Physics {
 		synchronized (balls) {
 			for(Ball ball: balls) {
 				//Skip if the other ball is this ball.
+				//Temporary, get rid of "ball.getID() != -5"
 				if(ball == owner || ball.getID() != -5) 
 					continue;
 				Vec2f disp = tempVecs.getVec();
@@ -319,16 +262,6 @@ public class Physics {
 			pos.y = -1 + pos.y%1f;
 		if(pos.y < -1)
 			pos.y = 1 + pos.y%1f;
-		
-		if(clientPos.x > 1) 
-			clientPos.x = -1 + clientPos.x%1f;
-		if(clientPos.x < -1)
-			clientPos.x = 1 + clientPos.x%1f;
-		
-		if(clientPos.y > 1) 
-			clientPos.y = -1 + clientPos.y%1f;
-		if(clientPos.y < -1)
-			clientPos.y = 1 + clientPos.y%1f;
 	}
 	
 	
@@ -337,6 +270,11 @@ public class Physics {
 	private void explode(Storage balls, int parts, float energy) {
 		tempVecs.startOfMethod();
 		/////////////////////////
+		
+		// Remove the ball that is exploding
+		owner.remove();
+		removeCount++;
+		System.out.println(removeCount);
 		
 		// Calculate the new radius and mass of each smaller ball part
 		float newRad = (float) (owner.getRad() / Math.sqrt(parts));
@@ -356,7 +294,7 @@ public class Physics {
 		
 		// Spawn in the small balls
 		for (int i = 0; i < parts; i++) {
-			//What to do about spawning in client?
+			
 			Ball ball = new Ball(3);
 			ball.setRad(newRad);
 			ball.phys.mass = newMass;
@@ -366,16 +304,11 @@ public class Physics {
 			direction.y = (float)Math.sin(angleDif * i);
 			
 			//Increment: ballPos = pos + direction*polygonRad
-			Vec2f.increment(ball.phys.pos, pos, direction, polygonRad);
-			Vec2f.increment(ball.phys.clientPos, pos, direction, polygonRad);
+			Vec2f ballPos = Vec2f.increment(tempVecs.getVec(), pos, direction, polygonRad);
+			ball.setPos(ballPos);
 			Vec2f.increment(ball.phys.vel, vel, direction, velAdd);
 			balls.add(ball);
 		}
-		
-		// Remove the ball that is exploding
-		owner.remove();
-		removeCount++;
-		System.out.println(removeCount);
 		
 		/////////////////////////
 		tempVecs.endOfMethod();

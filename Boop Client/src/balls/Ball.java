@@ -18,6 +18,18 @@ public class Ball {
 	private Color colour;
 	private int ownerID;
 	
+	//Client sees client pos.
+	public Vec2f clientPos = new Vec2f();
+	public Vec2f clientVel = new Vec2f();
+	public Vec2f clientAcc = new Vec2f();
+	
+	//Coefficients to control how responsive client is.
+	private float cA = 0.01f; //acceleration coefficient.
+	private float cV = -0.25f; //damping coefficient.
+	
+	private float timeForCorrection = 1f/15f;
+	private float timeLeftForCorrection = 1f/15f;
+	
 	private boolean timed = true;
 	private float timeAlive = 0;
 
@@ -42,7 +54,7 @@ public class Ball {
 		ID = (int)data[0];
 		type = (int)data[1];
 		setType(type);
-		phys.clientPos.set(data[2], data[3]);
+		clientPos.set(data[2], data[3]);
 		phys.pos.set(data[2], data[3]);
 		phys.vel.set(data[4], data[5]);
 		ownerID = (int)data[6];
@@ -70,7 +82,7 @@ public class Ball {
 
 		Vec2f pos = vecPool.getVec();
 
-		Vec2f.disp(pos, phys.clientPos, Display.centreInServer);
+		Vec2f.disp(pos, clientPos, Display.centreInServer);
 
 		float x = pos.x;
 		float y = pos.y;
@@ -155,8 +167,8 @@ public class Ball {
 	
 	
 	public void render(Graphics2D g, float dt) {
-		float posX = phys.clientPos.x;
-		float posY = phys.clientPos.y;
+		float posX = clientPos.x;
+		float posY = clientPos.y;
 		
 		float serverWidth = Display.diameterInServer*Display.aspectRatio;
 		float serverHeight = Display.diameterInServer;
@@ -228,6 +240,59 @@ public class Ball {
 		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
 	}
 	
+	public void updateClientPrediction(float dt) {
+		calcClientCorrAcc(dt);
+		Vec2f.increment(clientVel, clientVel, clientAcc, dt);
+		Vec2f.increment(clientPos, clientPos, clientVel, dt);
+		normaliseClientPos();
+	}
+	
+	//Uses implicit method for fun. 
+	//But is a bit more complicated, ask Ibraheem for details.
+	private void calcClientCorrAcc(float dt) {
+		vecPool.startOfMethod();
+		/////////////////////////
+		
+		//cl_acc = (acc - (cV/cA)*(vel - cl_vel) + (1/cA)*(pos - "cl_pos"))/(1 - dt/cA + (dt^2)*(cV/cA)) 
+
+		// -(cV/cA)*(vel - cl_vel)
+		Vec2f velTerm = Vec2f.sub(vecPool.getVec(), phys.vel, clientVel);
+		Vec2f.scale(velTerm, velTerm, -cV/cA);
+		
+		//(1/cA)*(pos - "cl_pos")
+		Vec2f cl_pos = Vec2f.increment(vecPool.getVec(), clientPos, clientVel, dt);
+		Vec2f posTerm = Vec2f.disp(vecPool.getVec(), phys.pos, cl_pos);
+		Vec2f.scale(posTerm, posTerm, 1f/cA);
+		
+		//1/(1 - dt/cA + (dt^2)*(cV/cA)
+		float scale = 1f/(1 + dt/cA + dt*dt*cV/cA);
+		
+		//Put all terms together in clientAcc.
+		Vec2f.add(clientAcc, phys.acc, velTerm);
+		Vec2f.add(clientAcc, clientAcc, posTerm);
+		Vec2f.scale(clientAcc, clientAcc, scale);
+		
+		///////////////////////
+		vecPool.endOfMethod();
+	}
+	
+	public void moveBall(Vec2f direction, float scalar) {
+		Vec2f.increment(phys.pos, phys.pos, direction, scalar);
+		Vec2f.increment(clientPos, clientPos, direction, scalar);
+	}
+	
+	private void normaliseClientPos() {
+		if(clientPos.x > 1) 
+			clientPos.x = -1 + clientPos.x%1f;
+		if(clientPos.x < -1)
+			clientPos.x = 1 + clientPos.x%1f;
+		
+		if(clientPos.y > 1) 
+			clientPos.y = -1 + clientPos.y%1f;
+		if(clientPos.y < -1)
+			clientPos.y = 1 + clientPos.y%1f;
+	}
+	
 	//For checking if ball hasn't been updated in a while.
 	public void updateTimer(float dt) {
 		if(timed) {
@@ -254,8 +319,8 @@ public class Ball {
 		float vely = data[5];
 		ownerID = (int)data[6];
 		
-		setPos(x,y);
-		setVel(velx, vely);
+		setActualPos(x,y);
+		setActualVel(velx, vely);
 		
 		resetTimer();
 	}
@@ -264,14 +329,46 @@ public class Ball {
 		return ID;
 	}
 	
+	private void setActualPos(float x, float y) {
+		phys.pos.x = x;
+		phys.pos.y = y;
+	}
+	
+	private void setActualVel(float x, float y) {
+		phys.vel.x = x;
+		phys.vel.y = y;
+	}
+	
 	public void setPos(float x, float y) {
 		phys.pos.x = x;
 		phys.pos.y = y;
+		
+		clientPos.x = x;
+		clientPos.y = y;
+	}
+	
+	public void setPos(Vec2f pos) {
+		phys.pos.x = pos.x;
+		phys.pos.y = pos.y;
+		
+		clientPos.x = pos.x;
+		clientPos.y = pos.y;
 	}
 	
 	public void setVel(float x, float y) {
 		phys.vel.x = x;
 		phys.vel.y = y;
+		
+		clientVel.x = x;
+		clientVel.y = y;
+	}
+	
+	public void setVel(Vec2f vel) {
+		phys.vel.x = vel.x;
+		phys.vel.y = vel.y;
+		
+		clientVel.x = vel.x;
+		clientVel.y = vel.y;
 	}
 	
 	public int getType() {

@@ -31,6 +31,13 @@ public class Storage {
 		synchronized (balls) {
 			for(Ball ball: balls) {
 				if(ball.getID() != -1)
+					ball.updateClientPrediction(dt);;
+			}
+		}
+		
+		synchronized (balls) {
+			for(Ball ball: balls) {
+				if(ball.getID() != -1)
 					ball.phys.calcAcc(balls);
 			}
 		}
@@ -41,6 +48,8 @@ public class Storage {
 					ball.phys.update(dt);
 			}
 		}
+		
+		
 		
 		List<Ball>ballsToRemove = new ArrayList<Ball>();
 		synchronized (balls) {
