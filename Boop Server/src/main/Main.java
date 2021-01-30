@@ -327,8 +327,6 @@ public class Main {
 			
 			List<Ball> inRange = new ArrayList<>();
 			
-			client.sendCentrePos();
-			
 			for (Ball ball: allBalls) {
 				// check if ball is in client area (simple circ)
 				//TODO: use disp method to find differnce.
@@ -427,6 +425,8 @@ public class Main {
 			if(!client.isReadyForUpdate()) continue;
 			
 			List<Ball> inRange = new ArrayList<>();
+			
+			client.sendCentrePos();
 			
 			for (Ball ball: allBalls) {
 				// check if ball is in client area (simple circ)
