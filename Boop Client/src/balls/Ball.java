@@ -88,17 +88,17 @@ public class Ball {
 		int Y2 = Y;
 		
 		if(x + rad > 1) {
-			X2 = X - Display.WINDOW_WIDTH;
+			X2 = (int) (X - 2*b*Display.WINDOW_WIDTH);
 		}
 		else if(x - rad < -1) {
-			X2 = X + Display.WINDOW_WIDTH;
+			X2 = (int) (X + 2*b*Display.WINDOW_WIDTH);
 		}
 		
 		if(y + rad > 1) {
-			Y2 = Y - Display.WINDOW_WIDTH;
+			Y2 = (int) (Y - 2*b*Display.WINDOW_WIDTH);
 		}
 		else if(y - rad < -1) {
-			Y2 = Y + Display.WINDOW_WIDTH;
+			Y2 = (int) (Y + 2*b*Display.WINDOW_WIDTH);
 		}
 		
 		g.setColor(colour);
