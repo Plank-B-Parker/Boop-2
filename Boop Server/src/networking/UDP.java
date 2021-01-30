@@ -70,6 +70,13 @@ public class UDP implements Runnable{
 			data = (byte) (data & ~(1 << 6)); // Resets the pressed bit to revert to the key number
 			client.handleKey(pressed, data);
 			break;
+		case 5:
+			float vy = Bitmaths.bytesToFloat(packet.getData(),1);
+			float vx = Bitmaths.bytesToFloat(packet.getData(),5);
+			
+			System.out.println("(" + client.centrePos.x + ", " + client.centrePos.y + ")");
+			client.setVel(vx, vy);
+			break;
 		case 10:
 			byte[] test = Bitmaths.intToBytes(packet.getPort());
 			byte[] test2 = Bitmaths.pushByteToData((byte) 10, test);

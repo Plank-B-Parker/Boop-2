@@ -11,7 +11,9 @@ import java.util.Random;
 
 import balls.Storage;
 import display.Display;
+import math.Bitmaths;
 import math.Vec2f;
+import math.VecPool;
 import networking.ServerLink;
 import networking.UdpLink;
 
@@ -30,11 +32,16 @@ public class Main {
 	public Vec2f pos;
 	
 	private Keyboard keyboard;
+	private Mouse mouse;
+	
+	private VecPool vecPool = new VecPool();
 	
 	public Main() {
 
 		keyboard = new Keyboard();
+		mouse = new Mouse();
 		canvas.addKeyListener(keyboard);
+		canvas.addMouseMotionListener(mouse);
 		
 		Random random = new Random();
 		
@@ -118,6 +125,15 @@ public class Main {
 							udpLink.sendData(new byte[] {1, data});
 						}
 					}
+					
+					if(mouse.mouseMoved) {
+						mouse.mouseMoved = false;
+						byte[] data = new byte[0];
+						data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.playerVel.x), data);
+						data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.playerVel.y), data);
+						data = Bitmaths.pushByteToData((byte)5, data);
+						udpLink.sendData(data);
+					}
 
 					udpLink.processServerUpdate();
 				}
@@ -130,7 +146,6 @@ public class Main {
 					}
 					
 					if (serverLink.getServerConnection()) {
-
 						// Checks if any hold keys have been pressed or released and sends any changes to the server
 						Key[] keys = new Key[] {Key.W, Key.A, Key.S, Key.D};
 						for (int i = 0; i < keys.length; i++) {
@@ -151,6 +166,15 @@ public class Main {
 								udpLink.sendData(new byte[] {1, data});
 							}
 						}
+						
+//						if(mouse.mouseMoved) {
+//							mouse.mouseMoved = false;
+//							byte[] data = new byte[0];
+//							data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.mouseDir.x), data);
+//							data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.mouseDir.y), data);
+//							data = Bitmaths.pushByteToData((byte)5, data);
+//							udpLink.sendData(data);
+//						}
 
 					}
 
@@ -184,7 +208,7 @@ public class Main {
 		updatePos(dt);
 	}
 
-	float movementSpeed = 0.1f;
+	static float movementSpeed = 0.3f;
 	private void updatePos(float dt) {
 		if (keyboard.isActive(Key.W)) {
 			Display.centreInServer.y -= movementSpeed*dt;
@@ -205,6 +229,16 @@ public class Main {
 			Display.centreInServer.x += movementSpeed*dt;
 			if (Display.centreInServer.x > 1) Display.centreInServer.x -= 2;
 		}
+		
+		
+		Vec2f.increment(Display.centreInServer, Display.centreInServer, mouse.playerVel, dt);
+		
+		if (Display.centreInServer.y < -1) Display.centreInServer.y += 2;
+		if (Display.centreInServer.x < -1) Display.centreInServer.x += 2;
+		if (Display.centreInServer.y > 1) Display.centreInServer.y -= 2;
+		if (Display.centreInServer.x > 1) Display.centreInServer.x -= 2;
+		
+		
 	}
 	
 	BufferStrategy bs;

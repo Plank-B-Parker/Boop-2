@@ -94,4 +94,9 @@ public class Vec2f {
 	public static float dot(Vec2f A, Vec2f B) {
 		return A.x*B.x + A.y*B.y;
 	}
+	
+	public void normalise() {
+		scale(this,this, (float) (1/Math.sqrt(lengthSq())));
+	}
+	
 }
