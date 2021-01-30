@@ -232,6 +232,10 @@ public class Main {
 		List<Client> clients = new ArrayList<>(clientAcceptor.clients.size());
 		clients = List.copyOf(clientAcceptor.clients);
 		
+		for(Client client: clients) {
+			client.updatePos(dt);
+		}
+		
 		storage.updateBalls(dt);
 	}
 	
@@ -322,6 +326,8 @@ public class Main {
 			if(!client.isReadyForUpdate()) continue;
 			
 			List<Ball> inRange = new ArrayList<>();
+			
+			client.sendCentrePos();
 			
 			for (Ball ball: allBalls) {
 				// check if ball is in client area (simple circ)
