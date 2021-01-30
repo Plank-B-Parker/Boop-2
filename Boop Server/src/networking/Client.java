@@ -41,7 +41,8 @@ public class Client implements Runnable{
 	private float timeBetweenUpdates = 1f;	//Time between the balls being sent;
 	private float delayUntilFirstSend = 3500;
 
-	private float movementSpeed = 0.1f; //Speed that the client's centre moves
+	private float movementSpeed = 0.3f; //Speed that the client's centre moves
+	private Vec2f velFromMouse = new Vec2f();	
 
 	private boolean[] pressedKeys = new boolean[4]; // Array to track which keys are being pressed
 	
@@ -194,6 +195,10 @@ public class Client implements Runnable{
 
 		pressedKeys[key] = pressed;
 	}
+	
+	public void setVel(float vx, float vy) {
+		velFromMouse.set(vx, vy);
+	}
 
 	public void updatePos(float dt) {
 		
@@ -216,6 +221,13 @@ public class Client implements Runnable{
 			centrePos.x += movementSpeed*dt;
 			if (centrePos.x > 1) centrePos.x -= 2;
 		}
+		
+		Vec2f.increment(centrePos, centrePos, velFromMouse, dt);
+		
+		if (centrePos.y < -1) centrePos.y += 2;
+		if (centrePos.x < -1) centrePos.x += 2;
+		if (centrePos.y > 1) centrePos.y -= 2;
+		if (centrePos.x > 1) centrePos.x -= 2;
 
 	}
 

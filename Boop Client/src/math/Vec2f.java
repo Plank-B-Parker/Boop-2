@@ -122,4 +122,7 @@ public class Vec2f {
 	public float lengthSq() {
 		return x*x + y*y;
 	}
+	public void normalise() {
+		scale(this,this, (float) (1/Math.sqrt(lengthSq())));
+	}
 }
