@@ -99,7 +99,7 @@ public class UDP implements Runnable{
 	
 	public void sendData(byte[] data, InetAddress ipAddress, int port) {
 		DatagramPacket packet = new DatagramPacket(data, data.length, ipAddress, port);
-		packet.getAddress(); // check if packet is actually from a client
+		
 		try {
 			socket.send(packet);
 			SentPacketsUDP.incrementAndGet();

@@ -187,12 +187,11 @@ public class Main {
 				ticks++;
 			}
 			
-			// 30 transmits per second
+			// maximum 30 transmits per second
 			while (timeAfterLastTransmit >= MS_PER_UPDATE * 2) {
 				// Send data and other stuff here
 				
 				// check if clients are connected then remove them from list
-				clientAcceptor.checkClientsConnection();
 				List<Client> clients = clientAcceptor.getClients();
 				for (Client client : clients) {
 					client.sendCentrePos();			
@@ -233,7 +232,8 @@ public class Main {
 	}
 	
 	public void fixedUpdate(float dt) {
-		// Move clients from waitingList (clientsToAdd) to clients list.
+		// Update client lists here to avoid concurrent modification
+		clientAcceptor.checkClientsConnection();
 		clientAcceptor.moveWaitingClients();
 		
 		List<Client> clients = clientAcceptor.getClients();

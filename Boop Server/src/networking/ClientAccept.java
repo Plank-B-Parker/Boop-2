@@ -20,6 +20,7 @@ public class ClientAccept implements Runnable{
 	static volatile boolean serverON = false;
 	
 	List<Client> clientsToAdd = new ArrayList<>(4);
+	List<Client> clientsToRemove = new ArrayList<>(4);
 	List<Client> clients = new ArrayList<>();
 	
 	
@@ -98,12 +99,17 @@ public class ClientAccept implements Runnable{
 			clients.add(client);
 		}
 		
+		for (Client client : clientsToRemove) {
+			clients.remove(client);
+		}
+		
 		clientsToAdd.clear();
+		clientsToRemove.clear();
 	}
 	
 	public void checkClientsConnection() {
-		for (Client client: clients) {
-			if (! client.isConnected()) clients.remove(client);
+		for (int i = 0; i < clients.size(); i++) {
+			if (! clients.get(i).isConnected()) clientsToRemove.add(clients.get(i));
 		}
 	}
 	
