@@ -24,8 +24,10 @@ public class Storage {
 	}
 	
 	
-	public void updateBalls(ClientAccept clients, float dt) {
+	public void updateBalls(ClientAccept acceptor, float dt) {
 		Physics.checkCollision(this);
+		
+		List<Client> clients = acceptor.getClients();
 		
 		//Maybe put the following bit of code into the client accept class, or whatever should handle client updates.
 		synchronized (balls) {
@@ -59,11 +61,13 @@ public class Storage {
 						
 						if(client.isInReach(ball)) {
 							
+							long ownerID = ball.getOwnerID();
+							
 							//Make sure balls in territories are magnetic.
 							ball.phys.magnetic = true;
 							
 							//If the ball already belongs to the current client... well, it belongs to the current client.
-							if(ball.getOwnerID() == client.getIdentity()) {
+							if(ownerID == client.getIdentity()) {
 								continue;
 							}
 							
@@ -73,18 +77,18 @@ public class Storage {
 							}
 							
 							//If the ball is in a dispute between two attractive clients.
-							if(ball.getOwnerID() == -2) {
+							if(ownerID == -2) {
 								continue;
 							}
 							//If the ball is within but a single clients territory.
-							if(ball.getOwnerID() == -1) {
+							if(ownerID == -1) {
 								client.ownedBalls.add(ball);
 								ball.setOwnerID(client.getIdentity());
 								continue;
 							}
 							//If the ball is within another clients territory and the current client has stumbled across it.
-							if(ball.getOwnerID() >= 0) {
-								(clients.getClientByID(ball.getOwnerID())).ownedBalls.remove(ball);
+							if(ownerID >= 0) {
+								(acceptor.getClientByID(ball.getOwnerID())).ownedBalls.remove(ball);
 								ball.setOwnerID(-2);
 							}
 							

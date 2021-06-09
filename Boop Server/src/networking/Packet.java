@@ -5,6 +5,7 @@ public enum Packet {
 	OLD_BALLS((byte) 3, 1392, 58, 6),
 	CLOCK_SYN((byte) 7, 8, 1, 1),
 	ACK((byte) 8, 8, 1, 1),
+	VIEWPORT((byte) 70, 12, 1, 3),
 	DISCONNECT((byte) -5, 0, 0, 0);
 	
 	

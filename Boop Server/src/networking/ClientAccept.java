@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class ClientAccept extends ArrayList<Client> implements Runnable{
+public class ClientAccept implements Runnable{
 	
 	/**
 	 * 
@@ -19,13 +19,13 @@ public class ClientAccept extends ArrayList<Client> implements Runnable{
 	Thread clientAcceptor;
 	static volatile boolean serverON = false;
 	
-	ArrayList<Client> clientsToAdd = new ArrayList<>();
+	List<Client> clientsToAdd = new ArrayList<>(4);
+	List<Client> clients = new ArrayList<>();
 	
 	
 	Random random = new Random();
 	
 	public ClientAccept() {
-		super(8);
 		try {
 			serverSocket = new ServerSocket(PORT);
 			
@@ -51,7 +51,7 @@ public class ClientAccept extends ArrayList<Client> implements Runnable{
 				
 				client.setupConnection(socket);
 				
-				add(client);
+				clientsToAdd.add(client);
 				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -66,8 +66,8 @@ public class ClientAccept extends ArrayList<Client> implements Runnable{
 		
 		do {
 			client.setIdentity((long) (Math.random() * 1000));
-			for (int i = 0; i < size(); i++) {
-				if (get(i).getIdentity() == client.getIdentity()) {
+			for (int i = 0; i < clients.size(); i++) {
+				if (clients.get(i).getIdentity() == client.getIdentity()) {
 					validID = false;
 				}
 			}
@@ -93,11 +93,17 @@ public class ClientAccept extends ArrayList<Client> implements Runnable{
 		}
 	}
 	
-	public void checkClientsConnection() {
-		Client[] localClients = toArray(new Client[size()]);
+	public void moveWaitingClients() {
+		for (Client client : clientsToAdd) {
+			clients.add(client);
+		}
 		
-		for (Client client: localClients) {
-			if (! client.isConnected()) remove(client);
+		clientsToAdd.clear();
+	}
+	
+	public void checkClientsConnection() {
+		for (Client client: clients) {
+			if (! client.isConnected()) clients.remove(client);
 		}
 	}
 	
@@ -106,15 +112,15 @@ public class ClientAccept extends ArrayList<Client> implements Runnable{
 	}
 	
 	public void disconnectAllClients(){
-		for (Client client: this) {
+		for (Client client: clients) {
 			client.disconnect();
 		}
-		clear();
+		clients.clear();
 	}
 
 	public Client getClientByAddressAndPort(InetAddress address, int port) {
 
-		for (Client client: this) {
+		for (Client client: clients) {
 			if (client.getIpv4Address().equals(address) && client.getClientPort() == port) return client;
 		}
 
@@ -122,10 +128,14 @@ public class ClientAccept extends ArrayList<Client> implements Runnable{
 	}
 	
 	public Client getClientByID(long ID) {
-		for(Client client: this) {
+		for(Client client: clients) {
 			if(client.getIdentity() == ID) 
 				return client;
 		}
 		return null;
+	}
+	
+	public List<Client> getClients(){
+		return clients;
 	}
 }

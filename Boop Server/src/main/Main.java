@@ -193,6 +193,10 @@ public class Main {
 				
 				// check if clients are connected then remove them from list
 				clientAcceptor.checkClientsConnection();
+				List<Client> clients = clientAcceptor.getClients();
+				for (Client client : clients) {
+					client.sendCentrePos();			
+				}
 				
 				// send ballz
 				sendTestBalls2();
@@ -229,8 +233,10 @@ public class Main {
 	}
 	
 	public void fixedUpdate(float dt) {
-		List<Client> clients = new ArrayList<>(clientAcceptor.size());
-		clients = List.copyOf(clientAcceptor);
+		// Move clients from waitingList (clientsToAdd) to clients list.
+		clientAcceptor.moveWaitingClients();
+		
+		List<Client> clients = clientAcceptor.getClients();
 		
 		for(Client client: clients) {
 			client.updatePos(dt);
@@ -275,13 +281,25 @@ public class Main {
 			g.drawString(""+ 2*(n/2-i)/n,  windowHeight/2, (int)(i/n*windowHeight));
 			g.drawString(""+ 2*(i - n/2)/n,  (int)(i/n*windowHeight), windowHeight/2);
 		}
-		g.setColor(Color.RED);
-		for (Client client: clientAcceptor) {
+		List<Client> clients = clientAcceptor.getClients();
+		for (Client client : clients) {
+			g.setColor(Color.RED);
 			int x = (int) ((client.centrePos.x + 1) * 0.5 * windowHeight);
 			int y = (int) ((client.centrePos.y + 1) * 0.5 * windowHeight);
 			int rad = (int) ((client.radOfVision) * 0.5 * windowHeight);
 			
 			g.drawOval(x - rad, y - rad, 2*rad, 2*rad);
+			
+			g.setColor(Color.GREEN);
+			// TODO draw rectangle to show client's viewport.
+			x = (int) ((client.centrePos.x + 1) * 0.5 * windowHeight);
+			y = (int) ((client.centrePos.y + 1) * 0.5 * windowHeight);
+			int height = (int) (client.radOfInf / Math.sqrt(2) * (float) windowHeight / windowWidth * windowHeight);
+			int width = (int) (client.radOfInf / Math.sqrt(2) * windowHeight);
+			x -= width / 2;
+			y -= height / 2;
+			
+			g.drawRect(x, y, width, height);
 		}
 	}
 
@@ -305,8 +323,7 @@ public class Main {
 	private void sendTestBalls() {
 		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
 		Collection<Ball> allBalls = storage.getBalls();
-		Client[] clients = new Client[clientAcceptor.size()];
-		System.arraycopy(clientAcceptor.toArray(), 0, clients, 0, clientAcceptor.size());
+		List<Client> clients = clientAcceptor.getClients();
 		
 		// sends data to all clients at the same time
 		int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
@@ -315,13 +332,13 @@ public class Main {
 		// Store balls within a certain area around the client screen inside the Client class TODO
 		
 		int packetsNo = (int) Math.ceil((float) allBalls.size() / (float) ballsPerPacket);
-		byte[][][] data = new byte[clients.length][packetsNo][Packet.MAX_PAYLOAD_SIZE - 1];
+		byte[][][] data = new byte[clients.size()][packetsNo][Packet.MAX_PAYLOAD_SIZE - 1];
 		
-		int[] clientMaxPackets = new int[clients.length];
+		int[] clientMaxPackets = new int[clients.size()];
 		
-		for (int i = 0; i < clients.length; i++) {
+		for (int i = 0; i < clients.size(); i++) {
 			
-			Client client = clients[i];
+			Client client = clients.get(i);
 			//Check if client is ready;
 			if(!client.isReadyForUpdate()) continue;
 			
@@ -330,8 +347,8 @@ public class Main {
 			for (Ball ball: allBalls) {
 				// check if ball is in client area (simple circ)
 				//TODO: use disp method to find differnce.
-				float dx = ball.phys.pos.x - clients[i].centrePos.x;
-				float dy = ball.phys.pos.y - clients[i].centrePos.y;
+				float dx = ball.phys.pos.x - client.centrePos.x;
+				float dy = ball.phys.pos.y - client.centrePos.y;
 
 				//Finds minimum difference in position.
 				if(dx > 1) {
@@ -387,9 +404,9 @@ public class Main {
 		// data[i].length
 		// clientMaxPackets[i]
 		// Send packets to client
-		for (int i = 0; i < clients.length; i++) {
+		for (int i = 0; i < clients.size(); i++) {
 			for (int j = 0; j < clientMaxPackets[i]; j++) {
-				udp.sendData(Bitmaths.pushByteToData((byte) 2, data[i][j]), clients[i].getIpv4Address(), clients[i].getClientPort());
+				udp.sendData(Bitmaths.pushByteToData((byte) 2, data[i][j]), clients.get(i).getIpv4Address(), clients.get(i).getClientPort());
 			}
 		}
 		
@@ -404,8 +421,7 @@ public class Main {
 	private void sendTestBalls2() {
 		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
 		Collection<Ball> allBalls = storage.getBalls();
-		Client[] clients = new Client[clientAcceptor.size()];
-		System.arraycopy(clientAcceptor.toArray(), 0, clients, 0, clientAcceptor.size());
+		List<Client> clients = clientAcceptor.getClients();
 		
 		// sends data to all clients at the same time
 		int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
@@ -414,25 +430,23 @@ public class Main {
 		// Store balls within a certain area around the client screen inside the Client class TODO
 		
 		int packetsNo = (int) Math.ceil((float) allBalls.size() / (float) ballsPerPacket);
-		byte[][][] data = new byte[clients.length][packetsNo][Packet.FREE_PAYLOAD_SIZE];
+		byte[][][] data = new byte[clients.size()][packetsNo][Packet.FREE_PAYLOAD_SIZE];
 		
-		int[] clientMaxPackets = new int[clients.length];
+		int[] clientMaxPackets = new int[clients.size()];
 		
-		for (int i = 0; i < clients.length; i++) {
+		for (int i = 0; i < clients.size(); i++) {
 			
-			Client client = clients[i];
+			Client client = clients.get(i);
 			//Check if client is ready;
 			if(!client.isReadyForUpdate()) continue;
 			
 			List<Ball> inRange = new ArrayList<>();
 			
-			client.sendCentrePos();
-			
 			for (Ball ball: allBalls) {
 				// check if ball is in client area (simple circ)
 				//TODO: use disp method to find differnce.
-				float dx = ball.phys.pos.x - clients[i].centrePos.x;
-				float dy = ball.phys.pos.y - clients[i].centrePos.y;
+				float dx = ball.phys.pos.x - client.centrePos.x;
+				float dy = ball.phys.pos.y - client.centrePos.y;
 
 				//Finds minimum difference in position.
 				if(dx > 1) {
@@ -484,18 +498,18 @@ public class Main {
 			
 		}
 		// Send packets to client
-		for (int i = 0; i < clients.length; i++) {
+		for (int i = 0; i < clients.size(); i++) {
 			for (int j = 0; j < clientMaxPackets[i]; j++) {
 				// array to replace with header information
 				byte[] headerInfo = new byte[0];
 				
 				// Add packet id and packet sequence
 				headerInfo = Bitmaths.pushByteToData(Packet.NEW_BALLS.getID(), headerInfo);
-				headerInfo = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(clients[i].udpPacketsSent.incrementAndGet()), headerInfo);
+				headerInfo = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(clients.get(i).udpPacketsSent.incrementAndGet()), headerInfo);
 				
 				byte[] completePacket = Bitmaths.pushByteArrayToData(headerInfo, data[i][j]);
 				
-				udp.sendData(completePacket, clients[i].getIpv4Address(), clients[i].getClientPort());
+				udp.sendData(completePacket, clients.get(i).getIpv4Address(), clients.get(i).getClientPort());
 				
 			}
 		}
@@ -507,8 +521,7 @@ public class Main {
 	 * This stops the client manipulating time and correctly works out time sensitive information.
 	 */
 	public void clockSynchronise() {
-		Client[] clients = new Client[clientAcceptor.size()];
-		System.arraycopy(clientAcceptor.toArray(), 0, clients, 0, clientAcceptor.size());
+		final List<Client> clients = clientAcceptor.getClients();
 		
 		for (Client client : clients) {
 			byte[] data = Bitmaths.longToBytes(System.currentTimeMillis());
