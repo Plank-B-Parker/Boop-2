@@ -2,11 +2,14 @@ package balls;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
 import java.util.List;
 
+import networking.Client;
+import networking.ClientAccept;
 import main.Main;
-import math.Vec2f;
 import math.Physics;
+import math.Vec2f;
 
 public class Ball {
 
@@ -14,13 +17,15 @@ public class Ball {
 	private int type;
 	private float rad;
 	private Color colour;
-	private int ownerID;
+	
+	//-1 if no one owns it, -2 if ball is contested.
+	public long ownerID = -1;
 	
 	private boolean toBeRemoved = false;
 
 	//Contains physics attributes: pos, vel.
 	public Physics phys = new Physics(this);
-		
+
 	
 	public Ball(int type) {
 		setType(type);
@@ -145,8 +150,12 @@ public class Ball {
 		this.rad = rad;
 	}
 
-	public int getOwnerID() {
+	public long getOwnerID() {
 		return ownerID;
+	}
+	
+	public void setOwnerID(long ID) {
+		ownerID = ID;
 	}
 
 	public Color getColour() {	

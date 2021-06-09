@@ -3,15 +3,14 @@ package networking;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jdk.jfr.Unsigned;
-import main.Main;
+import balls.Ball;
 import math.Bitmaths;
 import math.Vec2f;
 
@@ -35,7 +34,11 @@ public class Client implements Runnable{
 	Thread clientThread;
 	
 	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
-	public float radOfInf =  0.5f;        	//radius of region balls are sent to client.
+	public float radOfVision =  0.5f;        	//radius of region balls are sent to client.
+	public float radOfInf = 0.5f;
+	
+	public ArrayList<Ball> ownedBalls = new ArrayList<>();	//list of balls that the player possesses.
+	public ArrayList<Ball> localBalls = new ArrayList<>(); // All balls in the  territory.
 	
 	private long lastTime = 0;					//Last time when balls were sent;
 	private float timeBetweenUpdates = 1f;	//Time between the balls being sent;
@@ -108,7 +111,7 @@ public class Client implements Runnable{
 		float[] clientPosData = new float[4];
 		clientPosData[1] = centrePos.x;
 		clientPosData[2] = centrePos.y;
-		clientPosData[3] = radOfInf;
+		clientPosData[3] = radOfVision;
 		clientPosData[0] = (float) 3 * 4; // 3 floats * 4 bytes = 12 byte payload (length)
 		
 		byte[] clientPos = Bitmaths.floatArrayToBytes(clientPosData);
@@ -235,7 +238,7 @@ public class Client implements Runnable{
 		float[] clientPosData = new float[4];
 		clientPosData[1] = centrePos.x;
 		clientPosData[2] = centrePos.y;
-		clientPosData[3] = radOfInf;
+		clientPosData[3] = radOfVision;
 		clientPosData[0] = (float) 3 * 4; // 3 floats * 4 bytes = 12 byte payload (length)
 		
 		byte[] clientPos = Bitmaths.floatArrayToBytes(clientPosData);
@@ -246,5 +249,13 @@ public class Client implements Runnable{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	//checks if a ball is with in the attraction zone of the player.
+	public boolean isInReach(Ball b) {
+		float x = b.phys.pos.x - centrePos.x;
+		float y = b.phys.pos.y - centrePos.y;
+		
+		return (x*x + y*y <= (radOfInf + b.getRad())*(radOfInf+b.getRad()));
 	}
 }

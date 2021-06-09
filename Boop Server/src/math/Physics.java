@@ -16,6 +16,7 @@ public class Physics {
 	
 	public float mass;
 	public float mag = 0.02f;
+	public boolean magnetic = false;
 	public float bounciness = 1f;
 	private static float dragCoefficient = 10f;
 	
@@ -77,18 +78,27 @@ public class Physics {
 	}
 	
 	/**
-	 * Calculates the acceleration of the ball. 
+	 * Calculates the attractions of the ball to other balls in the list. 
 	 * @param balls: The balls this ball is attracted to.
 	 */
-	public void calcAcc(List<Ball> balls) {
-		acc.set(0, 0);
-		
+	public void calcAttraction(List<Ball> balls) {
 		//Strong mid range attractive force.
 		addAttraction(acc, balls, 1f, owner.getRad()*5, 0.5f);
 		//weaker small range repulsive force
 		addAttraction(acc, balls, -10f, owner.getRad(), owner.getRad()*5f);
-		
-		//Drag force to stop spinning.
+	}
+	
+	/**
+	 * Sets acceleration to 0, do this before calculating forces.
+	 */
+	public void nullifyForces() {
+		acc.set(0, 0);
+	}
+	
+	/**
+	 * Adds drag to acceleration.
+	 */
+	public void calcDrag() {
 		addDrag(acc);
 	}
 	
@@ -229,7 +239,7 @@ public class Physics {
 			for(Ball ball: balls) {
 				//Skip if the other ball is this ball.
 				//Temporary, get rid of "ball.getID() != -5"
-				if(ball == owner || ball.getID() != -5) 
+				if(ball == owner) 
 					continue;
 				Vec2f disp = tempVecs.getVec();
 				disp(disp, ball.phys.pos, pos);

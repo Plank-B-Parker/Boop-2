@@ -5,12 +5,11 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
-import main.Main;
-import math.Vec2f;
 import math.Physics;
+import networking.Client;
+import networking.ClientAccept;
 
 public class Storage {
 
@@ -19,17 +18,118 @@ public class Storage {
 	private List<Ball> balls = new ArrayList<>();
 	private List<Ball> removedBalls = new ArrayList<>();
 	
+	
 	public Storage() {
 		balls = Collections.synchronizedList(balls);
 	}
 	
-	public void updateBalls(float dt) {
+	
+	public void updateBalls(ClientAccept clients, float dt) {
 		Physics.checkCollision(this);
 		
+		//Maybe put the following bit of code into the client accept class, or whatever should handle client updates.
 		synchronized (balls) {
-			for(Ball ball: balls) {
-				ball.phys.calcAcc(balls);
+			if(clients != null) {
+				
+				//For each client check if a ball has escaped from their grasp.
+				for(Client client: clients) {
+					//List of balls out of reach.
+					ArrayList<Ball> ballsToRemove = new ArrayList<Ball>();
+					
+					for(Ball ball: client.localBalls) {
+						
+						if(!client.isInReach(ball)) {
+							ballsToRemove.add(ball);
+							ball.phys.magnetic = false;
+							//Set ID as not owned. Should be set to contested in later code if it is contested.
+							ball.setOwnerID(-1);
+						}
+			
+					}
+					//Remove all balls out of reach.
+					for(Ball ball: ballsToRemove) {
+						client.localBalls.remove(ball);
+					}
+				}
+				
+				//For each ball check if any client can claim a ball. If they can, then let them.
+				for(Ball ball: balls) {
+					
+					for(Client client: clients) {
+						
+						if(client.isInReach(ball)) {
+							
+							//Make sure balls in territories are magnetic.
+							ball.phys.magnetic = true;
+							
+							//If the ball already belongs to the current client... well, it belongs to the current client.
+							if(ball.getOwnerID() == client.getIdentity()) {
+								continue;
+							}
+							
+							//Pop the ball in the local ball list of the client.
+							if(!client.localBalls.contains(ball)) {
+								client.localBalls.add(ball);
+							}
+							
+							//If the ball is in a dispute between two attractive clients.
+							if(ball.getOwnerID() == -2) {
+								continue;
+							}
+							//If the ball is within but a single clients territory.
+							if(ball.getOwnerID() == -1) {
+								client.ownedBalls.add(ball);
+								ball.setOwnerID(client.getIdentity());
+								continue;
+							}
+							//If the ball is within another clients territory and the current client has stumbled across it.
+							if(ball.getOwnerID() >= 0) {
+								(clients.getClientByID(ball.getOwnerID())).ownedBalls.remove(ball);
+								ball.setOwnerID(-2);
+							}
+							
+							
+						}
+						
+					}
+				}
+				
+				//Make sure all owned balls are actually owned.
+				for(Client client: clients) {
+					
+					ArrayList<Ball> ballsToRemove = new ArrayList<Ball>();
+					System.out.println("local balls size: " + client.localBalls.size());
+					
+					for(Ball ball: client.ownedBalls) {
+						if(ball.ownerID < 0)
+							ballsToRemove.add(ball);		
+					}
+					
+					for(Ball ball: ballsToRemove) {
+						client.ownedBalls.remove(ball);
+					}
+				}
+				
 			}
+		}
+		
+		synchronized (balls) {
+		
+			//Set acceleration to 0 to begin with calculate drag force.
+			for(Ball ball: balls) {
+				ball.phys.nullifyForces();
+				ball.phys.calcDrag();
+			}
+			
+			if(clients != null) { 
+				//Calculate attraction of all magnetic balls.
+				for(Client client: clients) {
+					for(Ball ball: client.localBalls) {
+						ball.phys.calcAttraction(client.localBalls);
+					}
+				}
+			}
+			
 		}
 		
 		synchronized (balls) {

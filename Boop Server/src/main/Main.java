@@ -229,14 +229,14 @@ public class Main {
 	}
 	
 	public void fixedUpdate(float dt) {
-		List<Client> clients = new ArrayList<>(clientAcceptor.clients.size());
-		clients = List.copyOf(clientAcceptor.clients);
+		List<Client> clients = new ArrayList<>(clientAcceptor.size());
+		clients = List.copyOf(clientAcceptor);
 		
 		for(Client client: clients) {
 			client.updatePos(dt);
 		}
 		
-		storage.updateBalls(dt);
+		storage.updateBalls(clientAcceptor, dt);
 	}
 	
 	public void render(float dt) {
@@ -276,10 +276,10 @@ public class Main {
 			g.drawString(""+ 2*(i - n/2)/n,  (int)(i/n*windowHeight), windowHeight/2);
 		}
 		g.setColor(Color.RED);
-		for (Client client: clientAcceptor.clients) {
+		for (Client client: clientAcceptor) {
 			int x = (int) ((client.centrePos.x + 1) * 0.5 * windowHeight);
 			int y = (int) ((client.centrePos.y + 1) * 0.5 * windowHeight);
-			int rad = (int) ((client.radOfInf) * 0.5 * windowHeight);
+			int rad = (int) ((client.radOfVision) * 0.5 * windowHeight);
 			
 			g.drawOval(x - rad, y - rad, 2*rad, 2*rad);
 		}
@@ -305,8 +305,8 @@ public class Main {
 	private void sendTestBalls() {
 		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
 		Collection<Ball> allBalls = storage.getBalls();
-		Client[] clients = new Client[clientAcceptor.clients.size()];
-		System.arraycopy(clientAcceptor.clients.toArray(), 0, clients, 0, clientAcceptor.clients.size());
+		Client[] clients = new Client[clientAcceptor.size()];
+		System.arraycopy(clientAcceptor.toArray(), 0, clients, 0, clientAcceptor.size());
 		
 		// sends data to all clients at the same time
 		int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
@@ -348,7 +348,7 @@ public class Main {
 					dy = dy+2;
 				}
 				
-				if (dx*dx + dy*dy <= (client.radOfInf + ball.getRad())*(client.radOfInf + ball.getRad())) {
+				if (dx*dx + dy*dy <= (client.radOfVision + ball.getRad())*(client.radOfVision + ball.getRad())) {
 					inRange.add(ball);	
 				}	
 			}
@@ -404,8 +404,8 @@ public class Main {
 	private void sendTestBalls2() {
 		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
 		Collection<Ball> allBalls = storage.getBalls();
-		Client[] clients = new Client[clientAcceptor.clients.size()];
-		System.arraycopy(clientAcceptor.clients.toArray(), 0, clients, 0, clientAcceptor.clients.size());
+		Client[] clients = new Client[clientAcceptor.size()];
+		System.arraycopy(clientAcceptor.toArray(), 0, clients, 0, clientAcceptor.size());
 		
 		// sends data to all clients at the same time
 		int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
@@ -449,7 +449,7 @@ public class Main {
 					dy = dy+2;
 				}
 				
-				if (dx*dx + dy*dy <= (client.radOfInf + ball.getRad())*(client.radOfInf + ball.getRad())) {
+				if (dx*dx + dy*dy <= (client.radOfVision + ball.getRad())*(client.radOfVision + ball.getRad())) {
 					inRange.add(ball);	
 				}	
 			}
@@ -507,8 +507,8 @@ public class Main {
 	 * This stops the client manipulating time and correctly works out time sensitive information.
 	 */
 	public void clockSynchronise() {
-		Client[] clients = new Client[clientAcceptor.clients.size()];
-		System.arraycopy(clientAcceptor.clients.toArray(), 0, clients, 0, clientAcceptor.clients.size());
+		Client[] clients = new Client[clientAcceptor.size()];
+		System.arraycopy(clientAcceptor.toArray(), 0, clients, 0, clientAcceptor.size());
 		
 		for (Client client : clients) {
 			byte[] data = Bitmaths.longToBytes(System.currentTimeMillis());
