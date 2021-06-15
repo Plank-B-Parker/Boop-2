@@ -83,9 +83,9 @@ public class Physics {
 	 */
 	public void calcAttraction(List<Ball> balls) {
 		//Strong mid range attractive force.
-		addAttraction(acc, balls, 1f, owner.getRad()*5, 0.5f);
+		addAttraction(balls, 1f, owner.getRad()*5, 0.5f);
 		//weaker small range repulsive force
-		addAttraction(acc, balls, -10f, owner.getRad(), owner.getRad()*5f);
+		addAttraction(balls, -10f, owner.getRad(), owner.getRad()*5f);
 	}
 	
 	/**
@@ -99,11 +99,15 @@ public class Physics {
 	 * Adds drag to acceleration.
 	 */
 	public void calcDrag() {
-		addDrag(acc);
+		addDrag();
+	}
+	
+	public void calcClientAttraction(Vec2f clientPos, float clientStrength) {
+		this.addAttraction(clientPos, clientStrength);
 	}
 	
 	//Drag force.
-	private void addDrag(Vec2f acc) {
+	private void addDrag() {
 		Vec2f.increment(acc, acc, vel, -dragCoefficient*(float)Math.sqrt(vel.lengthSq())/mass);
 	}
 	
@@ -232,7 +236,7 @@ public class Physics {
 	 * @param minDist: Balls closer than this wont be affected.
 	 * @param maxDist: Balls farther than this wont be affected.
 	 */
-	private void addAttraction(Vec2f acc, List<Ball> balls, float attractionStrength, float minDist, float maxDist) {
+	private void addAttraction(List<Ball> balls, float attractionStrength, float minDist, float maxDist) {
 		tempVecs.startOfMethod();
 		/////////////////////////
 		
@@ -256,6 +260,23 @@ public class Physics {
 				Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
 			}
 		}
+		
+		///////////////////////
+		tempVecs.endOfMethod();
+	}
+	
+	private void addAttraction(Vec2f pos, float strength) {
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
+		Vec2f disp = tempVecs.getVec();
+		disp(disp, pos, this.pos);
+		
+		float distSq = disp.lengthSq();
+		if(distSq < 0.005) return;
+		
+		float distCubed = (float)(distSq*Math.sqrt(distSq));
+		Vec2f.increment(acc, acc, disp, strength/(mass*distCubed));
 		
 		///////////////////////
 		tempVecs.endOfMethod();

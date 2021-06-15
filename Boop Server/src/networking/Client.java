@@ -12,7 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import balls.Ball;
 import math.Bitmaths;
+import math.Physics;
 import math.Vec2f;
+import math.VecPool;
 
 public class Client implements Runnable{
 	
@@ -34,8 +36,13 @@ public class Client implements Runnable{
 	Thread clientThread;
 	
 	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
-	public float radOfVision =  0.5f;        	//radius of region balls are sent to client.
-	public float radOfInf = 0.5f;
+	public float radOfVision =  0.5f;       //radius of region balls are sent to client.
+	public float radOfInf = 0.5f;			//radius of region balls are attracted to the client.
+	
+	public static float attractionCoefficient = 0.001f; //multiplied by number of owned balls to give attraction strength.
+	public static float influenceCoefficient = 0.01f; //multiplied by number of balls to give area of influence. 
+	//NOTE: May make radius of influence proportional to number of local balls so, rate of area increase slows
+	//		as it gets bigger.
 	
 	public ArrayList<Ball> ownedBalls = new ArrayList<>();	//list of balls that the player possesses.
 	public ArrayList<Ball> localBalls = new ArrayList<>(); // All balls in the  territory.
@@ -251,11 +258,16 @@ public class Client implements Runnable{
 		}
 	}
 	
+	VecPool tempVecs = new VecPool();
 	//checks if a ball is with in the attraction zone of the player.
 	public boolean isInReach(Ball b) {
-		float x = b.phys.pos.x - centrePos.x;
-		float y = b.phys.pos.y - centrePos.y;
+		tempVecs.startOfMethod();
+		/////////////////////////
+		Vec2f disp = tempVecs.getVec();
+		Physics.disp(disp, centrePos, b.phys.pos);
+		///////////////////////
+		tempVecs.endOfMethod();
 		
-		return (x*x + y*y <= (radOfInf + b.getRad())*(radOfInf+b.getRad()));
+		return (disp.lengthSq() <= (radOfInf + b.getRad())*(radOfInf+b.getRad()));
 	}
 }
