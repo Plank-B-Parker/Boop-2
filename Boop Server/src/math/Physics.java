@@ -121,20 +121,21 @@ public class Physics {
 		synchronized (balls) {
 			for(int i = 0; i < balls.numBalls - 1; i++) {
 				Ball ball = balls.getBall(i);
-				if(ball.getID() == -1) continue;
+				if (ball.getID() == -1) continue;
 				
 				//Go through every ball after current ball in list.
 				for(int j = i + 1; j < balls.numBalls; j++) {
 					Ball otherBall = balls.getBall(j);
 					
-					if(otherBall.getID() == -1) continue;
+					if (otherBall.getID() == -1) continue;
 					
 					disp(disp, otherBall.phys.pos, ball.phys.pos);
 					float minimumDistance = ball.getRad() + otherBall.getRad();
 					
 					//If distance between centres is bigger that the sum of the radi than skip.
-					if(disp.lengthSq() > minimumDistance*minimumDistance)
+					if (disp.lengthSq() > minimumDistance*minimumDistance) {
 						continue;
+					}
 					
 					float distance = (float)Math.sqrt(disp.lengthSq());
 					float overlap = minimumDistance - distance;
@@ -238,9 +239,8 @@ public class Physics {
 		synchronized (balls) {
 			for(Ball ball: balls) {
 				//Skip if the other ball is this ball.
-				//Temporary, get rid of "ball.getID() != -5"
-				if(ball == owner) 
-					continue;
+				if (ball == owner) continue;
+				
 				Vec2f disp = tempVecs.getVec();
 				disp(disp, ball.phys.pos, pos);
 				

@@ -10,7 +10,6 @@ import java.util.Stack;
 import math.Physics;
 
 public class Storage {
-	// COPIED from server file
 
 	public int numBalls = 0;
 	
@@ -27,25 +26,34 @@ public class Storage {
 	
 	public void updateBalls(float dt) {
 		Physics.checkCollision(this);
+
+		synchronized (balls) {
+			for (Ball ball: balls) {
+				if(ball.getID() != -1) {
+					ball.updateClientPrediction(dt);
+				}
+			}
+		}
 		
 		synchronized (balls) {
+
 			for(Ball ball: balls) {
-				if(ball.getID() != -1)
-					ball.updateClientPrediction(dt);;
+				ball.phys.nullifyForces();
+				ball.phys.calcDrag();
+			}
+
+			for(Ball ball: balls) {
+				if(ball.getID() != -1) {
+					ball.phys.calcAttraction(balls);
+				}
 			}
 		}
 		
 		synchronized (balls) {
 			for(Ball ball: balls) {
-				if(ball.getID() != -1)
-					ball.phys.calcAcc(balls);
-			}
-		}
-		
-		synchronized (balls) {
-			for(Ball ball: balls) {
-				if(ball.getID() != -1)
+				if(ball.getID() != -1) {
 					ball.phys.update(dt);
+				}
 			}
 		}
 		
