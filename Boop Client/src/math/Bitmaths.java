@@ -107,4 +107,31 @@ public final class Bitmaths {
 		
 		return newData;
 	}
+	
+	public static byte[] numberToBytes(Number number) {
+		byte[] bytes = intToBytes(number.intValue());
+		
+
+		if (number.getClass() == Float.class) {
+			bytes = floatToBytes(number.floatValue());
+		}
+		else if (number.getClass() == Long.class) {
+			bytes = longToBytes(number.longValue());
+		}
+		else if (number.getClass() == Short.class) {
+			number.shortValue();
+		}
+		
+		return bytes;
+	}
+	
+	public static byte[] numberArrayToBytes(Number[] numbers) {
+		byte[] bytes = new byte[0];
+		
+		for (int i = numbers.length - 1; i >= 0; i--) {
+			pushByteArrayToData(numberToBytes(numbers[i]), bytes);
+		}
+		
+		return bytes;
+	}
 }

@@ -186,9 +186,23 @@ public class Main {
 				
 				// check if clients are connected then remove them from list
 				List<Client> clients = clientHandler.getClients();
-				for (Client client : clients) {
-					client.sendCentrePos();			
+				
+				Number[] clientsData = new Number[clients.size() * Packet.CLIENTDATA.getNumberOfItems()];
+				for (int i = 0; i < clients.size(); i++) {
+					// Fill data to prepare for sending.
+					Client client = clients.get(i);
+					
+					clientsData[i * 6 + 0] = client.centrePos.x;
+					clientsData[i * 6 + 1] = client.centrePos.y;
+					clientsData[i * 6 + 2] = client.velocity.x;
+					clientsData[i * 6 + 3] = client.velocity.y;
+					clientsData[i * 6 + 4] = client.radOfInf;
+					clientsData[i * 6 + 5] = client.getIdentity();
 				}
+				
+				
+				sendAllClientInfo(clientsData, clients);
+				
 				
 				// send ballz
 				sendTestBalls2();
@@ -504,6 +518,54 @@ public class Main {
 				
 				udp.sendData(completePacket, clients.get(i).getIpv4Address(), clients.get(i).getClientPort());
 				
+			}
+		}
+		
+	}
+	
+	public void sendAllClientInfo(Number[] clientsData, List<Client> clients) {
+		int packetNo = 0;
+		final int numItemsPerObj = Packet.CLIENTDATA.getNumberOfItems();
+		final int maxClientsPerPacket = Packet.CLIENTDATA.getNumObj();
+		
+		int numObjects = clientsData.length / numItemsPerObj;
+		
+		packetNo = numObjects / maxClientsPerPacket;
+		
+		int payloadSize = clientsData.length < (numItemsPerObj * maxClientsPerPacket) 
+				? numObjects * Packet.CLIENTDATA.getObjectSize() : Packet.CLIENTDATA.getMaxPayload();
+		
+		byte[][] data = new byte[packetNo][payloadSize];
+		
+		Number[][] splitInput = new Number[packetNo][numItemsPerObj];
+		
+		int inputFilled = 0;
+		int offset = 0;
+		
+		while (inputFilled < packetNo) {
+			for (int i = 0; i < numItemsPerObj; i++) {
+				splitInput[inputFilled][i] = clientsData[i + offset];
+			}
+			
+			inputFilled++;
+			offset += numItemsPerObj;
+		}
+		
+		// Fill packets with data
+		// array to replace with header information
+		byte[] headerInfo = new byte[0];
+		for(int i = 0; i < packetNo; i++) {
+			data[i] = Bitmaths.numberArrayToBytes(splitInput[i]);
+		}
+		
+		// Send data to all clients at same time.
+		for (Client client : clients) {
+			for (int i = 0; i < packetNo; i++) {
+				headerInfo = Bitmaths.pushByteToData(Packet.CLIENTDATA.getID(), headerInfo);
+				headerInfo = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(client.udpPacketsSent.incrementAndGet()), headerInfo);
+				byte[] completePacket = Bitmaths.pushByteArrayToData(headerInfo, data[i]);
+				
+				udp.sendData(completePacket, client.getIpv4Address(), client.getClientPort());
 			}
 		}
 		

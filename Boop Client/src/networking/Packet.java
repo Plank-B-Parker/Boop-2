@@ -5,7 +5,7 @@ public enum Packet {
 	OLD_BALLS((byte) 3, 1392, 58, 6),
 	CLOCK_SYN((byte) 7, 8, 1, 1),
 	ACK((byte) 8, 8, 1, 1),
-	VIEWPORT((byte) 70, 12, 1, 3),
+	CLIENTDATA((byte) 70, 896, 32, 6),
 	DISCONNECT((byte) -5, 0, 0, 0);
 	
 	
@@ -16,12 +16,15 @@ public enum Packet {
 	private int maxPayload = 0;
 	private int numObj = 0;
 	private int numberOfItems = 0;
+	private int objectSize = 0;
 	
 	private Packet(byte packetID, int maxPayload, int numObj, int numberOfItems) {
 		this.packetID = packetID;
 		this.maxPayload = maxPayload;
 		this.numObj = numObj;
 		this.numberOfItems = numberOfItems;
+		
+		if (numObj != 0) objectSize = maxPayload / numObj;
 	}
 
 	public byte getID() {
@@ -38,6 +41,10 @@ public enum Packet {
 
 	public int getNumberOfItems() {
 		return numberOfItems;
+	}
+	
+	public int getObjectSize() {
+		return objectSize;
 	}
 
 }

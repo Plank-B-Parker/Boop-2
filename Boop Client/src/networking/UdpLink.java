@@ -113,6 +113,11 @@ public class UdpLink implements Runnable{
 			recievedPacketsUDP.incrementAndGet();
 			break;
 			
+		case 70:// Handle player positions here
+			recievedPacketsUDP.incrementAndGet();
+			System.out.println("I'm recieving client info - UdpLink CLASS");
+			break;
+			
 		default:
 			return;
 		}
