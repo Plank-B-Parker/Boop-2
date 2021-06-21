@@ -102,7 +102,7 @@ public class Storage {
 				for(Client client: clients) {
 					
 					ArrayList<Ball> ballsToRemove = new ArrayList<Ball>();
-					System.out.println("local balls size: " + client.localBalls.size());
+					//System.out.println("local balls size: " + client.localBalls.size());
 					
 					for(Ball ball: client.ownedBalls) {
 						if(ball.ownerID < 0)

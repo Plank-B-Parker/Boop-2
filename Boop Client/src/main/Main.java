@@ -246,6 +246,9 @@ public class Main {
 		if (Display.centreInServer.x < -1) Display.centreInServer.x += 2;
 		if (Display.centreInServer.y > 1) Display.centreInServer.y -= 2;
 		if (Display.centreInServer.x > 1) Display.centreInServer.x -= 2;
+		
+		PlayerHandler.Me.centrePos.x = Display.centreInServer.x;
+		PlayerHandler.Me.centrePos.y = Display.centreInServer.y;
 	}
 	
 	BufferStrategy bs;

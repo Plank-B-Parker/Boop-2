@@ -11,7 +11,7 @@ public class PlayerHandler extends ArrayList<Player> {
 	 */
 	private static final long serialVersionUID = -8656568538126391881L;
 	
-	public static Player Me = new Player(true, -1, new Vec2f(0,0));
+	public volatile static Player Me = new Player(true, -1, new Vec2f(0,0));
 	
 	public PlayerHandler() {
 		add(Me);
