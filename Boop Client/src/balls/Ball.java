@@ -16,7 +16,7 @@ public class Ball {
 	private int type;
 	private float rad;
 	private Color colour;
-	private int ownerID;
+	private long ownerID = -1;
 	
 	//Client sees client pos.
 	public Vec2f clientPos = new Vec2f();
@@ -329,6 +329,10 @@ public class Ball {
 		return ID;
 	}
 	
+	public void setOwnerID(long ID) {
+		ownerID = ID;
+	}
+	
 	private void setActualPos(float x, float y) {
 		phys.pos.x = x;
 		phys.pos.y = y;
@@ -413,7 +417,7 @@ public class Ball {
 		this.rad = rad;
 	}
 
-	public int getOwnerID() {
+	public long getOwnerID() {
 		return ownerID;
 	}
 

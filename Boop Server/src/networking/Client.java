@@ -270,4 +270,8 @@ public class Client implements Runnable{
 		
 		return (disp.lengthSq() <= (radOfInf + b.getRad())*(radOfInf+b.getRad()));
 	}
+	
+//	public void updateLocalBalls() {
+//		
+//	}
 }

@@ -19,14 +19,13 @@ public class ClientAccept implements Runnable{
 	Thread clientAcceptor;
 	static volatile boolean serverON = false;
 	
-	List<Client> clientsToAdd = new ArrayList<>(4);
-	List<Client> clientsToRemove = new ArrayList<>(4);
-	List<Client> clients = new ArrayList<>();
+	ClientHandler clientHandler;
 	
 	
 	Random random = new Random();
 	
-	public ClientAccept() {
+	public ClientAccept(ClientHandler clientHandler) {
+		this.clientHandler = clientHandler;
 		try {
 			serverSocket = new ServerSocket(PORT);
 			
@@ -52,7 +51,7 @@ public class ClientAccept implements Runnable{
 				
 				client.setupConnection(socket);
 				
-				clientsToAdd.add(client);
+				clientHandler.clientsToAdd.add(client);
 				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -62,6 +61,7 @@ public class ClientAccept implements Runnable{
 	
 	private Client createNewClient() {
 		Client client = new Client();
+		List<Client> clients = clientHandler.clients;
 		
 		boolean validID = true;
 		
@@ -85,7 +85,7 @@ public class ClientAccept implements Runnable{
 	
 	public void terminateServer() {
 		serverON = false;
-		disconnectAllClients();
+		clientHandler.disconnectAllClients();
 		try {
 			serverSocket.close();
 			
@@ -94,54 +94,4 @@ public class ClientAccept implements Runnable{
 		}
 	}
 	
-	public void moveWaitingClients() {
-		for (Client client : clientsToAdd) {
-			clients.add(client);
-		}
-		
-		for (Client client : clientsToRemove) {
-			clients.remove(client);
-		}
-		
-		clientsToAdd.clear();
-		clientsToRemove.clear();
-	}
-	
-	public void checkClientsConnection() {
-		for (int i = 0; i < clients.size(); i++) {
-			if (! clients.get(i).isConnected()) clientsToRemove.add(clients.get(i));
-		}
-	}
-	
-	public void disconnectClient(Client client){
-		client.disconnect();
-	}
-	
-	public void disconnectAllClients(){
-		for (Client client: clients) {
-			client.disconnect();
-		}
-		clients.clear();
-	}
-
-	public Client getClientByAddressAndPort(InetAddress address, int port) {
-
-		for (Client client: clients) {
-			if (client.getIpv4Address().equals(address) && client.getClientPort() == port) return client;
-		}
-
-		return null;
-	}
-	
-	public Client getClientByID(long ID) {
-		for(Client client: clients) {
-			if(client.getIdentity() == ID) 
-				return client;
-		}
-		return null;
-	}
-	
-	public List<Client> getClients(){
-		return clients;
-	}
 }

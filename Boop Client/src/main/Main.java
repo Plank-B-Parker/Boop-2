@@ -27,6 +27,7 @@ public class Main {
 	public volatile boolean disconnectedByServer = false;
 	
 	public Storage balls = new Storage();
+	public PlayerHandler players = new PlayerHandler();
 	
 	public Vec2f pos;
 	
@@ -213,7 +214,7 @@ public class Main {
 	}
 	
 	private void fixedUpdate(float dt) {
-		balls.updateBalls(dt);
+		balls.updateBalls(players, dt);
 		updatePos(dt);
 	}
 

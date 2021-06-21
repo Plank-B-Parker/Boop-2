@@ -25,9 +25,11 @@ public class UDP implements Runnable{
 	
 	
 	private ClientAccept clientAcceptor;
+	private ClientHandler clientHanlder;
 
 	public UDP(ClientAccept clientAcceptor) {
 		this.clientAcceptor = clientAcceptor;
+		clientHanlder = clientAcceptor.clientHandler;
 		
 		try {
 			this.socket = new DatagramSocket(ClientAccept.PORT);
@@ -61,7 +63,7 @@ public class UDP implements Runnable{
 	
 	private void handleData(DatagramPacket packet) {
 
-		Client client = clientAcceptor.getClientByAddressAndPort(packet.getAddress(), packet.getPort());
+		Client client = clientHanlder.getClientByAddressAndPort(packet.getAddress(), packet.getPort());
 
 		if (client == null) {
 			System.out.println("UDP packet sent from unknown client: "+packet.getAddress().toString());

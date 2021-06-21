@@ -4,25 +4,16 @@ import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.MouseInfo;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
 import javax.swing.JFrame;
-import javax.swing.WindowConstants;
 
 import balls.Ball;
 import balls.Storage;
@@ -33,6 +24,7 @@ import math.Bitmaths;
 import math.Vec2f;
 import networking.Client;
 import networking.ClientAccept;
+import networking.ClientHandler;
 import networking.Packet;
 import networking.UDP;
 
@@ -41,6 +33,7 @@ public class Main {
 	public static final int windowWidth = 1280, windowHeight = 720;
 	private Canvas canvas = new Canvas();
 	public Storage storage = new Storage();
+	public ClientHandler clientHandler = new ClientHandler();
 	public Keyboard keyboard;
 	public Mouse mouse;
 	
@@ -132,7 +125,7 @@ public class Main {
 	UDP udp;
 	
 	public void setupConnections() {
-		clientAcceptor = new ClientAccept();
+		clientAcceptor = new ClientAccept(clientHandler);
 		udp = new UDP(clientAcceptor);
 		clientAcceptor.startServer();
 		udp.startUDP();
@@ -192,7 +185,7 @@ public class Main {
 				// Send data and other stuff here
 				
 				// check if clients are connected then remove them from list
-				List<Client> clients = clientAcceptor.getClients();
+				List<Client> clients = clientHandler.getClients();
 				for (Client client : clients) {
 					client.sendCentrePos();			
 				}
@@ -233,16 +226,16 @@ public class Main {
 	
 	public void fixedUpdate(float dt) {
 		// Update client lists here to avoid concurrent modification
-		clientAcceptor.checkClientsConnection();
-		clientAcceptor.moveWaitingClients();
+		clientHandler.checkClientsConnection();
+		clientHandler.moveWaitingClients();
 		
-		List<Client> clients = clientAcceptor.getClients();
+		List<Client> clients = clientHandler.getClients();
 		
 		for(Client client: clients) {
 			client.updatePos(dt);
 		}
 		
-		storage.updateBalls(clientAcceptor, dt);
+		storage.updateBalls(clientHandler, dt);
 	}
 	
 	public void render(float dt) {
@@ -281,7 +274,7 @@ public class Main {
 			g.drawString(""+ 2*(n/2-i)/n,  windowHeight/2, (int)(i/n*windowHeight));
 			g.drawString(""+ 2*(i - n/2)/n,  (int)(i/n*windowHeight), windowHeight/2);
 		}
-		List<Client> clients = clientAcceptor.getClients();
+		List<Client> clients = clientHandler.getClients();
 		for (Client client : clients) {
 			g.setColor(Color.RED);
 			int x = (int) ((client.centrePos.x + 1) * 0.5 * windowHeight);
@@ -323,7 +316,7 @@ public class Main {
 	private void sendTestBalls() {
 		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
 		Collection<Ball> allBalls = storage.getBalls();
-		List<Client> clients = clientAcceptor.getClients();
+		List<Client> clients = clientHandler.getClients();
 		
 		// sends data to all clients at the same time
 		int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
@@ -421,7 +414,7 @@ public class Main {
 	private void sendTestBalls2() {
 		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
 		Collection<Ball> allBalls = storage.getBalls();
-		List<Client> clients = clientAcceptor.getClients();
+		List<Client> clients = clientHandler.getClients();
 		
 		// sends data to all clients at the same time
 		int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
@@ -521,7 +514,7 @@ public class Main {
 	 * This stops the client manipulating time and correctly works out time sensitive information.
 	 */
 	public void clockSynchronise() {
-		final List<Client> clients = clientAcceptor.getClients();
+		final List<Client> clients = clientHandler.getClients();
 		
 		for (Client client : clients) {
 			byte[] data = Bitmaths.longToBytes(System.currentTimeMillis());

@@ -9,7 +9,7 @@ import java.util.List;
 
 import math.Physics;
 import networking.Client;
-import networking.ClientAccept;
+import networking.ClientHandler;
 
 public class Storage {
 
@@ -24,10 +24,10 @@ public class Storage {
 	}
 	
 	
-	public void updateBalls(ClientAccept acceptor, float dt) {
+	public void updateBalls(ClientHandler clientHandler, float dt) {
 		Physics.checkCollision(this);
 		
-		List<Client> clients = acceptor.getClients();
+		List<Client> clients = clientHandler.getClients();
 		
 		//Maybe put the following bit of code into the client accept class, or whatever should handle client updates.
 		synchronized (balls) {
@@ -88,7 +88,7 @@ public class Storage {
 							}
 							//If the ball is within another clients territory and the current client has stumbled across it.
 							if(ownerID >= 0) {
-								(acceptor.getClientByID(ball.getOwnerID())).ownedBalls.remove(ball);
+								(clientHandler.getClientByID(ball.getOwnerID())).ownedBalls.remove(ball);
 								ball.setOwnerID(-2);
 							}
 							
@@ -130,7 +130,7 @@ public class Storage {
 				for(Client client: clients) {
 					for(Ball ball: client.localBalls) {
 						ball.phys.calcAttraction(client.localBalls);
-						ball.phys.calcClientAttraction(client.centrePos, 0.001f);
+						ball.phys.calcClientAttraction(client.centrePos, 0.01f);
 					}
 				}
 			}

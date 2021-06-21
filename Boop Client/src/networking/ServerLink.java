@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import main.Main;
+import main.PlayerHandler;
 import math.Bitmaths;
 import math.Vec2f;
 import display.Display;
@@ -108,6 +109,10 @@ public class ServerLink implements Runnable{
 				Display.centreInServer.x = Bitmaths.bytesToFloat(data, 1);
 				Display.centreInServer.y = Bitmaths.bytesToFloat(data, 5);
 				Display.diameterInServer = 2f*Bitmaths.bytesToFloat(data, 9);
+				
+				PlayerHandler.Me.centrePos.x = Bitmaths.bytesToFloat(data, 1);
+				PlayerHandler.Me.centrePos.y = Bitmaths.bytesToFloat(data, 5);	
+				
 				break;
 			default:
 				return;
@@ -120,6 +125,7 @@ public class ServerLink implements Runnable{
 		try {
 			Thread.sleep(1000);
 			ID = in.readLong();
+			PlayerHandler.Me.ID = ID;
 			System.out.println("ID: " + ID);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();

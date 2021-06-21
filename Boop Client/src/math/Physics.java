@@ -88,6 +88,10 @@ public class Physics {
 		addAttraction(acc, balls, -10f, owner.getRad(), owner.getRad()*5f);
 	}
 	
+	public void calcClientAttraction(Vec2f clientPos, float clientStrength) {
+		this.addAttraction(clientPos, clientStrength);
+	}
+	
 	/**
 	 * Sets acceleration to 0, do this before calculating forces.
 	 */
@@ -253,6 +257,23 @@ public class Physics {
 				Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
 			}
 		}
+		
+		///////////////////////
+		tempVecs.endOfMethod();
+	}
+	
+	private void addAttraction(Vec2f pos, float strength) {
+		tempVecs.startOfMethod();
+		/////////////////////////
+		
+		Vec2f disp = tempVecs.getVec();
+		disp(disp, pos, this.pos);
+		
+		float distSq = disp.lengthSq();
+		if(distSq < 0.005) return;
+		
+		float distCubed = (float)(distSq*Math.sqrt(distSq));
+		Vec2f.increment(acc, acc, disp, strength/(mass*distCubed));
 		
 		///////////////////////
 		tempVecs.endOfMethod();

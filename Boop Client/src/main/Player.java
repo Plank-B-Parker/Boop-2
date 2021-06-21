@@ -1,0 +1,52 @@
+package main;
+
+import java.util.ArrayList;
+
+import balls.Ball;
+import math.Physics;
+import math.Vec2f;
+import math.VecPool;
+
+public class Player {
+	
+	public long ID = 0;
+	boolean isClient; 		// checks if this player is the current client.
+	
+	
+	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
+	public Vec2f velocity = new Vec2f();
+	public float radOfInf = 0.5f;			//radius of region balls are attracted to the client.
+	
+	public static float attractionCoefficient = 0.001f; //multiplied by number of owned balls to give attraction strength.
+	public static float influenceCoefficient = 0.01f; //multiplied by number of balls to give area of influence. 
+	//NOTE: May make radius of influence proportional to number of local balls so, rate of area increase slows
+	//		as it gets bigger.
+	
+	public ArrayList<Ball> ownedBalls = new ArrayList<>();	//list of balls that the player possesses.
+	public ArrayList<Ball> localBalls = new ArrayList<>(); // All balls in the territory.
+	
+	public Player(boolean isClient, long ID, Vec2f pos) {
+		this.ID = ID;
+		this.isClient = isClient;
+		centrePos = pos;
+	}
+	
+	VecPool tempVecs = new VecPool();
+	//checks if a ball is with in the attraction zone of the player.
+	public boolean isInReach(Ball b) {
+		tempVecs.startOfMethod();
+		/////////////////////////
+		Vec2f disp = tempVecs.getVec();
+		Physics.disp(disp, centrePos, b.phys.pos);
+		///////////////////////
+		tempVecs.endOfMethod();
+		
+		return (disp.lengthSq() <= (radOfInf + b.getRad())*(radOfInf+b.getRad()));
+	}
+	public void updatePos() {
+		
+	}
+	
+	
+}
+
