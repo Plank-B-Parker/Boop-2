@@ -129,7 +129,7 @@ public final class Bitmaths {
 		byte[] bytes = new byte[0];
 		
 		for (int i = numbers.length - 1; i >= 0; i--) {
-			pushByteArrayToData(numberToBytes(numbers[i]), bytes);
+			bytes = pushByteArrayToData(numberToBytes(numbers[i]), bytes);
 		}
 		
 		return bytes;

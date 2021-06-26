@@ -37,6 +37,7 @@ public class Client implements Runnable{
 	
 	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
 	public Vec2f velocity = new Vec2f();
+	public Vec2f direction = new Vec2f();   //Direction player wants to go.
 	public float radOfVision =  0.5f;       //radius of region balls are sent to client.
 	public float radOfInf = 0.5f;			//radius of region balls are attracted to the client.
 	
@@ -52,9 +53,7 @@ public class Client implements Runnable{
 	private float timeBetweenUpdates = 1f;	//Time between the balls being sent;
 	private float delayUntilFirstSend = 3500;
 
-	private float movementSpeed = 0.3f; //Speed that the client's centre moves
-	private Vec2f velFromMouse = new Vec2f();	
-
+	private float maxSpeed = 0.3f; //Speed that the client's centre moves
 	private boolean[] pressedKeys = new boolean[4]; // Array to track which keys are being pressed
 	
 	
@@ -207,33 +206,17 @@ public class Client implements Runnable{
 		pressedKeys[key] = pressed;
 	}
 	
-	public void setVel(float vx, float vy) {
-		velFromMouse.set(vx, vy);
+	public void setDirection(float dx, float dy) {
+		direction.set(dx, dy);
 	}
 
+	public void updateVelocity(float dt) {
+		Vec2f.scale(velocity, direction, maxSpeed);
+	}
+	
 	public void updatePos(float dt) {
 		
-		if (pressedKeys[0]) {
-			centrePos.y -= movementSpeed*dt;
-			if (centrePos.y < -1) centrePos.y += 2;
-		}
-
-		if (pressedKeys[1]) {
-			centrePos.x -= movementSpeed*dt;
-			if (centrePos.x < -1) centrePos.x += 2;
-		}
-
-		if (pressedKeys[2]) {
-			centrePos.y += movementSpeed*dt;
-			if (centrePos.y > 1) centrePos.y -= 2;
-		}
-
-		if (pressedKeys[3]) {
-			centrePos.x += movementSpeed*dt;
-			if (centrePos.x > 1) centrePos.x -= 2;
-		}
-		
-		Vec2f.increment(centrePos, centrePos, velFromMouse, dt);
+		Vec2f.increment(centrePos, centrePos, velocity, dt);
 		
 		if (centrePos.y < -1) centrePos.y += 2;
 		if (centrePos.x < -1) centrePos.x += 2;

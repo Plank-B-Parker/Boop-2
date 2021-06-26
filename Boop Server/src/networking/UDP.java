@@ -78,11 +78,13 @@ public class UDP implements Runnable{
 			client.handleKey(pressed, data);
 			break;
 		case 5:
-			float vy = Bitmaths.bytesToFloat(packet.getData(),1);
-			float vx = Bitmaths.bytesToFloat(packet.getData(),5);
+			float directionY = Bitmaths.bytesToFloat(packet.getData(),1);
+			float directionX = Bitmaths.bytesToFloat(packet.getData(),5);
 			
-			System.out.println("(" + client.centrePos.x + ", " + client.centrePos.y + ")");
-			client.setVel(vx, vy);
+//			System.out.println("(" + client.centrePos.x + ", " + client.centrePos.y + ")");
+			System.out.println("(" +  directionX + ", " +  directionY + ")");
+			
+			client.setDirection(directionX, directionY);
 			break;
 		case 10:
 			

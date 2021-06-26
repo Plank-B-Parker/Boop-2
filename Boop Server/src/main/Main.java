@@ -64,7 +64,7 @@ public class Main {
 		if (deterministicPhysics) random = new Random(3);
 		else random = new Random();
 		
-		for(int i = 0; i < 100; i++) {
+		for(int i = 0; i < 10; i++) {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -75,7 +75,7 @@ public class Main {
 		
 		
 		
-		for(int i = 0; i < 10; i++) {
+		for(int i = 0; i < 1; i++) {
 			Ball ball = new Ball(2);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -527,7 +527,7 @@ public class Main {
 		
 		int numObjects = clientsData.length / numItemsPerObj;
 		
-		packetNo = numObjects / maxClientsPerPacket;
+		packetNo = (int)Math.ceil((float)numObjects / (float)maxClientsPerPacket);
 		
 		int payloadSize = clientsData.length < (numItemsPerObj * maxClientsPerPacket) 
 				? numObjects * Packet.CLIENTDATA.getObjectSize() : Packet.CLIENTDATA.getMaxPayload();

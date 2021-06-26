@@ -16,6 +16,11 @@ public class ClientHandler{
 	public void updateClients(Collection<Ball> collection, float dt) {
 		if(clients == null) return;
 		
+		//Update Velocities of all the clients.
+		for(Client client: clients) {
+			client.updateVelocity(dt);
+		}
+		
 		//Update positions of all the clients.
 		for(Client client: clients) {
 			client.updatePos(dt);
@@ -113,6 +118,9 @@ public class ClientHandler{
 		}
 		
 		for (Client client : clientsToRemove) {
+			for(Ball ball: client.localBalls) {
+				ball.ownerID = -1;
+			}
 			clients.remove(client);
 		}
 		

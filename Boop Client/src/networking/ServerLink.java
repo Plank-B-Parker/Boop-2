@@ -106,8 +106,6 @@ public class ServerLink implements Runnable{
 		for (byte[] data: dataBuffer) {
 			switch (data[0]) {
 			case 70:
-				Display.centreInServer.x = Bitmaths.bytesToFloat(data, 1);
-				Display.centreInServer.y = Bitmaths.bytesToFloat(data, 5);
 				Display.diameterInServer = 2f*Bitmaths.bytesToFloat(data, 9);
 				
 				PlayerHandler.Me.centrePos.x = Bitmaths.bytesToFloat(data, 1);

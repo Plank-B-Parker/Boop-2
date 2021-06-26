@@ -115,6 +115,15 @@ public class PlayerHandler extends ArrayList<Player> {
 		}
 		
 	}
+
+	public void ServerUpdatePlayer(long ID, float posX, float posY, float velX, float velY, float radOfInf) {
+		for(Player player: this) {
+			if(player.ID == ID) {
+				player.serverUpdate(posX, posY, velX, velY, radOfInf);
+			}
+		}
+		
+	}
 		
 	
 }

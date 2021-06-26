@@ -101,7 +101,7 @@ public class Storage {
 		synchronized (balls) {
 			for (Ball ball: balls) {
 				if(ball.getID() == -1) continue;
-				ball.render2(g, dt);
+				ball.renderScaled(g, dt);
 				energy += ball.phys.calcEnergy(balls);
 			}
 		}

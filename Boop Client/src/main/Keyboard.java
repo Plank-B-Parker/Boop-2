@@ -12,6 +12,8 @@ public class Keyboard implements KeyListener{
 	private Map<Key, Integer> keyCountMap = new EnumMap<>(Key.class);
 	private Map<Key, Boolean> keyChangedMap = new EnumMap<>(Key.class);
 	
+	public boolean somethingHapended = false;
+	
 	public Keyboard() {
 		setupKeyMaps();
 	}
@@ -93,6 +95,7 @@ public class Keyboard implements KeyListener{
 				if (! key.isToggle() && ! key.isHold()) keyCountMap.put(key, keyCountMap.get(key) + 1);
 			}
 			keyChangedMap.put(key, true);
+			somethingHapended = true;
 		}
 	}
 
@@ -100,6 +103,7 @@ public class Keyboard implements KeyListener{
 		keyReleased.put(key, true);
 		if (key.isHold()) keymap.put(key, false);
 		keyChangedMap.put(key, true);
+		somethingHapended = true;
 	}
 	
 	private boolean getValueFromKeyMap(Key key) {

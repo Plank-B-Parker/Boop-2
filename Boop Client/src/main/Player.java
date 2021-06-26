@@ -17,7 +17,7 @@ public class Player {
 	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
 	public Vec2f velocity = new Vec2f();
 	public float radOfInf = 0.5f;			//radius of region balls are attracted to the client.
-	private float movementSpeed = 0.3f;
+	private static float maxSpeed = 0.3f;
 	
 	public static float attractionCoefficient = 0.001f; //multiplied by number of owned balls to give attraction strength.
 	public static float influenceCoefficient = 0.01f; //multiplied by number of balls to give area of influence. 
@@ -55,11 +55,8 @@ public class Player {
 		if (centrePos.x > 1) centrePos.x -= 2;
 	}
 	
-	private Vec2f direction = new Vec2f(0,0);
-	private float maxSpeed = 0.001f;
-	public void processInputs(Keyboard keyboard, Mouse mouse) {
-		if(!isClient) return;
-		
+	public static Vec2f direction = new Vec2f(0,0);
+	public static void processInputs(Keyboard keyboard, Mouse mouse) {
 		//Reset direction.
 		Vec2f.scale(direction, direction, 0);
 	
@@ -81,7 +78,8 @@ public class Player {
 		}
 		
 		//Keep direction length = 1.
-		direction.normalise();
+		if(direction.lengthSq() != 0)
+			direction.normalise();
 		
 		//Add mouse direction
 		Vec2f.add(direction, direction, mouse.mouseDir);
@@ -90,7 +88,16 @@ public class Player {
 			direction.normalise();
 		}
 		
-		Vec2f.scale(velocity, direction, maxSpeed);
+		Vec2f.scale(PlayerHandler.Me.velocity, direction, maxSpeed);
+	}
+	
+	//TODO: Change to client prediction thing laterrrr.
+	public void serverUpdate(float posX, float posY, float velX, float velY, float radOfInf) {
+		centrePos.x = posX;
+		centrePos.y = posY;
+		velocity.x = velX;
+		velocity.y = velY;
+		this.radOfInf = radOfInf;
 	}
 	
 	

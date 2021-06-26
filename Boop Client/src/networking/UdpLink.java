@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import main.Main;
+import main.PlayerHandler;
 import math.Bitmaths;
 
 public class UdpLink implements Runnable{
@@ -115,6 +116,21 @@ public class UdpLink implements Runnable{
 			
 		case 70:// Handle player positions here
 			recievedPacketsUDP.incrementAndGet();
+			
+			byte[] newDataa = Arrays.copyOfRange(data, 5, data.length);
+			
+			for(int i = 0; i < newDataa.length; i += Packet.CLIENTDATA.getObjectSize()) {
+				float posX = Bitmaths.bytesToFloat(newDataa, i);
+				float posY = Bitmaths.bytesToFloat(newDataa, i + 4);
+				float velX = Bitmaths.bytesToFloat(newDataa, i + 8);
+				float velY = Bitmaths.bytesToFloat(newDataa, i + 12);
+				float radOfInf = Bitmaths.bytesToFloat(newDataa, i + 16);
+				long ID = Bitmaths.bytesToLong(newDataa, i + 20);
+		
+				main.players.ServerUpdatePlayer(ID, posX, posY, velX, velY, radOfInf);
+			}
+			
+			
 			System.out.println("I'm recieving client info - UdpLink CLASS");
 			break;
 			

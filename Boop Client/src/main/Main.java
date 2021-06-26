@@ -88,8 +88,6 @@ public class Main {
 			previous = current;
 			timeAfterLastTick += elapsed;
 			
-			processInputs();
-			
 			// 60 physics update per second
 			while (timeAfterLastTick >= MS_PER_UPDATE) {
 				// use deterministic from server?????????
@@ -106,37 +104,7 @@ public class Main {
 				}
 				
 				if (serverLink.getServerConnection()) {
-
-					// Checks if any hold keys have been pressed or released and sends any changes to the server
-					Key[] keys = new Key[] {Key.W, Key.A, Key.S, Key.D};
-					for (int i = 0; i < keys.length; i++) {
-
-						Key key = keys[i];
-						
-						if (keyboard.hasChanged(key)){
-
-							// Sends the key number as a byte, with the 6th bit set to 1 if the key
-							// has been pressed or 0 if it has been released
-
-							byte data = (byte) i;
-
-							if (keyboard.isActive(key)) {
-								data = (byte) (data | (1 << 6));
-							}
-							
-							udpLink.sendData(new byte[] {1, data});
-						}
-					}
-
-					if(mouse.mouseMoved) {
-						mouse.mouseMoved = false;
-						byte[] data = new byte[0];
-						data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.playerVel.x), data);
-						data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.playerVel.y), data);
-						data = Bitmaths.pushByteToData((byte)5, data);
-						udpLink.sendData(data);
-					}
-
+					sendInputs();
 					udpLink.processServerUpdate();
 				}
 
@@ -148,42 +116,8 @@ public class Main {
 					}
 					
 					if (serverLink.getServerConnection()) {
-
-						// Checks if any hold keys have been pressed or released and sends any changes to the server
-						Key[] keys = new Key[] {Key.W, Key.A, Key.S, Key.D};
-						for (int i = 0; i < keys.length; i++) {
-
-							Key key = keys[i];
-							
-							if (keyboard.hasChanged(key)){
-
-								// Sends the key number as a byte, with the 6th bit set to 1 if the key
-								// has been pressed or 0 if it has been released
-
-								byte data = (byte) i;
-
-								if (keyboard.isActive(key)) {
-									data = (byte) (data | (1 << 6));
-								}
-								
-								udpLink.sendData(new byte[] {1, data});
-							}
-						}
-						
-						
-//						if(mouse.mouseMoved) {
-//							mouse.mouseMoved = false;
-//							byte[] data = new byte[0];
-//							data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.mouseDir.x), data);
-//							data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.mouseDir.y), data);
-//							data = Bitmaths.pushByteToData((byte)5, data);
-//							udpLink.sendData(data);
-//						}
-
-
+						//udpLink.processServerUpdate();
 					}
-
-					udpLink.processServerUpdate();
 				}
 				
 				networkTimer += MS_PER_UPDATE * 2;
@@ -211,38 +145,22 @@ public class Main {
 	
 	private void sendInputs() {
 		// Checks if any hold keys have been pressed or released and sends any changes to the server
-		Key[] keys = new Key[] {Key.W, Key.A, Key.S, Key.D};
-		for (int i = 0; i < keys.length; i++) {
-
-			Key key = keys[i];
-			
-			if (keyboard.hasChanged(key)){
-
-				// Sends the key number as a byte, with the 6th bit set to 1 if the key
-				// has been pressed or 0 if it has been released
-
-				byte data = (byte) i;
-
-				if (keyboard.isActive(key)) {
-					data = (byte) (data | (1 << 6));
-				}
-				
-				udpLink.sendData(new byte[] {1, data});
-			}
-		}
-
-		if(mouse.mouseMoved) {
+		if(mouse.mouseMoved || keyboard.somethingHapended) {
 			mouse.mouseMoved = false;
+			keyboard.somethingHapended = false;
+			
+			System.out.println("(" +  Player.direction.x + ", " +  Player.direction.y+ ")");
+			
 			byte[] data = new byte[0];
-			data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.playerVel.x), data);
-			data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.playerVel.y), data);
+			data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.x), data);
+			data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.y), data);
 			data = Bitmaths.pushByteToData((byte)5, data);
 			udpLink.sendData(data);
 		}
 	}
 	
 	private void fixedUpdate(float dt) {
-		PlayerHandler.Me.processInputs(keyboard, mouse);
+		Player.processInputs(keyboard, mouse);
 		players.updatePlayers(balls.getBalls(), dt);
 		balls.updateBalls(players, dt);
 	}
@@ -261,6 +179,10 @@ public class Main {
 			g2d.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
 			balls.renderBalls(g2d, dt);
 			drawPerformance(g2d);
+			
+			//Drawing client centre for debug.
+			g2d.setColor(Color.MAGENTA);
+			g2d.fillOval(Display.WINDOW_WIDTH/2, Display.WINDOW_HEIGHT/2, 3, 3);
 			
 			g2d.dispose();
 			bs.show();
