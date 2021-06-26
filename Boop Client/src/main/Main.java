@@ -209,46 +209,42 @@ public class Main {
 	    }
 	}
 	
-	private void processInputs() {
-		
+	private void sendInputs() {
+		// Checks if any hold keys have been pressed or released and sends any changes to the server
+		Key[] keys = new Key[] {Key.W, Key.A, Key.S, Key.D};
+		for (int i = 0; i < keys.length; i++) {
+
+			Key key = keys[i];
+			
+			if (keyboard.hasChanged(key)){
+
+				// Sends the key number as a byte, with the 6th bit set to 1 if the key
+				// has been pressed or 0 if it has been released
+
+				byte data = (byte) i;
+
+				if (keyboard.isActive(key)) {
+					data = (byte) (data | (1 << 6));
+				}
+				
+				udpLink.sendData(new byte[] {1, data});
+			}
+		}
+
+		if(mouse.mouseMoved) {
+			mouse.mouseMoved = false;
+			byte[] data = new byte[0];
+			data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.playerVel.x), data);
+			data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(mouse.playerVel.y), data);
+			data = Bitmaths.pushByteToData((byte)5, data);
+			udpLink.sendData(data);
+		}
 	}
 	
 	private void fixedUpdate(float dt) {
+		PlayerHandler.Me.processInputs(keyboard, mouse);
+		players.updatePlayers(balls.getBalls(), dt);
 		balls.updateBalls(players, dt);
-		updatePos(dt);
-	}
-
-	static float movementSpeed = 0.3f;
-	private void updatePos(float dt) {
-		if (keyboard.isActive(Key.W)) {
-			Display.centreInServer.y -= movementSpeed*dt;
-			if (Display.centreInServer.y < -1) Display.centreInServer.y += 2;
-		}
-
-		if (keyboard.isActive(Key.A)) {
-			Display.centreInServer.x -= movementSpeed*dt;
-			if (Display.centreInServer.x < -1) Display.centreInServer.x += 2;
-		}
-
-		if (keyboard.isActive(Key.S)) {
-			Display.centreInServer.y += movementSpeed*dt;
-			if (Display.centreInServer.y > 1) Display.centreInServer.y -= 2;
-		}
-
-		if (keyboard.isActive(Key.D)) {
-			Display.centreInServer.x += movementSpeed*dt;
-			if (Display.centreInServer.x > 1) Display.centreInServer.x -= 2;
-		}
-		
-		Vec2f.increment(Display.centreInServer, Display.centreInServer, mouse.playerVel, dt);
-		
-		if (Display.centreInServer.y < -1) Display.centreInServer.y += 2;
-		if (Display.centreInServer.x < -1) Display.centreInServer.x += 2;
-		if (Display.centreInServer.y > 1) Display.centreInServer.y -= 2;
-		if (Display.centreInServer.x > 1) Display.centreInServer.x -= 2;
-		
-		PlayerHandler.Me.centrePos.x = Display.centreInServer.x;
-		PlayerHandler.Me.centrePos.y = Display.centreInServer.y;
 	}
 	
 	BufferStrategy bs;

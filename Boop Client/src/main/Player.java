@@ -3,6 +3,7 @@ package main;
 import java.util.ArrayList;
 
 import balls.Ball;
+import display.Display;
 import math.Physics;
 import math.Vec2f;
 import math.VecPool;
@@ -16,6 +17,7 @@ public class Player {
 	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
 	public Vec2f velocity = new Vec2f();
 	public float radOfInf = 0.5f;			//radius of region balls are attracted to the client.
+	private float movementSpeed = 0.3f;
 	
 	public static float attractionCoefficient = 0.001f; //multiplied by number of owned balls to give attraction strength.
 	public static float influenceCoefficient = 0.01f; //multiplied by number of balls to give area of influence. 
@@ -43,8 +45,52 @@ public class Player {
 		
 		return (disp.lengthSq() <= (radOfInf + b.getRad())*(radOfInf+b.getRad()));
 	}
-	public void updatePos() {
+	
+	public void updatePos(float dt) {
+		Vec2f.increment(centrePos, centrePos, velocity, dt);
 		
+		if (centrePos.y < -1) centrePos.y += 2;
+		if (centrePos.x < -1) centrePos.x += 2;
+		if (centrePos.y > 1) centrePos.y -= 2;
+		if (centrePos.x > 1) centrePos.x -= 2;
+	}
+	
+	private Vec2f direction = new Vec2f(0,0);
+	private float maxSpeed = 0.001f;
+	public void processInputs(Keyboard keyboard, Mouse mouse) {
+		if(!isClient) return;
+		
+		//Reset direction.
+		Vec2f.scale(direction, direction, 0);
+	
+		//Calculate direction from keyboard.
+		if (keyboard.isActive(Key.W)) {
+			direction.y += 1;
+		}
+
+		if (keyboard.isActive(Key.A)) {
+			direction.x -= 1;
+		}
+
+		if (keyboard.isActive(Key.S)) {
+			direction.y -= 1;
+		}
+
+		if (keyboard.isActive(Key.D)) {
+			direction.x += 1;
+		}
+		
+		//Keep direction length = 1.
+		direction.normalise();
+		
+		//Add mouse direction
+		Vec2f.add(direction, direction, mouse.mouseDir);
+		//Normalise direction if too big.
+		if(direction.lengthSq() > 1) {
+			direction.normalise();
+		}
+		
+		Vec2f.scale(velocity, direction, maxSpeed);
 	}
 	
 	

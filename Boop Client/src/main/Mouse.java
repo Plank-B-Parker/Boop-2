@@ -11,7 +11,6 @@ public class Mouse implements MouseListener, MouseMotionListener{
 
 	//Stack<Vec2f> directionsMoved = new Stack<>();
 	Vec2f mouseDir = new Vec2f();
-	Vec2f playerVel = new Vec2f(); 
 	boolean mouseMoved = false;
 	
 	public Mouse() {
@@ -68,12 +67,7 @@ public class Mouse implements MouseListener, MouseMotionListener{
 		mouseDir.x = e.getX() - Display.WINDOW_WIDTH/2;
 		mouseDir.y = e.getY() - Display.WINDOW_HEIGHT/2;
 		
-		if(mouseDir.lengthSq() > r_max*r_max) {
-			mouseDir.normalise();
-			Vec2f.scale(mouseDir, mouseDir, r_max);
-		}
-		
-		Vec2f.scale(playerVel, mouseDir, Main.movementSpeed/r_max);
+		Vec2f.scale(mouseDir, mouseDir, 1.0f/r_max);
 		
 	}
 

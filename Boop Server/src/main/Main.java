@@ -245,11 +245,8 @@ public class Main {
 		
 		List<Client> clients = clientHandler.getClients();
 		
-		for(Client client: clients) {
-			client.updatePos(dt);
-		}
-		
-		storage.updateBalls(clientHandler, dt);
+		clientHandler.updateClients(storage.getBalls(), dt);
+		storage.updateBalls(clients, dt);
 	}
 	
 	public void render(float dt) {
