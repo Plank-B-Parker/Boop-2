@@ -144,10 +144,13 @@ public class Main {
 		running = true;
 				
 		final double MS_PER_UPDATE = 1000.0 / 60.0;
+		final double MS_PER_FRAME_LIMIT = 1000.0 / 60.0;
+
 		long previous = System.currentTimeMillis();
 		long timeAfterLastTick = 0;
 		long timeAfterLastTransmit = 0;
-		double timer = System.currentTimeMillis();
+		long timer = System.currentTimeMillis();
+		long frameTimer = System.currentTimeMillis();
 		
 		int ticks = 0;
 		int frames = 0;
@@ -211,8 +214,12 @@ public class Main {
 				timeAfterLastTransmit -= MS_PER_UPDATE * 2;
 			}
 			
-			render(timeAfterLastTick/1000f);
+			if (System.currentTimeMillis() - frameTimer >= MS_PER_FRAME_LIMIT) {
+				render(timeAfterLastTick / 1000f);
 			frames++;
+			
+				frameTimer += MS_PER_FRAME_LIMIT;
+			}
 			
 			if (System.currentTimeMillis() - timer >= 1000) {
 				clockSynchronise();
