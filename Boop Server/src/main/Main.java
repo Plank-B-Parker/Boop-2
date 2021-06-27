@@ -541,18 +541,26 @@ public class Main {
 		
 		byte[][] data = new byte[packetNo][payloadSize];
 		
-		Number[][] splitInput = new Number[packetNo][numItemsPerObj];
-		
+		Number[][] splitInput = new Number[packetNo][maxClientsPerPacket*numItemsPerObj];
+	
 		int inputFilled = 0;
 		int offset = 0;
 		
 		while (inputFilled < packetNo) {
-			for (int i = 0; i < numItemsPerObj; i++) {
+
+			int numToFill = maxClientsPerPacket*numItemsPerObj;
+
+			if (inputFilled >= packetNo - 1) {
+				numToFill = clientsData.length % (maxClientsPerPacket*numItemsPerObj);
+				splitInput[inputFilled] = new Number[numToFill];
+			}
+			
+			for (int i = 0; i < numToFill; i++) {
 				splitInput[inputFilled][i] = clientsData[i + offset];
 			}
 			
 			inputFilled++;
-			offset += numItemsPerObj;
+			offset += maxClientsPerPacket*numItemsPerObj;
 		}
 		
 		// Fill packets with data
@@ -565,6 +573,7 @@ public class Main {
 		// Send data to all clients at same time.
 		for (Client client : clients) {
 			for (int i = 0; i < packetNo; i++) {
+				headerInfo = new byte[0];
 				headerInfo = Bitmaths.pushByteToData(Packet.CLIENTDATA.getID(), headerInfo);
 				headerInfo = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(client.udpPacketsSent.incrementAndGet()), headerInfo);
 				byte[] completePacket = Bitmaths.pushByteArrayToData(headerInfo, data[i]);
