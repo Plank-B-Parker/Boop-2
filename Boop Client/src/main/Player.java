@@ -78,14 +78,20 @@ public class Player {
 		}
 		
 		//Keep direction length = 1.
-		if(direction.lengthSq() != 0)
+		if (direction.lengthSq() != 0)
 			direction.normalise();
 		
 		//Add mouse direction
 		Vec2f.add(direction, direction, mouse.mouseDir);
 		//Normalise direction if too big.
-		if(direction.lengthSq() > 1) {
+		if (direction.lengthSq() > 1) {
 			direction.normalise();
+		}
+		
+		// Deadzone
+		if (direction.lengthSq() < 0.01) {
+			direction.x = 0;
+			direction.y = 0;
 		}
 		
 		Vec2f.scale(PlayerHandler.Me.velocity, direction, maxSpeed);
