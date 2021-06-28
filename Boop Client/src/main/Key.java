@@ -7,7 +7,9 @@ public enum Key {
 	W("Up", KeyEvent.VK_W, true, false, -1),
 	A("Left", KeyEvent.VK_A, true, false, -1),
 	S("Down", KeyEvent.VK_S, true, false, -1),
-	D("Right", KeyEvent.VK_D, true, false, -1);
+	D("Right", KeyEvent.VK_D, true, false, -1),
+
+	F("Exact Coordinates", KeyEvent.VK_F, false, true, -1);
 	
 	
 	private String name;

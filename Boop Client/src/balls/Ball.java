@@ -126,8 +126,6 @@ public class Ball {
 		////////
 
 		vecPool.endOfMethod();
-		
-		renderExactCoordinates(g,dt);
 	}
 	
 	public void renderExactCoordinates(Graphics2D g, float dt) {

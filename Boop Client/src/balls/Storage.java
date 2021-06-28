@@ -109,6 +109,15 @@ public class Storage {
 		g.setColor(Color.PINK);
 		g.drawString("energy: " + energy, 20, 200);
 	}
+
+	public void renderExactCoordinates(Graphics2D g, float dt) {
+		synchronized (balls) {
+			for (Ball ball: balls) {
+				if(ball.getID() == -1) continue;
+				ball.renderExactCoordinates(g, dt);
+			}
+		}
+	}
 	
 	//Handles server balls.
 	public void add(float data[]) {

@@ -171,6 +171,11 @@ public class Main {
 			
 			g2d.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
 			balls.renderBalls(g2d, dt);
+
+			if (keyboard.isActive(Key.F)) {
+				balls.renderExactCoordinates(g2d, dt);
+			}
+
 			drawPerformance(g2d);
 			
 			//Drawing client centre for debug.
