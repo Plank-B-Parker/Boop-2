@@ -21,12 +21,14 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import main.Keyboard;
 import main.Main;
 import math.Vec2f;
 
 public class Display implements ActionListener{
 	Main main;
 	Canvas canvas;
+	JFrame frame;
 
 	public static int WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
 	public static final Font TEXT_FONT = new Font("Calibri", Font.PLAIN, 18);
@@ -53,7 +55,7 @@ public class Display implements ActionListener{
 	}
 	
 	public void createWindow() {
-		JFrame frame = new JFrame("Client");
+		frame = new JFrame("Client");
 
 		frame.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent componentEvent) {
@@ -156,11 +158,12 @@ public class Display implements ActionListener{
 	}
 	
 	public void showCard(String cardName) {
-		if(cardName == null || cardName == "" || cardName == "Game")
+		if(cardName == null || cardName == "" || cardName == "Game") {
 			cards.setVisible(false);
-		else
+		} else {
 			cards.setVisible(true);
 			cl.show(cards, cardName);
+	}
 	}
 	
 	
@@ -171,6 +174,10 @@ public class Display implements ActionListener{
 		else {
 			JOptionPane.showMessageDialog(canvas, message, title, messageType);
 		}
+	}
+
+	public void addKeyListener(Keyboard keyboard) {
+		frame.addKeyListener(keyboard);
 	}
 
 }

@@ -34,28 +34,14 @@ public class Main {
 	private Keyboard keyboard;
 	private Mouse mouse;
 	
-	public Main() {
+	public void createDisplay() {
+		display = new Display(this, canvas);
 
 		keyboard = new Keyboard();
 		mouse = new Mouse();
-		canvas.addKeyListener(keyboard);
+		
+		display.addKeyListener(keyboard);
 		canvas.addMouseMotionListener(mouse);
-		
-		Random random = new Random();
-		
-		/*for(int i = 0; i < 10; i++) {
-			Ball ball = new Ball(2);
-			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
-			//ball.setPos(0, -0.98f*i);
-			ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
-			ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
-			balls.add(ball);
-		}*/
-		
-	}
-	
-	public void createDisplay() {
-		display = new Display(this, canvas);
 	}
 	
 	public void setupConnections() {
