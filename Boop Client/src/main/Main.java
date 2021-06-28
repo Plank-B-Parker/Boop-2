@@ -142,7 +142,7 @@ public class Main {
 			mouse.mouseMoved = false;
 			keyboard.somethingHapended = false;
 			
-			System.out.println("(" +  Player.direction.x + ", " +  Player.direction.y+ ")");
+			// System.out.println("(" +  Player.direction.x + ", " +  Player.direction.y+ ")");
 			
 			byte[] data = new byte[0];
 			data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.x), data);

@@ -112,7 +112,7 @@ public class ServerLink implements Runnable{
 				PlayerHandler.Me.centrePos.y = Bitmaths.bytesToFloat(data, 5);	
 				
 //				System.out.println(PlayerHandler.Me.centrePos.x + ", " + PlayerHandler.Me.centrePos.y);
-				System.out.println("Hello");
+				// System.out.println("Hello");
 				
 				break;
 			default:

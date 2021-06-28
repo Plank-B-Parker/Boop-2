@@ -104,9 +104,9 @@ public class UdpLink implements Runnable{
 				
 				main.balls.setBallData(currentBall);
 				
-				System.out.println("Packet number: " + Bitmaths.bytesToInt(data, 0));
-				System.out.println("Packets recieved: " + recievedPacketsUDP.get());
-				System.out.println("////////////////////////////////");
+				// System.out.println("Packet number: " + Bitmaths.bytesToInt(data, 0));
+				// System.out.println("Packets recieved: " + recievedPacketsUDP.get());
+				// System.out.println("////////////////////////////////");
 			}
 			
 			break;
@@ -131,7 +131,7 @@ public class UdpLink implements Runnable{
 			}
 			
 			
-			System.out.println("I'm recieving client info - UdpLink CLASS");
+			// System.out.println("I'm recieving client info - UdpLink CLASS");
 			break;
 			
 		default:
