@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,9 +47,10 @@ public class Client implements Runnable{
 	//NOTE: May make radius of influence proportional to number of local balls so, rate of area increase slows
 	//		as it gets bigger.
 	
-	public ArrayList<Ball> ownedBalls = new ArrayList<>();	//list of balls that the player possesses.
-	public ArrayList<Ball> localBalls = new ArrayList<>(); // All balls in the  territory.
+	public List<Ball> ownedBalls = new ArrayList<>();	//list of balls that the player possesses.
+	public List<Ball> localBalls = new ArrayList<>(); // All balls in the  territory.
 	
+	private long[] timeSinceLastPacket = new long[Packet.values().length];
 	private long lastTime = 0;					//Last time when balls were sent;
 	private float timeBetweenUpdates = 1f;	//Time between the balls being sent;
 	private float delayUntilFirstSend = 3500;
@@ -162,22 +164,22 @@ public class Client implements Runnable{
 	}
 	
 	/**
-	 * Checks if client is ready for balls to be sent.
-	 * @return
+	 * Check if it's time to send this client a particular packet given a delay between the last one.
+	 * @param msDelayBetweenPackets Delay in milliseconds between each packet of this type.
+	 * @param packet The packet type being sent.
 	 */
-	public boolean isReadyForUpdate() {
+	public boolean isReadyForPacket(float msDelayBetweenPackets, Packet packet) {
 		long currentTime = System.currentTimeMillis();
-		long dt = currentTime - lastTime;
-		if (lastTime == 0) {
-			lastTime = currentTime;
-			dt = currentTime - lastTime;
+		long lastPacketTime = timeSinceLastPacket[packet.ordinal()];
+		long dt = currentTime - lastPacketTime;
+		
+		
+		if (dt < msDelayBetweenPackets) {
+			return false;
 		}
-		if(dt > timeBetweenUpdates*1000 && delayUntilFirstSend <= 0) {
-			lastTime = currentTime;
-			return true;
-		}
-		delayUntilFirstSend -= dt;
-		return false;
+		
+		timeSinceLastPacket[packet.ordinal()] = currentTime;
+		return true;
 	}
 	
 	public void setIdentity(long id) {
