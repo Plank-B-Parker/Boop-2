@@ -2,6 +2,7 @@ package main;
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.event.WindowAdapter;
@@ -30,7 +31,7 @@ import networking.UDP;
 
 public class Main {
 	
-	public static final int windowWidth = 1280, windowHeight = 720;
+	public static final int windowWidth = 720, windowHeight = 720;
 	private Canvas canvas = new Canvas();
 	public Storage storage = new Storage();
 	public ClientHandler clientHandler = new ClientHandler();
@@ -103,7 +104,8 @@ public class Main {
 		canvas.setSize(1920, 1080);
 		canvas.setFocusable(true);
 		
-		frame.setSize(windowWidth, windowHeight);
+		frame.getContentPane().setPreferredSize(new Dimension(windowWidth, windowHeight));
+		frame.pack();
 		frame.setLayout(null);
 		frame.getContentPane().setBackground(Color.BLACK);
 		frame.getContentPane().add(canvas);
