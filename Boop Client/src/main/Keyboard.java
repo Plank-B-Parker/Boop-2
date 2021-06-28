@@ -30,51 +30,30 @@ public class Keyboard implements KeyListener{
 		
 	}
 	
-	// Still trying to think of a way to make this button checking easier to read/check
+	// Sets the keys which have been pressed
 	@Override
 	public void keyPressed(KeyEvent e) {
-		switch(e.getKeyCode()) {
-			case KeyEvent.VK_W:
-				handleKeyPress(Key.W);
-				break;
-				
-			case KeyEvent.VK_A:
-				handleKeyPress(Key.A);
-				break;
-				
-			case KeyEvent.VK_S:
-				handleKeyPress(Key.S);
-				break;
-				
-			case KeyEvent.VK_D:
-				handleKeyPress(Key.D);
-				break;
-				
-			default:
-				System.out.println("Not valid key");
+		for (Key key : Key.values()) {
+			if (e.getKeyCode() == key.getKeyCode()) {
+				handleKeyPress(key);
+				return;
+			}
 		}
+
+		System.out.println("Not valid key");
 	}
 	
 	// Sets the keys which have been released
 	@Override
 	public void keyReleased(KeyEvent e) {
-		switch(e.getKeyCode()) {
-			case KeyEvent.VK_W:
-				handleKeyRelease(Key.W);
-				break;
-			case KeyEvent.VK_A:
-				handleKeyRelease(Key.A);
-				break;
-			case KeyEvent.VK_S:
-				handleKeyRelease(Key.S);
-				break;
-			case KeyEvent.VK_D:
-				handleKeyRelease(Key.D);
-				break;
-				
-			default:
-				System.out.println("Not valid release key");
+		for (Key key : Key.values()) {
+			if (e.getKeyCode() == key.getKeyCode()) {
+				handleKeyRelease(key);
+				return;
+			}
 		}
+
+		System.out.println("Not valid release key");
 	}
 	
 	@Override
