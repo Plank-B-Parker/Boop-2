@@ -4,9 +4,9 @@ public enum Packet {
 	NEW_BALLS((byte) 2, 1372, 49, 7),
 	OLD_BALLS((byte) 3, 1392, 58, 6),
 	CLOCK_SYN((byte) 7, 8, 1, 1),
-	ACK((byte) 8, 8, 1, 1),
 	CLIENTDATA((byte) 70, 896, 32, 6),
-	DISCONNECT((byte) -5, 0, 0, 0);
+	DISCONNECT((byte) -5, 0, 0, 0),
+	DUMMY((byte) 8, 8, 1, 1);
 	
 	
 	public static final int MAX_PAYLOAD_SIZE = 1400;

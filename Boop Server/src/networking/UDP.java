@@ -82,7 +82,7 @@ public class UDP implements Runnable{
 			float directionX = Bitmaths.bytesToFloat(packet.getData(),5);
 			
 //			System.out.println("(" + client.centrePos.x + ", " + client.centrePos.y + ")");
-			System.out.println("(" +  directionX + ", " +  directionY + ")");
+			//System.out.println("(" +  directionX + ", " +  directionY + ")");
 			
 			client.setDirection(directionX, directionY);
 			break;
@@ -111,8 +111,8 @@ public class UDP implements Runnable{
 			e.printStackTrace();
 		}
 		int sequence = Bitmaths.bytesToInt(data);
-		System.out.println("Packet sequence: " + Bitmaths.bytesToInt(data));
-		System.out.println("Total packets sent: " + SentPacketsUDP.get());
+		//System.out.println("Packet sequence: " + Bitmaths.bytesToInt(data));
+		//System.out.println("Total packets sent: " + SentPacketsUDP.get());
 	}
 	
 	public void startUDP() {

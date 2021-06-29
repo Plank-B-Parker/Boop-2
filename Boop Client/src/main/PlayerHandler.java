@@ -88,7 +88,7 @@ public class PlayerHandler extends ArrayList<Player> {
 						continue;
 					}
 					//If the ball is within another clients territory and the current client has stumbled across it.
-					if(ownerID >= 0) {
+					if(ownerID >= 0 && getPlayerByID(ball.getOwnerID()) != null) {
 						(getPlayerByID(ball.getOwnerID())).ownedBalls.remove(ball);
 						ball.setOwnerID(-2);
 					}

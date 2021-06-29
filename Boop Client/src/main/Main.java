@@ -12,6 +12,7 @@ import balls.Storage;
 import display.Display;
 import math.Bitmaths;
 import math.Vec2f;
+import networking.Packet;
 import networking.ServerLink;
 import networking.UdpLink;
 
@@ -23,6 +24,7 @@ public class Main {
 	public ServerLink serverLink;
 	public UdpLink udpLink;
 	
+	private long[] timeSinceLastPacket = new long[Packet.values().length];
 	public volatile boolean disconnectedByServer = false;
 	
 	public Storage balls = new Storage();
@@ -78,6 +80,9 @@ public class Main {
 			previous = current;
 			timeAfterLastTick += elapsed;
 			
+			// Method should always be run as fast as possible.
+			processInput();
+			
 			// 60 physics update per second
 			while (timeAfterLastTick >= MS_PER_UPDATE) {
 				// use deterministic from server?????????
@@ -128,7 +133,7 @@ public class Main {
 				packetsSentLastTotal = udpLink.sentPacketsUDP.get();
 				TPS = ticks;
 				FPS = frames;
-				count =0;
+				count = 0;
 				ticks = 0;
 				frames = 0;
 				timer += 1000;
@@ -137,24 +142,31 @@ public class Main {
 	    }
 	}
 	
-	private void sendInputs() {
-		// Checks if any hold keys have been pressed or released and sends any changes to the server
+	private void processInput() {
+		// Updates current state of data based on latest input.
 		if(mouse.mouseMoved || keyboard.somethingHapended) {
 			mouse.mouseMoved = false;
 			keyboard.somethingHapended = false;
-			
-			// System.out.println("(" +  Player.direction.x + ", " +  Player.direction.y+ ")");
-			
-			byte[] data = new byte[0];
-			data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.x), data);
-			data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.y), data);
-			data = Bitmaths.pushByteToData((byte)5, data);
-			udpLink.sendData(data);
 		}
+		Player.processInputs(keyboard, mouse);
+		
+	}
+	
+	private void sendInputs() {
+		// sends any input changes to the server
+			
+		//System.out.println("(" +  Player.direction.x + ", " +  Player.direction.y+ ")");
+		
+		if (!isServerReadyForPacket(100, Packet.DUMMY)) return;
+		
+		byte[] data = new byte[0];
+		data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.x), data);
+		data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.y), data);
+		data = Bitmaths.pushByteToData((byte)5, data);
+		udpLink.sendData(data);
 	}
 	
 	private void fixedUpdate(float dt) {
-		Player.processInputs(keyboard, mouse);
 		players.updatePlayers(balls.getBalls(), dt);
 		balls.updateBalls(players, dt);
 	}
@@ -196,6 +208,25 @@ public class Main {
 		
 		g2d.drawString("Tx: " + packetsSentPerSec, 140, 50);
 		g2d.drawString("Rx: " + packetsRecievedPerSec, 140, 75);
+	}
+	
+	/**
+	 * Check if it's time to send the server a particular packet given a delay between the last one.
+	 * @param msDelayBetweenPackets Delay in milliseconds between each packet of this type.
+	 * @param packet The packet type being sent.
+	 */
+	public boolean isServerReadyForPacket(float msDelayBetweenPackets, Packet packet) {
+		long currentTime = System.currentTimeMillis();
+		long lastPacketTime = timeSinceLastPacket[packet.ordinal()];
+		long dt = currentTime - lastPacketTime;
+		
+		
+		if (dt < msDelayBetweenPackets) {
+			return false;
+		}
+		
+		timeSinceLastPacket[packet.ordinal()] = currentTime;
+		return true;
 	}
 	
 	// Called by the Display Class when user starts game
