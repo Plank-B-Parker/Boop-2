@@ -13,7 +13,7 @@ public class Bot1 extends Bot {
 
 	    long timer = System.currentTimeMillis();
 	    while(running) {
-			if (doRender && System.currentTimeMillis() - timer >= 1000) {
+			if (System.currentTimeMillis() - timer >= 1000) {
 
 				goingLeft = !goingLeft;
 				if (goingLeft) moveMouse(-1, 1);
