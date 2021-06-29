@@ -185,18 +185,22 @@ public class Main {
 				ticks++;
 			}
 			
-			// maximum 30 transmits per second
-			while (timeAfterLastTransmit >= MS_PER_UPDATE * 2) {
+			// maximum 60 transmits per second
+			while (timeAfterLastTransmit >= MS_PER_UPDATE) {
 				// Send data and other stuff here
 				
 				// check if clients are connected then remove them from list
 				List<Client> clients = clientHandler.getClients();
+				List<Client> readyClients = new ArrayList<>();
 				
-				Number[] clientsData = new Number[clients.size() * Packet.CLIENTDATA.getNumberOfItems()];
-				for (int i = 0; i < clients.size(); i++) {
-					// Fill data to prepare for sending.
-					Client client = clients.get(i);
+				var clientsData = new Number[clients.size() * Packet.CLIENTDATA.getNumberOfItems()];
+				for (var i = 0; i < clients.size(); i++) {					
+					var client = clients.get(i);
 					
+					if (!client.isReadyForPacket(200, Packet.CLIENTDATA)) continue;
+					
+					// Fill data to prepare for sending.
+					readyClients.add(client);
 					clientsData[i * 6 + 0] = client.centrePos.x;
 					clientsData[i * 6 + 1] = client.centrePos.y;
 					clientsData[i * 6 + 2] = client.velocity.x;
@@ -205,8 +209,9 @@ public class Main {
 					clientsData[i * 6 + 5] = client.getIdentity();
 				}
 				
-				
-				sendAllClientInfo(clientsData, clients);
+				if (! readyClients.isEmpty()) {
+					sendAllClientInfo(clientsData, readyClients);					
+				}
 				
 				
 				// send ballz
@@ -353,7 +358,7 @@ public class Main {
 			
 			Client client = clients.get(i);
 			//Check if client is ready;
-			if(!client.isReadyForUpdate()) continue;
+			if(!client.isReadyForPacket(100, Packet.NEW_BALLS)) continue;
 			
 			List<Ball> inRange = new ArrayList<>();
 			
@@ -427,7 +432,6 @@ public class Main {
 	}
 	
 	/**
-	 * Similar to testballs1 but uses object serialisation.
 	 * Also adds an offset to the packet to send time and packet sequence.
 	 * 12 bytes used for offset
 	 */
@@ -451,7 +455,7 @@ public class Main {
 			
 			Client client = clients.get(i);
 			//Check if client is ready;
-			if(!client.isReadyForUpdate()) continue;
+			if(!client.isReadyForPacket(100, Packet.NEW_BALLS)) continue;
 			
 			List<Ball> inRange = new ArrayList<>();
 			
@@ -543,7 +547,11 @@ public class Main {
 		
 		byte[][] data = new byte[packetNo][payloadSize];
 		
-		Number[][] splitInput = new Number[packetNo][maxClientsPerPacket*numItemsPerObj];
+		int NumbersPerPacket = maxClientsPerPacket * numItemsPerObj;
+		
+		if (clients.size() < maxClientsPerPacket) NumbersPerPacket = clients.size() * numItemsPerObj;
+		
+		Number[][] splitInput = new Number[packetNo][NumbersPerPacket];
 	
 		int inputFilled = 0;
 		int offset = 0;
@@ -574,7 +582,7 @@ public class Main {
 		
 		// Send data to all clients at same time.
 		for (Client client : clients) {
-			for (int i = 0; i < packetNo; i++) {
+			for (var i = 0; i < packetNo; i++) {
 				headerInfo = new byte[0];
 				headerInfo = Bitmaths.pushByteToData(Packet.CLIENTDATA.getID(), headerInfo);
 				headerInfo = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(client.udpPacketsSent.incrementAndGet()), headerInfo);

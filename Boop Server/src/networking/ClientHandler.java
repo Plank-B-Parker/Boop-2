@@ -142,7 +142,6 @@ public class ClientHandler{
 		for (Client client: clients) {
 			client.disconnect();
 		}
-		clients.clear();
 	}
 
 	public Client getClientByAddressAndPort(InetAddress address, int port) {
