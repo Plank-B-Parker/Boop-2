@@ -7,7 +7,6 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Random;
 
 import balls.Storage;
 import display.Display;
@@ -19,7 +18,7 @@ import networking.UdpLink;
 public class Main {
 
 	public volatile boolean running = false;
-	private Canvas canvas = new Canvas();
+	protected Canvas canvas = new Canvas();
 	public Display display;
 	public ServerLink serverLink;
 	public UdpLink udpLink;
@@ -31,8 +30,10 @@ public class Main {
 	
 	public Vec2f pos;
 	
-	private Keyboard keyboard;
-	private Mouse mouse;
+	protected Keyboard keyboard;
+	protected Mouse mouse;
+
+	protected boolean doRender = true;
 	
 	public void createDisplay() {
 		display = new Display(this, canvas);
@@ -112,9 +113,9 @@ public class Main {
 				networkTimer += MS_PER_UPDATE * 2;
 			}
 			
-			if (System.currentTimeMillis() - frameTimer >= MS_PER_FRAME_LIMIT) {
-			render(timeAfterLastTick / 1000f);
-			frames++;
+			if (doRender && System.currentTimeMillis() - frameTimer >= MS_PER_FRAME_LIMIT) {
+				render(timeAfterLastTick / 1000f);
+				frames++;
 			
 				frameTimer += MS_PER_FRAME_LIMIT;
 			}
@@ -132,7 +133,7 @@ public class Main {
 				frames = 0;
 				timer += 1000;
 			}
-	    	
+
 	    }
 	}
 	

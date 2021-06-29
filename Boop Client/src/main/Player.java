@@ -62,7 +62,7 @@ public class Player {
 	
 		//Calculate direction from keyboard.
 		if (keyboard.isActive(Key.W)) {
-			direction.y += 1;
+			direction.y -= 1;
 		}
 
 		if (keyboard.isActive(Key.A)) {
@@ -70,7 +70,7 @@ public class Player {
 		}
 
 		if (keyboard.isActive(Key.S)) {
-			direction.y -= 1;
+			direction.y += 1;
 		}
 
 		if (keyboard.isActive(Key.D)) {

@@ -10,8 +10,8 @@ import math.Vec2f;
 public class Mouse implements MouseListener, MouseMotionListener{
 
 	//Stack<Vec2f> directionsMoved = new Stack<>();
-	Vec2f mouseDir = new Vec2f();
-	boolean mouseMoved = false;
+	protected Vec2f mouseDir = new Vec2f();
+	protected boolean mouseMoved = false;
 	
 	public Mouse() {
 		

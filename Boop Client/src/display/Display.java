@@ -3,6 +3,7 @@ package display;
 import java.awt.Canvas;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -68,7 +69,8 @@ public class Display implements ActionListener{
 		canvas.setSize(1920, 1080);
 		canvas.setBackground(Color.BLACK);
 		
-		frame.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+		frame.getContentPane().setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
+		frame.pack();
 		frame.setLayout(null);
 		frame.setBackground(Color.RED);
 		// Content is at the front of the panel
@@ -178,6 +180,10 @@ public class Display implements ActionListener{
 
 	public void addKeyListener(Keyboard keyboard) {
 		frame.addKeyListener(keyboard);
+	}
+
+	public void setVisible(boolean b) {
+		frame.setVisible(b);
 	}
 
 }
