@@ -23,8 +23,8 @@ public final class Bitmaths {
 	}
 	
 	public static byte[] longArrayToBytes(long[] longs) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(longs.length * 8);
-		LongBuffer longBuffer = byteBuffer.asLongBuffer();
+		var byteBuffer = ByteBuffer.allocate(longs.length * 8);
+		var longBuffer = byteBuffer.asLongBuffer();
 		
 		for (long i: longs) {
 			longBuffer.put(i);
@@ -50,8 +50,8 @@ public final class Bitmaths {
 	}
 	
 	public static byte[] floatArrayToBytes(float[] floats) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(floats.length * 4);
-		FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
+		var byteBuffer = ByteBuffer.allocate(floats.length * 4);
+		var floatBuffer = byteBuffer.asFloatBuffer();
 		
 		for (float i: floats) {
 			floatBuffer.put(i);
@@ -77,8 +77,8 @@ public final class Bitmaths {
 	}
 	
 	public static byte[] intArrayToBytes(int[] ints) {
-		ByteBuffer byteBuffer = ByteBuffer.allocate(ints.length * 4);
-		IntBuffer intBuffer = byteBuffer.asIntBuffer();
+		var byteBuffer = ByteBuffer.allocate(ints.length * 4);
+		var intBuffer = byteBuffer.asIntBuffer();
 		
 		for (int i: ints) {
 			intBuffer.put(i);

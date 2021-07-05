@@ -3,6 +3,7 @@ package networking;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import balls.Ball;
@@ -161,7 +162,10 @@ public class ClientHandler{
 		return null;
 	}
 	
+	/**
+	 * @return A reference to an unmodifiable list of all clients. (Elements are still mutable).
+	 */
 	public List<Client> getClients(){
-		return clients;
+		return Collections.unmodifiableList(clients);
 	}
 }

@@ -26,7 +26,6 @@ public class Client implements Runnable{
 	
 	private long ID = 0;
 	private InetAddress ipv4Address;
-	private InetAddress ipv6Address;
 	
 	private int clientPort;
 	
@@ -51,14 +50,9 @@ public class Client implements Runnable{
 	public List<Ball> localBalls = new ArrayList<>(); // All balls in the  territory.
 	
 	private long[] timeSinceLastPacket = new long[Packet.values().length];
-	private long lastTime = 0;					//Last time when balls were sent;
-	private float timeBetweenUpdates = 1f;	//Time between the balls being sent;
-	private float delayUntilFirstSend = 3500;
 
 	private float maxSpeed = 0.3f; //Speed that the client's centre moves
 	private boolean[] pressedKeys = new boolean[4]; // Array to track which keys are being pressed
-	
-	
 	
 	public AtomicInteger udpPacketsSent = new AtomicInteger(0);
 	public AtomicInteger udpPacketsRecieved = new AtomicInteger(0);
@@ -67,8 +61,6 @@ public class Client implements Runnable{
 		clientThread = new Thread(this, "Client-Thread");
 		
 		dataBuffer = new LinkedBlockingQueue<>(60);
-		
-		Random random = new Random();
 		
 		centrePos.set(0f, 0f);
 	}

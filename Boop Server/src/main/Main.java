@@ -11,6 +11,7 @@ import java.awt.image.BufferStrategy;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -189,30 +190,12 @@ public class Main {
 			while (timeAfterLastTransmit >= MS_PER_UPDATE) {
 				// Send data and other stuff here
 				
-				// check if clients are connected then remove them from list
-				List<Client> clients = clientHandler.getClients();
-				List<Client> readyClients = new ArrayList<>();
+				// check if clients are connected before attempting to send data.
+				final List<Client> clients = clientHandler.getClients();
+				if (clients.isEmpty()) break;
 				
-				var clientsData = new Number[clients.size() * Packet.CLIENTDATA.getNumberOfItems()];
-				for (var i = 0; i < clients.size(); i++) {					
-					var client = clients.get(i);
-					
-					if (!client.isReadyForPacket(200, Packet.CLIENTDATA)) continue;
-					
-					// Fill data to prepare for sending.
-					readyClients.add(client);
-					clientsData[i * 6 + 0] = client.centrePos.x;
-					clientsData[i * 6 + 1] = client.centrePos.y;
-					clientsData[i * 6 + 2] = client.velocity.x;
-					clientsData[i * 6 + 3] = client.velocity.y;
-					clientsData[i * 6 + 4] = client.radOfInf;
-					clientsData[i * 6 + 5] = client.getIdentity();
-				}
-				
-				if (! readyClients.isEmpty()) {
-					sendAllClientInfo(clientsData, readyClients);					
-				}
-				
+				// Send position, velocity, influence and ID about every client to every client.
+				sendAllClientInfo();
 				
 				// send ballz
 				sendTestBalls2();
@@ -533,44 +516,64 @@ public class Main {
 		
 	}
 	
-	public void sendAllClientInfo(Number[] clientsData, List<Client> clients) {
-		int packetNo = 0;
+	public void sendAllClientInfo() {
 		final int numItemsPerObj = Packet.CLIENTDATA.getNumberOfItems();
 		final int maxClientsPerPacket = Packet.CLIENTDATA.getNumObj();
 		
-		int numObjects = clientsData.length / numItemsPerObj;
+		// Prepare data only for clients that are ready to accept packets.
+		final List<Client> clients = clientHandler.getClients();
+		List<Client> readyClients = new ArrayList<>();
 		
-		packetNo = (int)Math.ceil((float)numObjects / (float)maxClientsPerPacket);
+		var clientsData = new Number[clients.size() * numItemsPerObj];
+		var numClients = 0;
 		
-		int payloadSize = clientsData.length < (numItemsPerObj * maxClientsPerPacket) 
-				? numObjects * Packet.CLIENTDATA.getObjectSize() : Packet.CLIENTDATA.getMaxPayload();
+		for (var client : clients) {
+			if (!client.isReadyForPacket(200, Packet.CLIENTDATA)) continue;
+			
+			// Fill data to prepare for sending. (Front of the array will be filled first).
+			readyClients.add(client);
+			clientsData[numClients * 6 + 0] = client.centrePos.x;
+			clientsData[numClients * 6 + 1] = client.centrePos.y;
+			clientsData[numClients * 6 + 2] = client.velocity.x;
+			clientsData[numClients * 6 + 3] = client.velocity.y;
+			clientsData[numClients * 6 + 4] = client.radOfInf;
+			clientsData[numClients * 6 + 5] = client.getIdentity();
+			
+			numClients++;
+		}
+		
+		int packetNo = (int)Math.ceil((float)numClients / (float)maxClientsPerPacket);
+		boolean isSinglePacket = packetNo == 1;
+		
+		int payloadSize = isSinglePacket 
+				? numClients * Packet.CLIENTDATA.getObjectSize() : Packet.CLIENTDATA.getMaxPayload();
+		
+		int numbersPerPacket = isSinglePacket ? 
+				numClients * numItemsPerObj : numItemsPerObj * maxClientsPerPacket;
 		
 		byte[][] data = new byte[packetNo][payloadSize];
+		Number[][] splitInput = new Number[packetNo][numbersPerPacket];
 		
-		int NumbersPerPacket = maxClientsPerPacket * numItemsPerObj;
-		
-		if (clients.size() < maxClientsPerPacket) NumbersPerPacket = clients.size() * numItemsPerObj;
-		
-		Number[][] splitInput = new Number[packetNo][NumbersPerPacket];
-	
-		int inputFilled = 0;
-		int offset = 0;
+		var inputFilled = 0;
+		var offset = 0;
 		
 		while (inputFilled < packetNo) {
 
-			int numToFill = maxClientsPerPacket*numItemsPerObj;
-
-			if (inputFilled >= packetNo - 1) {
-				numToFill = clientsData.length % (maxClientsPerPacket*numItemsPerObj);
+			int numToFill = numbersPerPacket;
+			
+			// Trim the size of the array at the last packet
+			if (!isSinglePacket && inputFilled >= packetNo - 1) {
+				numToFill = (numClients * numItemsPerObj) % (maxClientsPerPacket * numItemsPerObj);
+				
 				splitInput[inputFilled] = new Number[numToFill];
 			}
 			
-			for (int i = 0; i < numToFill; i++) {
+			for (var i = 0; i < numToFill; i++) {
 				splitInput[inputFilled][i] = clientsData[i + offset];
 			}
 			
 			inputFilled++;
-			offset += maxClientsPerPacket*numItemsPerObj;
+			offset += maxClientsPerPacket * numItemsPerObj;
 		}
 		
 		// Fill packets with data
@@ -581,7 +584,7 @@ public class Main {
 		}
 		
 		// Send data to all clients at same time.
-		for (Client client : clients) {
+		for (var client : readyClients) {
 			for (var i = 0; i < packetNo; i++) {
 				headerInfo = new byte[0];
 				headerInfo = Bitmaths.pushByteToData(Packet.CLIENTDATA.getID(), headerInfo);
