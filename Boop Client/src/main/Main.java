@@ -27,7 +27,7 @@ public class Main {
 	private long[] timeSinceLastPacket = new long[Packet.values().length];
 	public volatile boolean disconnectedByServer = false;
 	
-	public Storage balls = new Storage();
+	public Storage storage = new Storage();
 	public PlayerHandler players = new PlayerHandler();
 	
 	public Vec2f pos;
@@ -52,6 +52,9 @@ public class Main {
 		udpLink = new UdpLink(this);
 	}
 	
+	private static final double TICK_RATE = 60.0;
+	private double fps_cap = 60.0;
+	
 	private int FPS = 0;
 	private int TPS = 0;
 	private int packetsSentPerSec = 0;
@@ -59,84 +62,71 @@ public class Main {
 	private int packetsRecievedLastTotal = 0;
 	private int packetsSentLastTotal = 0;
 	
-	private int count = 0;
 	public void mainLoop() {
 		
-		final double MS_PER_UPDATE = 1000.0 / 60.0;
-		final double MS_PER_FRAME_LIMIT = 1000.0 / 60.0;
+		final double NS_PER_UPDATE = 1000000000.0 / TICK_RATE;
+		double nsPerFrameLimit = 1000000000.0 / fps_cap;
 
-		long previous = System.currentTimeMillis();
+		long previous = System.nanoTime();
 		long timeAfterLastTick = 0;
-	    long timer = System.currentTimeMillis();
-	    long networkTimer = System.currentTimeMillis();
-		long frameTimer = System.currentTimeMillis();
+		long timeAfterLastTransmit = 0;
+	    long timer = System.nanoTime();
+		long frameTimer = System.nanoTime();
 	    
 	    int ticks = 0;
 	    int frames = 0;
 	    
 	    while(running) {
-	    	long current = System.currentTimeMillis();
+	    	long current = System.nanoTime();
 			long elapsed = current - previous;
 			previous = current;
 			timeAfterLastTick += elapsed;
-			
-			// Method should always be run as fast as possible.
-			processInput();
+			timeAfterLastTransmit += elapsed;
 			
 			// 60 physics update per second
-			while (timeAfterLastTick >= MS_PER_UPDATE) {
+			while (timeAfterLastTick >= NS_PER_UPDATE) {
 				// use deterministic from server?????????
 				fixedUpdate(1f / 60f);
-				timeAfterLastTick -= MS_PER_UPDATE;
+				timeAfterLastTick -= NS_PER_UPDATE;
 				ticks++;
 			}
 			
-			// Code branch occurs 30 times a second
-			if (System.currentTimeMillis() - networkTimer >= MS_PER_UPDATE * 2) {
+			while (timeAfterLastTransmit >= NS_PER_UPDATE) {
 				if (disconnectedByServer && serverLink.getServerConnection()) {
 					disconnectServer();
 					disconnectedByServer = false;
 				}
 				
-				if (serverLink.getServerConnection()) {
-					sendInputs();
-					udpLink.processServerUpdate();
-				}
-
-				// Code branch occurs 1 time a second
-				if (System.currentTimeMillis() - timer >= MS_PER_UPDATE * 60) {
-					if (disconnectedByServer && serverLink.getServerConnection()) {
-						disconnectServer();
-						disconnectedByServer = false;
-					}
-					
-					if (serverLink.getServerConnection()) {
-						//udpLink.processServerUpdate();
-					}
-				}
+				if (!serverLink.getServerConnection() || !udpLink.isConnected()) break;
 				
-				networkTimer += MS_PER_UPDATE * 2;
+				sendInputs();
+				udpLink.processServerUpdate();
+				
+				timeAfterLastTransmit -= NS_PER_UPDATE;
 			}
 			
-			if (doRender && System.currentTimeMillis() - frameTimer >= MS_PER_FRAME_LIMIT) {
-				render(timeAfterLastTick / 1000f);
+			
+			if (doRender && System.nanoTime() - frameTimer >= nsPerFrameLimit) {
+				render(timeAfterLastTick / 1000000000f);
+				processInput();
 				frames++;
-			
-				frameTimer += MS_PER_FRAME_LIMIT;
+				frameTimer += nsPerFrameLimit;
 			}
 			
-			if (System.currentTimeMillis() - timer >= 1000) {
+			if (System.nanoTime() - timer >= 1000000000) {
 				packetsRecievedPerSec = udpLink.recievedPacketsUDP.get() - packetsRecievedLastTotal;
 				packetsSentPerSec = udpLink.sentPacketsUDP.get() - packetsSentLastTotal;
 				
 				packetsRecievedLastTotal = udpLink.recievedPacketsUDP.get();
 				packetsSentLastTotal = udpLink.sentPacketsUDP.get();
+				
+				display.updatePlayerID(PlayerHandler.Me.ID);
+				
 				TPS = ticks;
 				FPS = frames;
-				count = 0;
 				ticks = 0;
 				frames = 0;
-				timer += 1000;
+				timer += 1000000000;
 			}
 
 	    }
@@ -167,8 +157,8 @@ public class Main {
 	}
 	
 	private void fixedUpdate(float dt) {
-		players.updatePlayers(balls.getBalls(), dt);
-		balls.updateBalls(players, dt);
+		players.updatePlayers(storage.getBalls(), dt);
+		storage.updateBalls(players, dt);
 	}
 	
 	BufferStrategy bs;
@@ -183,10 +173,10 @@ public class Main {
 			Graphics2D g2d = (Graphics2D) bs.getDrawGraphics();
 			
 			g2d.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
-			balls.renderBalls(g2d, dt);
+			storage.renderBalls(g2d, dt);
 
 			if (keyboard.isActive(Key.F)) {
-				balls.renderExactCoordinates(g2d, dt);
+				storage.renderExactCoordinates(g2d, dt);
 			}
 
 			drawPerformance(g2d);
@@ -229,7 +219,7 @@ public class Main {
 		return true;
 	}
 	
-	// Called by the Display Class when user starts game
+	// Called by the Display Class when user starts game (A separate event thread!!!).
 	public void connectToServer(InetAddress serverIP) throws IOException {
 		serverLink.connectToServer(serverIP);
 		udpLink.connectToServerUDP(serverIP, serverLink.getMyPort());
@@ -256,12 +246,13 @@ public class Main {
 	
 	
 	public static void main(String args[]){
-		Thread t = Thread.currentThread();
+		var t = Thread.currentThread();
 		t.setName("Main-Loop");
 		
-		Main main = new Main();
+		var main = new Main();
 		main.createDisplay();
 		main.setupConnections();
+		
 		main.running = true;
 		main.mainLoop();
 	}

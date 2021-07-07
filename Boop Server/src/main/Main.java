@@ -11,7 +11,6 @@ import java.awt.image.BufferStrategy;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -134,6 +133,9 @@ public class Main {
 		udp.startUDP();
 	}
 	
+	private static final double TICK_RATE = 60.0;
+	private double fps_cap = 60.0;
+	
 	private boolean running = false;
 	public static boolean physpaused = false;
 	private int TPS = 0;
@@ -146,33 +148,47 @@ public class Main {
 	public void mainLoop() {
 		running = true;
 				
-		final double MS_PER_UPDATE = 1000.0 / 60.0;
-		final double MS_PER_FRAME_LIMIT = 1000.0 / 60.0;
+		final double NS_PER_UPDATE = 1000000000.0 / TICK_RATE;
+		double nsPerFrameLimit = 1000000000.0 / fps_cap;
 
-		long previous = System.currentTimeMillis();
+		long previous = System.nanoTime();
 		long timeAfterLastTick = 0;
 		long timeAfterLastTransmit = 0;
-		long timer = System.currentTimeMillis();
-		long frameTimer = System.currentTimeMillis();
+		long timer = System.nanoTime();
+		long frameTimer = System.nanoTime();
 		
 		int ticks = 0;
 		int frames = 0;
 		
 		while(running) {
-			long current = System.currentTimeMillis();
+			long current = System.nanoTime();
 			long elapsed = current - previous;
 			previous = current;
 			timeAfterLastTick += elapsed;
 			timeAfterLastTransmit += elapsed;
 			
-			processInputs();
+			
+			// The program is running faster than set limits and should be slowed down.
+			if (elapsed < NS_PER_UPDATE && elapsed < nsPerFrameLimit) {
+				
+				double freeTime = Math.min(NS_PER_UPDATE - elapsed, nsPerFrameLimit - elapsed);
+				long sleepTime = (long) Math.floor(freeTime / 2.0) / 1000000;
+				
+				try {
+					if (sleepTime > 2) 
+						Thread.sleep(sleepTime);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					Thread.currentThread().interrupt();
+				}
+			}
 			
 			// 60 physics update per second
-			while (timeAfterLastTick >= MS_PER_UPDATE) {
+			while (timeAfterLastTick >= NS_PER_UPDATE) {
 				
 				if(! physpaused) {
 					// If the physics is not deterministic, use the real delta time for physics calculations
-					if (!deterministicPhysics) fixedUpdate(timeAfterLastTick/1000f);
+					if (!deterministicPhysics) fixedUpdate(timeAfterLastTick/1000000000f);
 					
 					// If the physics is deterministic, set a fixed delta time for physics calculations
 					else fixedUpdate(1f/60f);
@@ -182,12 +198,12 @@ public class Main {
 					fixedUpdate(1f/60f);
 				}
 				
-				timeAfterLastTick -= MS_PER_UPDATE;
+				timeAfterLastTick -= NS_PER_UPDATE;
 				ticks++;
 			}
 			
 			// maximum 60 transmits per second
-			while (timeAfterLastTransmit >= MS_PER_UPDATE) {
+			while (timeAfterLastTransmit >= NS_PER_UPDATE) {
 				// Send data and other stuff here
 				
 				// check if clients are connected before attempting to send data.
@@ -201,29 +217,28 @@ public class Main {
 				sendTestBalls2();
 				
 				
-				timeAfterLastTransmit -= MS_PER_UPDATE * 2;
+				timeAfterLastTransmit -= NS_PER_UPDATE;
 			}
 			
-			if (System.currentTimeMillis() - frameTimer >= MS_PER_FRAME_LIMIT) {
-				render(timeAfterLastTick / 1000f);
-			frames++;
-			
-				frameTimer += MS_PER_FRAME_LIMIT;
+			if (System.nanoTime() - frameTimer >= nsPerFrameLimit) {
+				render(timeAfterLastTick / 1000000000f);
+				processInputs();
+				frameTimer += nsPerFrameLimit;
+				frames++;
 			}
 			
-			if (System.currentTimeMillis() - timer >= 1000) {
-				clockSynchronise();
+			if (System.nanoTime() - timer >= 1000000000) {
 				packetsRecievedPerSec = udp.RecievedPacketsUDP.get() - packetsRecievedLastTotal;
 				packetsSentPerSec = udp.SentPacketsUDP.get() - packetsSentLastTotal;
 				
 				packetsRecievedLastTotal = udp.RecievedPacketsUDP.get();
 				packetsSentLastTotal = udp.SentPacketsUDP.get();
+				
 				TPS = ticks;
 				FPS = frames;
 				ticks = 0;
 				frames = 0;
-				timer += 1000;
-				//System.out.println(clientAcceptor.clients);
+				timer += 1000000000;
 			}
 		}
 		
@@ -319,99 +334,6 @@ public class Main {
 		float x = pos.x / windowHeight * 2 - 1;
 		float y = pos.y / windowHeight * 2 - 1;
 		debug_ball.setPos(x, y);
-	}
-	
-	private void sendTestBalls() {
-		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
-		Collection<Ball> allBalls = storage.getBalls();
-		List<Client> clients = clientHandler.getClients();
-		
-		// sends data to all clients at the same time
-		int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
-		int ballsPerPacket = Packet.NEW_BALLS.getNumObj();
-		
-		// Store balls within a certain area around the client screen inside the Client class TODO
-		
-		int packetsNo = (int) Math.ceil((float) allBalls.size() / (float) ballsPerPacket);
-		byte[][][] data = new byte[clients.size()][packetsNo][Packet.MAX_PAYLOAD_SIZE - 1];
-		
-		int[] clientMaxPackets = new int[clients.size()];
-		
-		for (int i = 0; i < clients.size(); i++) {
-			
-			Client client = clients.get(i);
-			//Check if client is ready;
-			if(!client.isReadyForPacket(100, Packet.NEW_BALLS)) continue;
-			
-			List<Ball> inRange = new ArrayList<>();
-			
-			for (Ball ball: allBalls) {
-				// check if ball is in client area (simple circ)
-				//TODO: use disp method to find differnce.
-				float dx = ball.phys.pos.x - client.centrePos.x;
-				float dy = ball.phys.pos.y - client.centrePos.y;
-
-				//Finds minimum difference in position.
-				if(dx > 1) {
-					dx = dx-2;
-				}
-				if(dx < -1) {
-					dx = dx+2;
-				}
-				
-				if(dy > 1) {
-					dy = dy-2;
-				}
-				if(dy < -1) {
-					dy = dy+2;
-				}
-				
-				if (dx*dx + dy*dy <= (client.radOfVision + ball.getRad())*(client.radOfVision + ball.getRad())) {
-					inRange.add(ball);	
-				}	
-			}
-			
-		//	System.out.println("num balls sent: " + inRange.size());
-			
-			int numberOfPackets = (int) Math.ceil((double) inRange.size() / ballsPerPacket);
-			int floatsPerPacket = ballsPerPacket * numberOfItems;
-			int packetsFilled = 0;
-			int lastBall = 0;
-			
-			clientMaxPackets[i] = numberOfPackets;
-			
-			float[][] floatData = new float[numberOfPackets][floatsPerPacket];
-			
-			while (packetsFilled < numberOfPackets) {
-				for (int b1 = 0, b2 = lastBall; b1 < ballsPerPacket && b2 < inRange.size(); b1++, b2++) {
-					Ball ball = inRange.get(b2);
-					int offset = numberOfItems *  b1;
-					lastBall++;
-					
-					floatData[packetsFilled][offset] = ball.getID();
-					floatData[packetsFilled][offset + 1] = ball.getType();
-					floatData[packetsFilled][offset + 2] = ball.phys.pos.x;
-					floatData[packetsFilled][offset + 3] = ball.phys.pos.y;
-					floatData[packetsFilled][offset + 4] = ball.phys.vel.x;
-					floatData[packetsFilled][offset + 5] = ball.phys.vel.y;
-					floatData[packetsFilled][offset + 6] = ball.getOwnerID();
-					
-				}
-				data[i][packetsFilled] = Bitmaths.floatArrayToBytes(floatData[packetsFilled]);
-				packetsFilled++;
-			}
-			
-		}
-		// data[i].length
-		// clientMaxPackets[i]
-		// Send packets to client
-		for (int i = 0; i < clients.size(); i++) {
-			for (int j = 0; j < clientMaxPackets[i]; j++) {
-				udp.sendData(Bitmaths.pushByteToData((byte) 2, data[i][j]), clients.get(i).getIpv4Address(), clients.get(i).getClientPort());
-			}
-		}
-		
-		//System.out.println("num Packets after sending: " + numPackets);
 	}
 	
 	/**

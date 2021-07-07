@@ -7,12 +7,13 @@ public class VecPool{
 	
 	private ArrayList<Vec2f> vecs = new ArrayList<>();
 	private int vP = 0;//Pointer to first inactive vector.
-	private Stack<Integer> vecsToClear = new Stack<Integer>();
+	private Stack<Integer> vecsToClear = new Stack<>();
 	
 	
 	public VecPool() {
 		
 	}
+	
 	/**
 	 * Call this method before getting any temporary variables from this class.
 	 * Ideally at start of the method where temporary variable is used.
@@ -20,7 +21,6 @@ public class VecPool{
 	public void startOfMethod() {
 		vecsToClear.push(0);
 	}
-	
 	
 	/**
 	 * Call this method before the return of the function where temporary variable is being used. 
@@ -36,12 +36,14 @@ public class VecPool{
 	 * @return a Vec2f object.
 	 */
 	public Vec2f getVec() {
-		Vec2f vec = null;
+		Vec2f vec;
 		
-		if(vecs.size() == vP) 
-			vecs.add(vec = new Vec2f());
-		else 
-			vec = vecs.get(vP);
+		if (vecs.size() == vP) {
+			vecs.add(new Vec2f());
+		}
+		
+		vec = vecs.get(vP);
+		
 		vP++;
 		
 		int numVectsToClear = vecsToClear.pop() + 1;

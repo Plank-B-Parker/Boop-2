@@ -1,7 +1,6 @@
 package math;
 
 import java.util.List;
-
 import balls.Ball;
 import balls.Storage;
 
@@ -20,7 +19,7 @@ public class Physics {
 	public float bounciness = 1f;
 	private static float dragCoefficient = 10f;
 	
-	public Ball owner;
+	private Ball owner;
 	
 	//Temp variables to avoid object creation;
 	static VecPool tempVecs = new VecPool();
@@ -44,14 +43,12 @@ public class Physics {
 		
 		Vec2f disp = tempVecs.getVec();
 
-		synchronized (balls) {
-			for (Ball ball: balls) {
-				if(ball == owner)
-					continue;
-				disp(disp, ball.phys.pos, pos);
-				float dist = (float)Math.sqrt(disp.lengthSq());
-				PE -= mag*ball.phys.mag/dist;
-			}
+		for (Ball ball: balls) {
+			if(ball == owner)
+				continue;
+			disp(disp, ball.phys.pos, pos);
+			float dist = (float)Math.sqrt(disp.lengthSq());
+			PE -= mag*ball.phys.mag/dist;
 		}
 		
 		/////////////////////////
@@ -73,7 +70,7 @@ public class Physics {
 	}
 	
 	//Might try a more accurate integration method if I figure it out.
-	public void updateRungaCuttaYoMama(float dt) {
+	public void updateRungaCutta(float dt) {
 		
 	}
 	
@@ -122,55 +119,53 @@ public class Physics {
 		
 		Vec2f disp = tempVecs.getVec();
 		
-		synchronized (balls) {
-			for(int i = 0; i < balls.getBallListSize() - 1; i++) {
-				Ball ball = balls.getBall(i);
-				if(ball.getID() == -1) continue;
+		for(int i = 0; i < balls.getBallListSize() - 1; i++) {
+			Ball ball = balls.getBall(i);
+			if(ball.getID() == -1) continue;
+			
+			//Go through every ball after current ball in list.
+			for(int j = i + 1; j < balls.getBallListSize(); j++) {
+				Ball otherBall = balls.getBall(j);
 				
-				//Go through every ball after current ball in list.
-				for(int j = i + 1; j < balls.getBallListSize(); j++) {
-					Ball otherBall = balls.getBall(j);
+				if(otherBall.getID() == -1) continue;
+				
+				disp(disp, otherBall.phys.pos, ball.phys.pos);
+				float minimumDistance = ball.getRad() + otherBall.getRad();
+				
+				//If distance between centres is bigger that the sum of the radi than skip.
+				if(disp.lengthSq() > minimumDistance*minimumDistance)
+					continue;
+				
+				float distance = (float)Math.sqrt(disp.lengthSq());
+				float overlap = minimumDistance - distance;
+				
+				//Normalise disp.
+				Vec2f.scale(disp, disp, 1f/distance);
+				
+				//Move balls apart to stop overlap.
+				ball.moveBall(disp, -overlap*0.5f);
+				otherBall.moveBall(disp, overlap*0.5f);
+				
+				float impulse = calcImpulse(ball, otherBall, disp);
+				
+				//Add impulse to the velocities.
+				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, -impulse/ball.phys.mass);
+				Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse/otherBall.phys.mass);
+				
+				
+				// If the types of each ball are exploding types, explode them into 16 smaller balls with 2J of explosion power
+				if (ball.getType() == 2 && otherBall.getType() == 2) {
+					Vec2f pos1 = tempVecs.getVec();
+					Vec2f pos2 = tempVecs.getVec();
 					
-					if(otherBall.getID() == -1) continue;
+					pos1 = ball.phys.pos.copy();
+					pos2 = otherBall.phys.pos.copy();
 					
-					disp(disp, otherBall.phys.pos, ball.phys.pos);
-					float minimumDistance = ball.getRad() + otherBall.getRad();
-					
-					//If distance between centres is bigger that the sum of the radi than skip.
-					if(disp.lengthSq() > minimumDistance*minimumDistance)
-						continue;
-					
-					float distance = (float)Math.sqrt(disp.lengthSq());
-					float overlap = minimumDistance - distance;
-					
-					//Normalise disp.
-					Vec2f.scale(disp, disp, 1f/distance);
-					
-					//Move balls apart to stop overlap.
-					ball.moveBall(disp, -overlap*0.5f);
-					otherBall.moveBall(disp, overlap*0.5f);
-					
-					float impulse = calcImpulse(ball, otherBall, disp);
-					
-					//Add impulse to the velocities.
-					Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, -impulse/ball.phys.mass);
-					Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse/otherBall.phys.mass);
-					
-					
-					// If the types of each ball are exploding types, explode them into 16 smaller balls with 2J of explosion power
-					if (ball.getType() == 2 && otherBall.getType() == 2) {
-						Vec2f pos1 = tempVecs.getVec();
-						Vec2f pos2 = tempVecs.getVec();
-						
-						pos1 = ball.phys.pos.copy();
-						pos2 = otherBall.phys.pos.copy();
-						
-						ball.phys.explode(balls, 16, 0f);
-						otherBall.phys.explode(balls, 16, 0f);
+					ball.phys.explode(balls, 16, 0f);
+					otherBall.phys.explode(balls, 16, 0f);
 
-						shockwave(balls, pos1, 0.02f);
-						shockwave(balls, pos2, 0.02f);
-					}
+					shockwave(balls, pos1, 0.02f);
+					shockwave(balls, pos2, 0.02f);
 				}
 			}
 		}
@@ -239,23 +234,21 @@ public class Physics {
 		tempVecs.startOfMethod();
 		/////////////////////////
 		
-		synchronized (balls) {
-			for(Ball ball: balls) {
-				//Skip if the other ball is this ball.
-				if (ball == owner) continue;
+		for(Ball ball: balls) {
+			//Skip if the other ball is this ball.
+			if (ball == owner) continue;
 
-				Vec2f disp = tempVecs.getVec();
-				disp(disp, ball.phys.pos, pos);
-				
-				//If distance is less than minDist then skip.
-				if (disp.lengthSq()<minDist*minDist) continue;
-				//If distance is bigger than maxDist then skip.
-				if (disp.lengthSq()>maxDist*maxDist) continue;
-				
-				float distCubed = disp.lengthSq();
-				distCubed *= Math.sqrt(distCubed);
-				Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
-			}
+			Vec2f disp = tempVecs.getVec();
+			disp(disp, ball.phys.pos, pos);
+			
+			//If distance is less than minDist then skip.
+			if (disp.lengthSq()<minDist*minDist) continue;
+			//If distance is bigger than maxDist then skip.
+			if (disp.lengthSq()>maxDist*maxDist) continue;
+			
+			float distCubed = disp.lengthSq();
+			distCubed *= Math.sqrt(distCubed);
+			Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
 		}
 		
 		///////////////////////
@@ -347,22 +340,28 @@ public class Physics {
 		tempVecs.startOfMethod();
 		/////////////////////////
 		
-		synchronized (balls) {
-			for(int i = 0; i < balls.getBallListSize(); i++) {
-				Ball ball = balls.getBall(i);
-				if(ball.getID() == -1) continue;
-				
-				Vec2f disp = tempVecs.getVec();
-				Vec2f.sub(disp, ball.phys.pos, centre);
-				float distCubed = disp.lengthSq();
-				distCubed *= Math.sqrt(distCubed);
-				
-				Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed + 0.01f));
-			}
+		for(int i = 0; i < balls.getBallListSize(); i++) {
+			Ball ball = balls.getBall(i);
+			if(ball.getID() == -1) continue;
+			
+			Vec2f disp = tempVecs.getVec();
+			Vec2f.sub(disp, ball.phys.pos, centre);
+			float distCubed = disp.lengthSq();
+			distCubed *= Math.sqrt(distCubed);
+			
+			Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed + 0.01f));
 		}
 		
 		///////////////////////
 		tempVecs.endOfMethod();
+	}
+	
+	public final Ball getOwner() {
+		return owner;
+	}
+
+	public final void setOwner(Ball owner) {
+		this.owner = owner;
 	}
 	
 }

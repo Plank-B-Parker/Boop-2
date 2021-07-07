@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import main.Main;
-import main.PlayerHandler;
 import math.Bitmaths;
 
 public class UdpLink implements Runnable{
@@ -102,7 +101,7 @@ public class UdpLink implements Runnable{
 						currentBall[j] = ballData[offset + j];
 					}
 				
-				main.balls.setBallData(currentBall);
+				main.storage.setBallData(currentBall);
 				
 				// System.out.println("Packet number: " + Bitmaths.bytesToInt(data, 0));
 				// System.out.println("Packets recieved: " + recievedPacketsUDP.get());
@@ -205,4 +204,7 @@ public class UdpLink implements Runnable{
 		return ((socket != null) && socket.isClosed());
 	}
 	
+	public boolean isConnected() {
+		return connected;
+	}
 }

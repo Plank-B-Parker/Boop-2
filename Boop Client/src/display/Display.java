@@ -24,6 +24,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 
 import main.Keyboard;
 import main.Main;
+import main.PlayerHandler;
 import math.Vec2f;
 
 public class Display implements ActionListener{
@@ -55,8 +56,9 @@ public class Display implements ActionListener{
 		createWindow();
 	}
 	
+	private long lastPlayerID = PlayerHandler.Me.ID;
 	public void createWindow() {
-		frame = new JFrame("Client");
+		frame = new JFrame("Client: " + PlayerHandler.Me.ID);
 
 		frame.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent componentEvent) {
@@ -83,10 +85,7 @@ public class Display implements ActionListener{
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
-				if (main.serverLink.getServerConnection()) {
-					main.disconnectServer();
-				}
-				
+				main.disconnectServer();
 				System.exit(0);
 			}
 		});
@@ -184,6 +183,13 @@ public class Display implements ActionListener{
 
 	public void setVisible(boolean b) {
 		frame.setVisible(b);
+	}
+	
+	public void updatePlayerID(long playerID) {
+		if (lastPlayerID != playerID) {
+			lastPlayerID = playerID;
+			frame.setTitle("Client: " + playerID);
+		}
 	}
 
 }

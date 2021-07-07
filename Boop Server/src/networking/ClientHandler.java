@@ -14,7 +14,7 @@ public class ClientHandler{
 	List<Client> clientsToRemove = new ArrayList<>(4);
 	List<Client> clients = new ArrayList<>();
 	
-	public void updateClients(Collection<Ball> collection, float dt) {
+	public void updateClients(List<Ball> balls, float dt) {
 		if(clients == null) return;
 		
 		//Update Velocities of all the clients.
@@ -32,7 +32,7 @@ public class ClientHandler{
 		//For each client check if a ball has escaped from their grasp.
 		for(Client client: clients) {
 			//List of balls out of reach.
-			ArrayList<Ball> ballsToRemove = new ArrayList<Ball>();
+			ArrayList<Ball> ballsToRemove = new ArrayList<>();
 			
 			for(Ball ball: client.localBalls) {
 				
@@ -51,7 +51,7 @@ public class ClientHandler{
 		}
 		
 		//For each ball check if any client can claim a ball. If they can, then let them.
-		for(Ball ball: collection) {
+		for(Ball ball: balls) {
 			
 			for(Client client: clients) {
 				
@@ -97,7 +97,7 @@ public class ClientHandler{
 		//Make sure all owned balls are actually owned.
 		for(Client client: clients) {
 			
-			ArrayList<Ball> ballsToRemove = new ArrayList<Ball>();
+			List<Ball> ballsToRemove = new ArrayList<>();
 			//System.out.println("local balls size: " + client.localBalls.size());
 			
 			for(Ball ball: client.ownedBalls) {

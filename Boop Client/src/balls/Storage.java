@@ -3,7 +3,6 @@ package balls;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -23,48 +22,41 @@ public class Storage {
 	private float timeBeforeRemovingAbandonedBall = 5;
 	
 	public Storage() {
-		balls = Collections.synchronizedList(balls);
 	}
 	
 	public void updateBalls(PlayerHandler players, float dt) {
 		Physics.checkCollision(this);
 
-		synchronized (balls) {
-			for (Ball ball: balls) {
-				if(ball.getID() != -1) {
-					ball.updateClientPrediction(dt);
-				}
+		for (Ball ball: balls) {
+			if(ball.getID() != -1) {
+				ball.updateClientPrediction(dt);
 			}
 		}
 		
-		synchronized (balls) {
 
-			for(Ball ball: balls) {
-				ball.phys.nullifyForces();
-				ball.phys.calcDrag();
-			}
-			
-			for(Player player: players) {
-				for(Ball ball: player.localBalls) {
-					if(ball.getID() != -1) {
-						ball.phys.calcAttraction(player.localBalls);
-						ball.phys.calcClientAttraction(player.centrePos, 0.01f);
-					}
-				}
-			}
+		for(Ball ball: balls) {
+			ball.phys.nullifyForces();
+			ball.phys.calcDrag();
 		}
 		
-		synchronized (balls) {
-			for(Ball ball: balls) {
+		for(Player player: players) {
+			for(Ball ball: player.localBalls) {
 				if(ball.getID() != -1) {
-					ball.phys.update(dt);
+					ball.phys.calcAttraction(player.localBalls);
+					ball.phys.calcClientAttraction(player.centrePos, 0.01f);
 				}
+			}
+		}
+		
+		for(Ball ball: balls) {
+			if(ball.getID() != -1) {
+				ball.phys.update(dt);
 			}
 		}
 		
 		
 		
-		List<Ball>ballsToRemove = new ArrayList<Ball>();
+		List<Ball>ballsToRemove = new ArrayList<>();
 		synchronized (balls) {
 			for(Ball ball: balls) {
 				if(ball.getID() != -1) {
