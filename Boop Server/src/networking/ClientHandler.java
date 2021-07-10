@@ -1,5 +1,6 @@
 package networking;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import balls.Ball;
+import math.Bitmaths;
 
 public class ClientHandler{
 	
@@ -113,6 +115,28 @@ public class ClientHandler{
 		
 	}
 	
+	/**
+	 * Sends a 'ping' packet to each client and expects a response with
+	 * an attached receive time on the packet to ignore processing delay.
+	 */
+	public void pingClients() {
+		for (var client : clients) {
+			
+			if (!client.isReadyForPacket(1000, Packet.PING)) continue;
+			
+			long sendTime = System.nanoTime();
+			byte[] payload = Bitmaths.longToBytes(sendTime);
+			payload = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(8), payload); // payload length
+			payload = Bitmaths.pushByteToData(Packet.PING.getID(), payload);
+			try {
+				client.out.write(payload);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.out.println("Something went wrong with this client: " + client.getIdentity());
+			}
+		}
+	}
+	
 	public void moveWaitingClients() {
 		for (Client client : clientsToAdd) {
 			clients.add(client);
@@ -143,6 +167,26 @@ public class ClientHandler{
 		for (Client client: clients) {
 			client.disconnect();
 		}
+	}
+	
+	/**
+	 * Adds a client into the buffer.
+	 * @param client The client to be added.
+	 * @see {@link #moveWaitingClients}
+	 * Use this method to move the clients from the buffer to the clients list.
+	 */
+	public void addClient(Client client) {
+		clientsToAdd.add(client);
+	}
+	
+	/**
+	 * Removes a client into the buffer.
+	 * @param client The client to be removed.
+	 * @see {@link #moveWaitingClients}
+	 * Use this method to move the clients out of the client list.
+	 */
+	public void removeClient(Client client) {
+		clientsToRemove.add(client);
 	}
 
 	public Client getClientByAddressAndPort(InetAddress address, int port) {

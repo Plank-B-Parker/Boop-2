@@ -7,7 +7,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,6 +25,7 @@ public class Client implements Runnable{
 	
 	private long ID = 0;
 	private InetAddress ipv4Address;
+	private long msPing = 0;
 	
 	private int clientPort;
 	
@@ -60,7 +60,8 @@ public class Client implements Runnable{
 	public Client() {
 		clientThread = new Thread(this, "Client-Thread");
 		
-		dataBuffer = new LinkedBlockingQueue<>(60);
+		// Accessing thread will be blocked until the queue is not empty.
+		dataBuffer = new LinkedBlockingQueue<>(30);
 		
 		centrePos.set(0f, 0f);
 	}
@@ -71,29 +72,66 @@ public class Client implements Runnable{
 			// Read data in stream and store in buffer
 			try {
 				dataBuffer.add(recieveData());
+				handleAllData();
 			} catch (IOException e) {
 				e.printStackTrace();
 				disconnect();
+				break;
 			}
 		}
 	}
 	
-	public byte[] recieveData() throws IOException{
-		byte packetID = in.readByte();
+	private byte[] recieveData() throws IOException{
+		var packetID = in.readByte();
 		if (packetID == Packet.DISCONNECT.getID()) throw new IOException();
 		
-		int len = in.readInt();
-		
+		// Reads the correct length of data to store into the dataBuffer.
+		var len = in.readInt();
 		byte[] data = new byte[len + 1];
 		data[0] = packetID;
 		
 		byte[] payload = in.readNBytes(len);
 		
-		for (int i = 0; i < len; i++) {
-			data[i + 1] = payload[i];
-		}
+		System.arraycopy(payload, 0, data, 1, len);
 		
 		return data;
+	}
+	
+	private void handleAllData() throws IOException{
+		while (!dataBuffer.isEmpty()) {
+			byte[] data = dataBuffer.poll();
+			
+			switch (data[0]) {
+			case 5:
+				var receiveTime = System.nanoTime();
+				
+				// Server is the sender when the packet contains both server and client time.
+				var isServerSender = data.length == Packet.PING.getObjectSize() + 1;
+				
+				// Calculate ping and store data
+				if (isServerSender) {
+					var receivedClient = Bitmaths.bytesToLong(data, 1);
+					long serverToClient = receivedClient - Bitmaths.bytesToLong(data, 9);
+					long clientToServer = receiveTime - receivedClient;
+					long rtt = serverToClient + clientToServer;
+					msPing = rtt / 1000000;
+				}
+				// Add time received to packet and echo back to client.
+				else {
+					byte[] echoData = new byte[8];
+					System.arraycopy(data, 1, echoData, 0, 8);
+					echoData = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(receiveTime), echoData);
+					echoData = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(16), echoData);
+					echoData = Bitmaths.pushByteToData(Packet.PING.getID(), echoData);
+					out.write(echoData);
+				}
+				
+				break;
+			default:
+				System.out.println("Tcp packet id not supported: " + data[0]);
+				break;
+			}
+		}
 	}
 	
 	public void setupConnection(Socket socket) throws IOException{
@@ -109,13 +147,17 @@ public class Client implements Runnable{
 		out = new DataOutputStream(myClientSocket.getOutputStream());
 		out.writeLong(ID);
 		
-		float[] clientPosData = new float[4];
-		clientPosData[1] = centrePos.x;
-		clientPosData[2] = centrePos.y;
-		clientPosData[3] = radOfVision;
-		clientPosData[0] = (float) 3 * 4; // 3 floats * 4 bytes = 12 byte payload (length)
+		// Currently this code block is necessary for client to see balls because
+		// it needs to set the Display.diameterInServer value.
+		// TODO change this so that this code is not necessary.
+		
+		float[] clientPosData = new float[3];
+		clientPosData[0] = centrePos.x;
+		clientPosData[1] = centrePos.y;
+		clientPosData[2] = radOfVision;
 		
 		byte[] clientPos = Bitmaths.floatArrayToBytes(clientPosData);
+		clientPos = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(12), clientPos);
 		clientPos = Bitmaths.pushByteToData((byte) 70, clientPos);
 		
 		
@@ -190,6 +232,13 @@ public class Client implements Runnable{
 		return ipv4Address;
 	}
 	
+	/**
+	 * @return ping of the client in milliseconds.
+	 */
+	public long getPing() {
+		return msPing;
+	}
+	
 	public boolean isConnected() {
 		return connected;
 	}
@@ -236,17 +285,32 @@ public class Client implements Runnable{
 		}
 	}
 	
-	VecPool tempVecs = new VecPool();
-	//checks if a ball is with in the attraction zone of the player.
+	/**
+	 * Checks if the ball is within the attraction range of the client.
+	 * @param b The ball to check with.
+	 * @return If the ball is in range.
+	 */
 	public boolean isInReach(Ball b) {
-		tempVecs.startOfMethod();
-		/////////////////////////
-		Vec2f disp = tempVecs.getVec();
+		var disp = new Vec2f();
 		Physics.disp(disp, centrePos, b.phys.pos);
-		///////////////////////
-		tempVecs.endOfMethod();
 		
 		return (disp.lengthSq() <= (radOfInf + b.getRad())*(radOfInf+b.getRad()));
+	}
+	
+	/**
+	 * Checks if the ball is within range for the ball data to be sent to the client.
+	 * @param b The ball to check with.
+	 * @return If it's appropriate to send the ball to the client.
+	 */
+	public boolean isInSendingRange(Ball b) {
+		var disp = new Vec2f();
+		Physics.disp(disp, centrePos, b.phys.pos);
+		
+		return (disp.lengthSq() <= (radOfVision + b.getRad())*(radOfVision + b.getRad()));
+	}
+
+	public final long getMsPing() {
+		return msPing;
 	}
 	
 //	public void updateLocalBalls() {

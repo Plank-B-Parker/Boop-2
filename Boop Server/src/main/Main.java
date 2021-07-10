@@ -9,8 +9,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -99,7 +97,7 @@ public class Main {
 	}
 	
 	public void createDisplay() {
-		JFrame frame = new JFrame("Server");
+		var frame = new JFrame("Server");
 		
 		canvas.setSize(1920, 1080);
 		canvas.setFocusable(true);
@@ -210,11 +208,15 @@ public class Main {
 				final List<Client> clients = clientHandler.getClients();
 				if (clients.isEmpty()) break;
 				
+				clientHandler.pingClients();
+				
 				// Send position, velocity, influence and ID about every client to every client.
-				sendAllClientInfo();
+				udp.sendAllClientInfo(clients);
+				
+				final List<Ball> balls = storage.getBalls();
 				
 				// send ballz
-				sendTestBalls2();
+				udp.sendBalls(balls, clients);
 				
 				
 				timeAfterLastTransmit -= NS_PER_UPDATE;
@@ -337,189 +339,6 @@ public class Main {
 	}
 	
 	/**
-	 * Also adds an offset to the packet to send time and packet sequence.
-	 * 12 bytes used for offset
-	 */
-	private void sendTestBalls2() {
-		// packet id, ballID, ball type, x, y, velx, vely, ownerID 
-		Collection<Ball> allBalls = storage.getBalls();
-		List<Client> clients = clientHandler.getClients();
-		
-		// sends data to all clients at the same time
-		int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
-		int ballsPerPacket = Packet.NEW_BALLS.getNumObj();
-		
-		// Store balls within a certain area around the client screen inside the Client class TODO
-		
-		int packetsNo = (int) Math.ceil((float) allBalls.size() / (float) ballsPerPacket);
-		byte[][][] data = new byte[clients.size()][packetsNo][Packet.FREE_PAYLOAD_SIZE];
-		
-		int[] clientMaxPackets = new int[clients.size()];
-		
-		for (int i = 0; i < clients.size(); i++) {
-			
-			Client client = clients.get(i);
-			//Check if client is ready;
-			if(!client.isReadyForPacket(100, Packet.NEW_BALLS)) continue;
-			
-			List<Ball> inRange = new ArrayList<>();
-			
-			for (Ball ball: allBalls) {
-				// check if ball is in client area (simple circ)
-				//TODO: use disp method to find differnce.
-				float dx = ball.phys.pos.x - client.centrePos.x;
-				float dy = ball.phys.pos.y - client.centrePos.y;
-
-				//Finds minimum difference in position.
-				if(dx > 1) {
-					dx = dx-2;
-				}
-				if(dx < -1) {
-					dx = dx+2;
-				}
-				
-				if(dy > 1) {
-					dy = dy-2;
-				}
-				if(dy < -1) {
-					dy = dy+2;
-				}
-				
-				if (dx*dx + dy*dy <= (client.radOfVision + ball.getRad())*(client.radOfVision + ball.getRad())) {
-					inRange.add(ball);	
-				}	
-			}
-			
-			int numberOfPackets = (int) Math.ceil((double) inRange.size() / ballsPerPacket);
-			int floatsPerPacket = ballsPerPacket * numberOfItems;
-			int packetsFilled = 0;
-			int lastBall = 0;
-			
-			clientMaxPackets[i] = numberOfPackets;
-			
-			float[][] floatData = new float[numberOfPackets][floatsPerPacket];
-			
-			while (packetsFilled < numberOfPackets) {
-				for (int b1 = 0, b2 = lastBall; b1 < ballsPerPacket && b2 < inRange.size(); b1++, b2++) {
-					Ball ball = inRange.get(b2);
-					int offset = numberOfItems *  b1;
-					lastBall++;
-					
-					floatData[packetsFilled][offset] = ball.getID();
-					floatData[packetsFilled][offset + 1] = ball.getType();
-					floatData[packetsFilled][offset + 2] = ball.phys.pos.x;
-					floatData[packetsFilled][offset + 3] = ball.phys.pos.y;
-					floatData[packetsFilled][offset + 4] = ball.phys.vel.x;
-					floatData[packetsFilled][offset + 5] = ball.phys.vel.y;
-					floatData[packetsFilled][offset + 6] = ball.getOwnerID();
-					
-				}
-				data[i][packetsFilled] = Bitmaths.floatArrayToBytes(floatData[packetsFilled]);
-				packetsFilled++;
-			}
-			
-		}
-		// Send packets to client
-		for (int i = 0; i < clients.size(); i++) {
-			for (int j = 0; j < clientMaxPackets[i]; j++) {
-				// array to replace with header information
-				byte[] headerInfo = new byte[0];
-				
-				// Add packet id and packet sequence
-				headerInfo = Bitmaths.pushByteToData(Packet.NEW_BALLS.getID(), headerInfo);
-				headerInfo = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(clients.get(i).udpPacketsSent.incrementAndGet()), headerInfo);
-				
-				byte[] completePacket = Bitmaths.pushByteArrayToData(headerInfo, data[i][j]);
-				
-				udp.sendData(completePacket, clients.get(i).getIpv4Address(), clients.get(i).getClientPort());
-				
-			}
-		}
-		
-	}
-	
-	public void sendAllClientInfo() {
-		final int numItemsPerObj = Packet.CLIENTDATA.getNumberOfItems();
-		final int maxClientsPerPacket = Packet.CLIENTDATA.getNumObj();
-		
-		// Prepare data only for clients that are ready to accept packets.
-		final List<Client> clients = clientHandler.getClients();
-		List<Client> readyClients = new ArrayList<>();
-		
-		var clientsData = new Number[clients.size() * numItemsPerObj];
-		var numClients = 0;
-		
-		for (var client : clients) {
-			if (!client.isReadyForPacket(200, Packet.CLIENTDATA)) continue;
-			
-			// Fill data to prepare for sending. (Front of the array will be filled first).
-			readyClients.add(client);
-			clientsData[numClients * 6 + 0] = client.centrePos.x;
-			clientsData[numClients * 6 + 1] = client.centrePos.y;
-			clientsData[numClients * 6 + 2] = client.velocity.x;
-			clientsData[numClients * 6 + 3] = client.velocity.y;
-			clientsData[numClients * 6 + 4] = client.radOfInf;
-			clientsData[numClients * 6 + 5] = client.getIdentity();
-			
-			numClients++;
-		}
-		
-		int packetNo = (int)Math.ceil((float)numClients / (float)maxClientsPerPacket);
-		boolean isSinglePacket = packetNo == 1;
-		
-		int payloadSize = isSinglePacket 
-				? numClients * Packet.CLIENTDATA.getObjectSize() : Packet.CLIENTDATA.getMaxPayload();
-		
-		int numbersPerPacket = isSinglePacket ? 
-				numClients * numItemsPerObj : numItemsPerObj * maxClientsPerPacket;
-		
-		byte[][] data = new byte[packetNo][payloadSize];
-		Number[][] splitInput = new Number[packetNo][numbersPerPacket];
-		
-		var inputFilled = 0;
-		var offset = 0;
-		
-		while (inputFilled < packetNo) {
-
-			int numToFill = numbersPerPacket;
-			
-			// Trim the size of the array at the last packet
-			if (!isSinglePacket && inputFilled >= packetNo - 1) {
-				numToFill = (numClients * numItemsPerObj) % (maxClientsPerPacket * numItemsPerObj);
-				
-				splitInput[inputFilled] = new Number[numToFill];
-			}
-			
-			for (var i = 0; i < numToFill; i++) {
-				splitInput[inputFilled][i] = clientsData[i + offset];
-			}
-			
-			inputFilled++;
-			offset += maxClientsPerPacket * numItemsPerObj;
-		}
-		
-		// Fill packets with data
-		// array to replace with header information
-		byte[] headerInfo = new byte[0];
-		for(int i = 0; i < packetNo; i++) {
-			data[i] = Bitmaths.numberArrayToBytes(splitInput[i]);
-		}
-		
-		// Send data to all clients at same time.
-		for (var client : readyClients) {
-			for (var i = 0; i < packetNo; i++) {
-				headerInfo = new byte[0];
-				headerInfo = Bitmaths.pushByteToData(Packet.CLIENTDATA.getID(), headerInfo);
-				headerInfo = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(client.udpPacketsSent.incrementAndGet()), headerInfo);
-				byte[] completePacket = Bitmaths.pushByteArrayToData(headerInfo, data[i]);
-				
-				udp.sendData(completePacket, client.getIpv4Address(), client.getClientPort());
-			}
-		}
-		
-	}
-	
-	/**
 	 * Synchronises the client's clock to the server.
 	 * This stops the client manipulating time and correctly works out time sensitive information.
 	 */
@@ -537,10 +356,10 @@ public class Main {
 	}
 	
 	public static void main(String args[]){
-		Thread t = Thread.currentThread();
+		var t = Thread.currentThread();
 		t.setName("Main-Loop");
 		
-		Main main = new Main();
+		var main = new Main();
 		main.createDisplay();
 		main.setupConnections();
 		main.mainLoop();

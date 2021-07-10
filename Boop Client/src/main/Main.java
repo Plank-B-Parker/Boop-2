@@ -157,6 +157,7 @@ public class Main {
 	}
 	
 	private void fixedUpdate(float dt) {
+		storage.moveBallsList();
 		players.updatePlayers(storage.getBalls(), dt);
 		storage.updateBalls(players, dt);
 	}

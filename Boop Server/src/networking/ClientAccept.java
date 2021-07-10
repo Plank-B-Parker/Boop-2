@@ -42,16 +42,16 @@ public class ClientAccept implements Runnable{
 		while(serverON) {
 			try {
 				// creates new client with a unique ID
-				Client client = createNewClient();
+				var client = createNewClient();
 				
 				System.out.println("Waiting for new Client");
 				
 				// Blocking method
-				Socket socket = serverSocket.accept();
+				var socket = serverSocket.accept();
 				
 				client.setupConnection(socket);
 				
-				clientHandler.clientsToAdd.add(client);
+				clientHandler.addClient(client);
 				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -60,14 +60,14 @@ public class ClientAccept implements Runnable{
 	}
 	
 	private Client createNewClient() {
-		Client client = new Client();
-		List<Client> clients = clientHandler.clients;
+		var client = new Client();
+		List<Client> clients = clientHandler.getClients();
 		
-		boolean validID = true;
+		var validID = true;
 		
 		do {
 			client.setIdentity((long) (Math.random() * 1000));
-			for (int i = 0; i < clients.size(); i++) {
+			for (var i = 0; i < clients.size(); i++) {
 				if (clients.get(i).getIdentity() == client.getIdentity()) {
 					validID = false;
 				}

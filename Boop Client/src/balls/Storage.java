@@ -15,6 +15,7 @@ public class Storage {
 	public int numBalls = 0;
 	
 	private List<Ball> balls = new ArrayList<>();
+	private List<Ball> ballsToAdd = new ArrayList<>();
 	//List of slots that are empty in the balls list.
 	private Stack<Integer> emptySlots = new Stack<>();
 	private List<Ball> removedBalls = new ArrayList<>();
@@ -111,17 +112,27 @@ public class Storage {
 		}
 	}
 	
+	/**
+	 * Transfers balls from the toAdd list to the main balls list.
+	 */
+	public void moveBallsList() {
+		for (var ball : ballsToAdd) {
+			balls.add(ball);
+		}
+		ballsToAdd.clear();
+	}
+	
 	//Handles server balls.
-	public void add(float data[]) {
+	public void add(float[] data) {
 		//Check if there is an empty slot for this ball.
 		if(!emptySlots.isEmpty()) {
 			int index = emptySlots.pop();
-			Ball ball = balls.get(index);
+			var ball = balls.get(index);
 			ball.setBall(data);
 			return;
 		}
-		Ball ball = new Ball(data);
-		balls.add(ball);
+		var ball = new Ball(data);
+		ballsToAdd.add(ball);
 		numBalls++;
 	}
 	
@@ -130,7 +141,7 @@ public class Storage {
 		//Add index of new ball to client created balls index list.
 		emptySlots.add(balls.size());
 		
-		balls.add(ball);
+		ballsToAdd.add(ball);
 		//Client created balls have an index of -2.
 		ball.setID(-2);
 		numBalls++;

@@ -13,6 +13,7 @@ public class Player {
 	public long ID = 0;
 	boolean isClient; 		// checks if this player is the current client.
 	
+	private long msPing = 0;
 	
 	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
 	public Vec2f velocity = new Vec2f();
@@ -105,7 +106,14 @@ public class Player {
 		velocity.y = velY;
 		this.radOfInf = radOfInf;
 	}
-	
+
+	public final long getMsPing() {
+		return msPing;
+	}
+
+	public final void setMsPing(long msPing) {
+		this.msPing = msPing;
+	}
 	
 }
 

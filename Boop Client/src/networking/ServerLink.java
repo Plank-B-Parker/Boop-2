@@ -42,7 +42,7 @@ public class ServerLink implements Runnable{
 	public ServerLink(Main main){
 		this.main = main;
 		
-		dataBuffer = new LinkedBlockingQueue<>(60);
+		dataBuffer = new LinkedBlockingQueue<>(30);
 		
 		threadTCP = new Thread(this, "TCP-Thread");
 		threadTCP.setDaemon(true);
@@ -79,17 +79,17 @@ public class ServerLink implements Runnable{
 			return new byte[0];
 		}
 		
-		float len = in.readFloat();
-		System.out.println("Payload length: " + len);
+		var len = in.readInt();
 		
-		byte[] data = new byte[(int)len + 1];
+		var packet = Packet.getPacketByID(packetID);
+		if (packet == null || len > packet.getMaxPayload() || len < 0) return new byte[0];
+		
+		byte[] data = new byte[len + 1];
 		data[0] = packetID;
 		
-		byte[] payload = in.readNBytes((int)len);
+		byte[] payload = in.readNBytes(len);
 		
-		for (int i = 0; i < len; i++) {
-			data[i + 1] = payload[i];
-		}
+		System.arraycopy(payload, 0, data, 1, len);
 		
 		return data;
 	}
@@ -99,11 +99,11 @@ public class ServerLink implements Runnable{
 	}
 	
 	// Handles all available data in the buffer
-	public void handleAllTCPData() {
-		if (dataBuffer.isEmpty()) {return;}
-		
+	public void handleAllTCPData() throws IOException {
 		// Handles each type of packet. (Plan to add methods for specific data handling)
-		for (byte[] data: dataBuffer) {
+		while (!dataBuffer.isEmpty()) {
+			byte[] data = dataBuffer.poll();
+			
 			switch (data[0]) {
 			case 70:
 				Display.diameterInServer = 2f*Bitmaths.bytesToFloat(data, 9);
@@ -113,7 +113,31 @@ public class ServerLink implements Runnable{
 				
 //				System.out.println(PlayerHandler.Me.centrePos.x + ", " + PlayerHandler.Me.centrePos.y);
 				// System.out.println("Hello");
+				break;
 				
+			case 5:
+				var receiveTime = System.nanoTime();
+				
+				// Client is the sender when the packet contains both client and server time.
+				var isClientSender = data.length == Packet.PING.getObjectSize() + 1;
+				
+				// Calculate ping and store data
+				if (isClientSender) {
+					var receivedServer = Bitmaths.bytesToLong(data, 1);
+					long clientToServer = receivedServer - Bitmaths.bytesToLong(data, 9);
+					long serverToClient = receiveTime - receivedServer;
+					long rtt = clientToServer + serverToClient;
+					PlayerHandler.Me.setMsPing(rtt / 1000000);
+				}
+				// Add time received to packet and echo back to server.
+				else {
+					byte[] echoData = new byte[8];
+					System.arraycopy(data, 1, echoData, 0, 8);
+					echoData = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(receiveTime), echoData);
+					echoData = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(16), echoData);
+					echoData = Bitmaths.pushByteToData(Packet.PING.getID(), echoData);
+					out.write(echoData);
+				}
 				break;
 			default:
 				return;

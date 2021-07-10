@@ -92,6 +92,9 @@ public class Storage {
 		return balls.get(index);
 	}
 	
+	/**
+	 * @return A reference to an unmodifiable list of all balls. (Elements are still mutable).
+	 */
 	public List<Ball> getBalls() {
 		return Collections.unmodifiableList(balls);
 	}

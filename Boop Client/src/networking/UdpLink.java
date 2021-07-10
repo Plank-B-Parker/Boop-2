@@ -78,7 +78,10 @@ public class UdpLink implements Runnable{
 	
 	
 	private void handleData(byte[] data) {
-		switch (data[4]) {
+		// Data[0] is packetID and the next 4 bytes (int)
+		// is the number of udp packets sent by the server
+		// TODO Use above number to deal with out of order packets and packet loss.
+		switch (data[0]) {
 		case 2: // New balls
 			recievedPacketsUDP.incrementAndGet();
 			
@@ -118,15 +121,15 @@ public class UdpLink implements Runnable{
 			
 			byte[] newDataa = Arrays.copyOfRange(data, 5, data.length);
 			
-			for(int i = 0; i < newDataa.length; i += Packet.CLIENTDATA.getObjectSize()) {
-				float posX = Bitmaths.bytesToFloat(newDataa, i);
-				float posY = Bitmaths.bytesToFloat(newDataa, i + 4);
-				float velX = Bitmaths.bytesToFloat(newDataa, i + 8);
-				float velY = Bitmaths.bytesToFloat(newDataa, i + 12);
-				float radOfInf = Bitmaths.bytesToFloat(newDataa, i + 16);
-				long ID = Bitmaths.bytesToLong(newDataa, i + 20);
+			for(var i = 0; i < newDataa.length; i += Packet.CLIENTDATA.getObjectSize()) {
+				var posX = Bitmaths.bytesToFloat(newDataa, i);
+				var posY = Bitmaths.bytesToFloat(newDataa, i + 4);
+				var velX = Bitmaths.bytesToFloat(newDataa, i + 8);
+				var velY = Bitmaths.bytesToFloat(newDataa, i + 12);
+				var radOfInf = Bitmaths.bytesToFloat(newDataa, i + 16);
+				var ID = Bitmaths.bytesToLong(newDataa, i + 20);
 		
-				main.players.ServerUpdatePlayer(ID, posX, posY, velX, velY, radOfInf);
+				main.players.serverUpdatePlayer(ID, posX, posY, velX, velY, radOfInf);
 			}
 			
 			
