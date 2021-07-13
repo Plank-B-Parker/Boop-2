@@ -16,6 +16,8 @@ public class ClientHandler{
 	List<Client> clientsToRemove = new ArrayList<>(4);
 	List<Client> clients = new ArrayList<>();
 	
+	private boolean everyOneKnowsAboutEveryOne = true;
+	
 	public void updateClients(List<Ball> balls, float dt) {
 		if(clients == null) return;
 		
@@ -138,6 +140,8 @@ public class ClientHandler{
 	}
 	
 	public void moveWaitingClients() {
+		if(!everyOneKnowsAboutEveryOne) return;
+		
 		for (Client client : clientsToAdd) {
 			clients.add(client);
 		}
@@ -175,8 +179,15 @@ public class ClientHandler{
 	 * @see {@link #moveWaitingClients}
 	 * Use this method to move the clients from the buffer to the clients list.
 	 */
-	public void addClient(Client client) {
-		clientsToAdd.add(client);
+	public void addClient(Client newClient) {
+		everyOneKnowsAboutEveryOne = false;
+		clientsToAdd.add(newClient);
+		
+		for(Client client: clients) {
+			newClient.alertClient(client, true);
+			client.alertClient(newClient, true);
+		}
+		everyOneKnowsAboutEveryOne = true;
 	}
 	
 	/**
@@ -185,8 +196,14 @@ public class ClientHandler{
 	 * @see {@link #moveWaitingClients}
 	 * Use this method to move the clients out of the client list.
 	 */
-	public void removeClient(Client client) {
-		clientsToRemove.add(client);
+	public void removeClient(Client leavingClient) {
+		everyOneKnowsAboutEveryOne = false;
+		clientsToRemove.add(leavingClient);
+		
+		for(Client client: clients) {
+			client.alertClient(leavingClient, false);
+		}
+		everyOneKnowsAboutEveryOne = true;
 	}
 
 	public Client getClientByAddressAndPort(InetAddress address, int port) {

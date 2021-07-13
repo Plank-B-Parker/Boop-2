@@ -30,12 +30,11 @@ public class Main {
 	public Storage storage = new Storage();
 	public PlayerHandler players = new PlayerHandler();
 	
-	public Vec2f pos;
-	
 	protected Keyboard keyboard;
 	protected Mouse mouse;
 
 	protected boolean doRender = true;
+	public boolean debugging;
 	
 	public void createDisplay() {
 		display = new Display(this, canvas);
@@ -108,7 +107,7 @@ public class Main {
 			
 			if (doRender && System.nanoTime() - frameTimer >= nsPerFrameLimit) {
 				render(timeAfterLastTick / 1000000000f);
-				processInput();
+				processInputs();
 				frames++;
 				frameTimer += nsPerFrameLimit;
 			}
@@ -132,7 +131,7 @@ public class Main {
 	    }
 	}
 	
-	private void processInput() {
+	private void processInputs() {
 		// Updates current state of data based on latest input.
 		if(mouse.mouseMoved || keyboard.somethingHapended) {
 			mouse.mouseMoved = false;
@@ -144,8 +143,6 @@ public class Main {
 	
 	private void sendInputs() {
 		// sends any input changes to the server
-			
-		//System.out.println("(" +  Player.direction.x + ", " +  Player.direction.y+ ")");
 		
 		if (!isServerReadyForPacket(100, Packet.DUMMY)) return;
 		
@@ -174,11 +171,7 @@ public class Main {
 			Graphics2D g2d = (Graphics2D) bs.getDrawGraphics();
 			
 			g2d.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
-			storage.renderBalls(g2d, dt);
-
-			if (keyboard.isActive(Key.F)) {
-				storage.renderExactCoordinates(g2d, dt);
-			}
+			storage.renderBalls(g2d, dt, players, keyboard.isActive(Key.F));
 
 			drawPerformance(g2d);
 			

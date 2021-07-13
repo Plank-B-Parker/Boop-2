@@ -1,5 +1,6 @@
 package networking;
 
+import java.awt.Color;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -14,7 +15,6 @@ import balls.Ball;
 import math.Bitmaths;
 import math.Physics;
 import math.Vec2f;
-import math.VecPool;
 
 public class Client implements Runnable{
 	
@@ -32,8 +32,13 @@ public class Client implements Runnable{
 	public LinkedBlockingQueue<byte[]> dataBuffer;
 	
 	private volatile boolean connected = false;
+	public volatile boolean readyToRecieveUDP = false;
 	
 	Thread clientThread;
+	
+	//Set these values up at client and have them sent.
+	String name = "Pakistan > India";
+	Color colour = Color.GREEN;
 	
 	public Vec2f centrePos = new Vec2f(); 	//centre of screen of client.
 	public Vec2f velocity = new Vec2f();
@@ -56,6 +61,7 @@ public class Client implements Runnable{
 	
 	public AtomicInteger udpPacketsSent = new AtomicInteger(0);
 	public AtomicInteger udpPacketsRecieved = new AtomicInteger(0);
+	
 	
 	public Client() {
 		clientThread = new Thread(this, "Client-Thread");
@@ -102,6 +108,16 @@ public class Client implements Runnable{
 			byte[] data = dataBuffer.poll();
 			
 			switch (data[0]) {
+			
+			case 70:
+				var nameLength = Integer.valueOf(Bitmaths.bytesToString(data, 1, 2)) - 10;
+				var name = Bitmaths.bytesToString(data, 3, nameLength);
+				var colour = Integer.valueOf(Bitmaths.bytesToString(data, 3 + nameLength, data.length - (3 + nameLength)));
+				
+				this.name = name;
+				this.colour = new Color(colour);
+				
+				//Colour last thing to be sent, relies on knowing the length of everything else.
 			case 5:
 				var receiveTime = System.nanoTime();
 				
@@ -147,22 +163,6 @@ public class Client implements Runnable{
 		out = new DataOutputStream(myClientSocket.getOutputStream());
 		out.writeLong(ID);
 		
-		// Currently this code block is necessary for client to see balls because
-		// it needs to set the Display.diameterInServer value.
-		// TODO change this so that this code is not necessary.
-		
-		float[] clientPosData = new float[3];
-		clientPosData[0] = centrePos.x;
-		clientPosData[1] = centrePos.y;
-		clientPosData[2] = radOfVision;
-		
-		byte[] clientPos = Bitmaths.floatArrayToBytes(clientPosData);
-		clientPos = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(12), clientPos);
-		clientPos = Bitmaths.pushByteToData((byte) 70, clientPos);
-		
-		
-		out.write(clientPos);
-		
 		ipv4Address = socket.getInetAddress();
 		clientPort = socket.getPort();
 		
@@ -172,6 +172,31 @@ public class Client implements Runnable{
 		
 		connected = true;
 		clientThread.start();
+	}
+	
+	//Alerts client about another client joining or leaving.
+	public void alertClient(Client client, boolean joining){
+		//Made all strings because name is a string.
+		var clientStringData = new String[5];
+		
+		//4 + 2 + 89 + 8 + 1
+		clientStringData[0] = Long.toString(client.ID);  //ID always has four digits and so has four bytes as a string.
+		clientStringData[1] = Integer.toString(client.name.length() + 10); //Add 10 to ensure string always has two digits. No name > 89 allowed
+		clientStringData[2] = client.name;
+		clientStringData[3] = (joining)? "1":"0";
+		clientStringData[4] = Integer.toString(client.colour.getRGB());
+		
+		int payload = 4 + 2 + client.name.length() + 1 + clientStringData[4].length();
+		
+		byte[] clientData = Bitmaths.stringArrayToBytes(clientStringData);
+		clientData = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(payload), clientData);
+		clientData = Bitmaths.pushByteToData((byte) 70, clientData);
+		
+		try {
+			out.write(clientData);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void disconnect(){
@@ -208,7 +233,7 @@ public class Client implements Runnable{
 		long dt = currentTime - lastPacketTime;
 		
 		
-		if (dt < msDelayBetweenPackets) {
+		if (dt < msDelayBetweenPackets || !readyToRecieveUDP) {
 			return false;
 		}
 		

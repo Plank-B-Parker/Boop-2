@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import display.Display;
 import main.Main;
+import main.PlayerHandler;
 import math.Bitmaths;
 
 public class UdpLink implements Runnable{
@@ -129,6 +131,8 @@ public class UdpLink implements Runnable{
 				var radOfInf = Bitmaths.bytesToFloat(newDataa, i + 16);
 				var ID = Bitmaths.bytesToLong(newDataa, i + 20);
 		
+				if(ID == PlayerHandler.Me.ID)
+					Display.setDiameterInServerFromRadOfInf(radOfInf);
 				main.players.serverUpdatePlayer(ID, posX, posY, velX, velY, radOfInf);
 			}
 			

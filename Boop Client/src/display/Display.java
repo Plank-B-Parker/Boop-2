@@ -38,7 +38,7 @@ public class Display implements ActionListener{
 	public static final Font HEADER_FONT = new Font("Calibri", Font.PLAIN, 22);
 	
 	//Scaling and offset for rendering.
-	public static float diameterInServer = 0f; 	//The height of the screen on the server.
+	private static float radOfVision = 0f; 	//The height of the screen on the server.
 	public static float aspectRatio = WINDOW_WIDTH/WINDOW_HEIGHT;
 	
 	public Display(Main main, Canvas canvas) {
@@ -190,6 +190,14 @@ public class Display implements ActionListener{
 			lastPlayerID = playerID;
 			frame.setTitle("Client: " + playerID);
 		}
+	}
+	
+	public static void setDiameterInServerFromRadOfInf(float radOfInf) {
+		radOfVision = radOfInf;
+	}
+	
+	public static float getDiameterOfVisionInServer() {
+		return 2*radOfVision;
 	}
 
 }

@@ -3,6 +3,7 @@ package networking;
 public enum Packet {
 	NEW_BALLS	((byte) 2, 1372, 49, 7),
 	OLD_BALLS	((byte) 3, 1392, 58, 6),
+	CLIENTJOIN  ((byte) 71, 1352, 13, 5),
 	CLIENTDATA	((byte) 70, 896, 32, 6),
 	CLOCK_SYN	((byte) 7, 8, 1, 1),
 	PACKET_LOSS	((byte) 15, 4, 1, 1),

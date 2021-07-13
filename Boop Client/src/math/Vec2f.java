@@ -6,8 +6,11 @@ public class Vec2f {
 	public float x = 0;
 	public float y = 0;
 	
+	public static final Vec2f Origin = new Vec2f(); 
+	
 	public Vec2f() {
 	}
+	
 	public Vec2f(float X, float Y) {
 		x = X;
 		y = Y;
@@ -18,7 +21,8 @@ public class Vec2f {
 	}
 	
 	/**
-	 * Sets vector components as (x,y). Used to avoid object creation.
+	 * Sets vector components as (x,y).
+	 * Used to avoid object creation.
 	 * @param x
 	 * @param y
 	 */
@@ -27,7 +31,8 @@ public class Vec2f {
 		this.y = y;
 	}
 	
-	/**Adds A to B and stores the value in result.
+	/**
+	 * Sets result as A + B.
 	 * No new Object created.
 	 * @param result
 	 * @param A
@@ -40,7 +45,20 @@ public class Vec2f {
 		return result;
 	}
 	
-	/**Subtracts A by B and stores value in result.
+	/**
+	 * Returns A + B.
+	 * New Object returned.
+	 * @param result
+	 * @param A
+	 * @param B
+	 */
+	public static Vec2f add(Vec2f A, Vec2f B) {
+		Vec2f result = new Vec2f();
+		return add(result, A, B);
+	}
+	
+	/**
+	 * Sets result as A - B.
 	 * No new Object created.
 	 * @param result
 	 * @param A
@@ -54,12 +72,26 @@ public class Vec2f {
 	}
 	
 	/**
-	 * Calculates minimum distance between two points on a torus/doughnut.
+	 * Returns A - B.
+	 * New Object created.
+	 * @param result
+	 * @param A
+	 * @param B
+	 */
+	public static Vec2f sub(Vec2f A, Vec2f B) {
+		Vec2f result = new Vec2f();
+		return sub(result, A, B);
+	}
+	
+	/**
+	 * Sets result as min(|pos2 - pos1|) on a torus.
+	 * Use for calculating displacement.
+	 * No new object created.
 	 * @param result
 	 * @param pos2
 	 * @param pos1
 	 */
-	public static Vec2f disp(Vec2f result, Vec2f pos2, Vec2f pos1) {
+	public static Vec2f minDisp(Vec2f result, Vec2f pos2, Vec2f pos1) {
 		float x = pos2.x - pos1.x;
 		float y = pos2.y - pos1.y;
 		
@@ -83,7 +115,19 @@ public class Vec2f {
 		return result;
 	}
 	
-	/**Scales A by k and stores value in result.
+	/**
+	 * Returns min(|pos2 - pos1|) on a torus.
+	 * Use for calculating displacement.
+	 * New object created.
+	 * @param pos2
+	 * @param pos1
+	 */
+	public static Vec2f minDisp(Vec2f pos2, Vec2f pos1) {
+		return minDisp(new Vec2f(), pos2, pos1);
+	}
+	
+	/**
+	 * Sets result as A*k.
 	 * No new Object created.
 	 * @param result
 	 * @param A
@@ -97,7 +141,18 @@ public class Vec2f {
 	}
 	
 	/**
+	 * Returns A*k.
+	 * New object created.
+	 * @param A
+	 * @param B
+	 */
+	public static Vec2f scale(Vec2f A, float k) {
+		return scale(new Vec2f(), A, k);
+	}
+	
+	/**
 	 * Sets result as A + k*B.
+	 * No new object created.
 	 * @param result
 	 * @param A
 	 * @param B
@@ -111,7 +166,18 @@ public class Vec2f {
 	}
 	
 	/**
-	 * Returns dot product between A and B.|A|*|B|*cos(<AB)
+	 * Returns A + k*B.
+	 * New object created.
+	 * @param A
+	 * @param B
+	 * @param k
+	 */
+	public static Vec2f increment(Vec2f A, Vec2f B, float k) {
+		return increment(new Vec2f(), A, B, k);
+	}
+	
+	/**
+	 * Returns dot product between A and B (= |A|*|B|*cos(<AB)).
 	 * @param A
 	 * @param B
 	 * @return
@@ -122,7 +188,13 @@ public class Vec2f {
 	public float lengthSq() {
 		return x*x + y*y;
 	}
+	/**
+	 * Sets vector to length 1 in same direction.
+	 */
 	public void normalise() {
 		scale(this,this, (float) (1/Math.sqrt(lengthSq())));
+	}
+	public void nomaliseCordinates() {
+		minDisp(this, this, Origin);
 	}
 }

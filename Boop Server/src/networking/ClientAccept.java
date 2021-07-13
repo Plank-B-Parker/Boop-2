@@ -49,14 +49,23 @@ public class ClientAccept implements Runnable{
 				// Blocking method
 				var socket = serverSocket.accept();
 				
-				client.setupConnection(socket);
+				setUpClient(client, socket);
 				
-				clientHandler.addClient(client);
+				client.readyToRecieveUDP = true;
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private void setUpClient(Client client, Socket socket)throws IOException {
+		client.setupConnection(socket);
+		//Anything to send or recieve here:
+		
+		
+		//
+		clientHandler.addClient(client);
 	}
 	
 	private Client createNewClient() {
@@ -66,7 +75,7 @@ public class ClientAccept implements Runnable{
 		var validID = true;
 		
 		do {
-			client.setIdentity((long) (Math.random() * 1000));
+			client.setIdentity((long) (Math.random() * 1000 + 1000));
 			for (var i = 0; i < clients.size(); i++) {
 				if (clients.get(i).getIdentity() == client.getIdentity()) {
 					validID = false;

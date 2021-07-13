@@ -137,7 +137,7 @@ public class UDP implements Runnable{
 			
 			var client = clients.get(i);
 			//Check if client is ready;
-			if(!client.isReadyForPacket(100, Packet.NEW_BALLS)) continue;
+			if(!client.isReadyForPacket(1000, Packet.NEW_BALLS)) continue;
 			
 			readyClients.add(client);
 		}

@@ -3,12 +3,12 @@ package balls;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-import main.Main;
+import display.Display;
+import main.Player;
 import main.PlayerHandler;
+import math.Physics;
 import math.Vec2f;
 import math.VecPool;
-import math.Physics;
-import display.Display;
 
 public class Ball {
 	
@@ -76,20 +76,19 @@ public class Ball {
 		return data;
 	}
 	
-	//Render method below renders whole server.
-	public void renderScaled(Graphics2D g, float dt) {
+	public void renderScaled(Graphics2D g, float dt, PlayerHandler players, boolean debugging) {
 
 		vecPool.startOfMethod();
 
 		Vec2f pos = vecPool.getVec();
 
-		Vec2f.disp(pos, clientPos, PlayerHandler.Me.centrePos);
+		Vec2f.minDisp(pos, clientPos, PlayerHandler.Me.centrePos);
 
 		float x = pos.x;
 		float y = pos.y;
 
-		double a = Math.sqrt(2)*Display.diameterInServer / 4;
-		double b = Math.sqrt(2)/Display.diameterInServer;
+		double a = Math.sqrt(2)*Display.getDiameterOfVisionInServer() / 4;
+		double b = Math.sqrt(2)/Display.getDiameterOfVisionInServer();
 		
 		//Scaling for screen.
 		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);
@@ -114,32 +113,52 @@ public class Ball {
 			Y2 = (int) (Y + 2*b*Display.WINDOW_WIDTH);
 		}
 		
+		
+		vecPool.endOfMethod();
+		
+		//FOR DEBUGGING: 
+		if(debugging) {
+			//ExactCoords
+			renderExactCoordinates(g, dt);
+			//TIMER
+			g.setColor(Color.WHITE);
+			g.drawString("t:" + (float)(Math.round(100*timeAlive))/100f, X-Rad-10, Y-Rad-10);
+			//
+		}
+		
+		Color colour = this.colour;
+		if(ownerID == -2) {
+			colour = Color.WHITE;
+		}
+		if(ownerID > 0) {
+			boolean pain = (players.getPlayerByID(ownerID) == null);
+			if(pain == true && pain != false) {
+				System.out.println("ouch, it hurts man. Not cool");
+			}
+			
+			colour = players.getPlayerByID(ownerID).colour;
+		}
+		
 		g.setColor(colour);
+		
 		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
 		if(X2 != X || Y2 != Y) {
 			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
 		}
-		
-		/////FOR DEBUGGING: TIMER
-//		g.setColor(Color.WHITE);
-//		g.drawString("t:" + (float)(Math.round(100*timeAlive))/100f, X, Y);
-		////////
-
-		vecPool.endOfMethod();
 	}
 	
-	public void renderExactCoordinates(Graphics2D g, float dt) {
+	private void renderExactCoordinates(Graphics2D g, float dt) {
 		vecPool.startOfMethod();
 
 		Vec2f pos = vecPool.getVec();
 
-		Vec2f.disp(pos, phys.pos, PlayerHandler.Me.centrePos);
+		Vec2f.minDisp(pos, phys.pos, PlayerHandler.Me.centrePos);
 
 		float x = pos.x;
 		float y = pos.y;
 
-		double a = Math.sqrt(2)*Display.diameterInServer / 4;
-		double b = Math.sqrt(2)/Display.diameterInServer;
+		double a = Math.sqrt(2)*Display.getDiameterOfVisionInServer() / 4;
+		double b = Math.sqrt(2)/Display.getDiameterOfVisionInServer();
 		
 		//Scaling for screen.
 		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);
@@ -178,7 +197,7 @@ public class Ball {
 		vecPool.endOfMethod();
 	}
 	
-	public void render3(Graphics2D g, float dt) {
+	public void renderExactCoordinatesUnscaled(Graphics2D g, float dt) {
 		Vec2f pos = phys.pos;
 		
 		float x = pos.x;
@@ -214,81 +233,6 @@ public class Ball {
 		}
 	}
 	
-	
-	public void render(Graphics2D g, float dt) {
-		float posX = clientPos.x;
-		float posY = clientPos.y;
-		
-		float serverWidth = Display.diameterInServer*Display.aspectRatio;
-		float serverHeight = Display.diameterInServer;
-		
-		float x = posX - PlayerHandler.Me.centrePos.x;
-		float y = posY - PlayerHandler.Me.centrePos.y;
-		
-		if(x > 1) {
-			x = x-2;
-		}
-		if(x < -1) {
-			x = x+2;
-		}
-		
-		if(y > 1) {
-			y = y-2;
-		}
-		if(y < -1) {
-			y = y+2;
-		}
-		
-		x += serverWidth/2;
-		y += serverHeight/2;
-		
-		int X = (int)(Display.WINDOW_WIDTH*x/serverWidth);
-		int Y = (int)(Display.WINDOW_HEIGHT*y/serverHeight);
-		
-		int Rad = (int)(Display.WINDOW_HEIGHT*rad/serverHeight);
-		
-		g.setColor(colour);
-		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
-		
-		render4(g,dt);
-	}
-	
-	public void render4(Graphics2D g, float dt) {
-		float posX = phys.pos.x;
-		float posY = phys.pos.y;
-		
-		float serverWidth = Display.diameterInServer*Display.aspectRatio;
-		float serverHeight = Display.diameterInServer;
-		
-		float x = posX - PlayerHandler.Me.centrePos.x;
-		float y = posY - PlayerHandler.Me.centrePos.y;
-		
-		if(x > 1) {
-			x = x-2;
-		}
-		if(x < -1) {
-			x = x+2;
-		}
-		
-		if(y > 1) {
-			y = y-2;
-		}
-		if(y < -1) {
-			y = y+2;
-		}
-		
-		x += serverWidth/2;
-		y += serverHeight/2;
-		
-		int X = (int)(Display.WINDOW_WIDTH*x/serverWidth);
-		int Y = (int)(Display.WINDOW_HEIGHT*y/serverHeight);
-		
-		int Rad = (int)(Display.WINDOW_HEIGHT*rad/serverHeight);
-		
-		g.setColor(Color.red);
-		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
-	}
-	
 	public void updateClientPrediction(float dt) {
 		calcClientCorrAcc(dt);
 		Vec2f.increment(clientVel, clientVel, clientAcc, dt);
@@ -310,7 +254,7 @@ public class Ball {
 		
 		//(1/cA)*(pos - "cl_pos")
 		Vec2f cl_pos = Vec2f.increment(vecPool.getVec(), clientPos, clientVel, dt);
-		Vec2f posTerm = Vec2f.disp(vecPool.getVec(), phys.pos, cl_pos);
+		Vec2f posTerm = Vec2f.minDisp(vecPool.getVec(), phys.pos, cl_pos);
 		Vec2f.scale(posTerm, posTerm, 1f/cA);
 		
 		//1/(1 - dt/cA + (dt^2)*(cV/cA)

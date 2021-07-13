@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
+import java.util.Arrays;
 
 public final class Bitmaths {
 	
@@ -102,7 +103,6 @@ public final class Bitmaths {
 	public static byte[] pushByteArrayToData(byte[] frontArray, byte[] data) {
 		byte[] newData = new byte[data.length + frontArray.length];
 		System.arraycopy(data, 0, newData, newData.length - data.length, data.length);
-		
 		System.arraycopy(frontArray, 0, newData, 0, frontArray.length);
 		
 		return newData;
@@ -133,5 +133,25 @@ public final class Bitmaths {
 		}
 		
 		return bytes;
+	}
+	
+	public static byte[] stringArrayToBytes(String[] string) {
+		var bytes = new byte[0];
+		
+		for (int i = string.length - 1; i >= 0; i--) {
+			bytes = pushByteArrayToData(string[i].getBytes(), bytes);
+		}
+		
+		return bytes;
+	}
+	
+	public static String bytesToString(byte[] bytes, int index, int length) {
+		if (index > bytes.length - length) return null;
+		byte[] stringInBytes = Arrays.copyOfRange(bytes, index, index+length);
+		return new String(stringInBytes);
+	}
+	
+	public static String bytesToString(byte[] bytes, int length) {
+		return bytesToString(bytes, 0, length);
 	}
 }

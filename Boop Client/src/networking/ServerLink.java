@@ -1,23 +1,18 @@
 package networking;
 
+import java.awt.Color;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import main.Main;
+import main.Player;
 import main.PlayerHandler;
 import math.Bitmaths;
 import math.Vec2f;
-import display.Display;
 
 public class ServerLink implements Runnable{
 	
@@ -51,6 +46,7 @@ public class ServerLink implements Runnable{
 	@Override
 	public void run() {
 		readIDfromServer();
+		sendMyData();
 		
 		while(serverConnection) {
 			try {
@@ -100,19 +96,29 @@ public class ServerLink implements Runnable{
 	
 	// Handles all available data in the buffer
 	public void handleAllTCPData() throws IOException {
+		
 		// Handles each type of packet. (Plan to add methods for specific data handling)
 		while (!dataBuffer.isEmpty()) {
 			byte[] data = dataBuffer.poll();
 			
 			switch (data[0]) {
 			case 70:
-				Display.diameterInServer = 2f*Bitmaths.bytesToFloat(data, 9);
+				//Last thing sent.
+				//Other Players info.
+				var ID = Long.parseLong(Bitmaths.bytesToString(data, 1, 4));
 				
-				PlayerHandler.Me.centrePos.x = Bitmaths.bytesToFloat(data, 1);
-				PlayerHandler.Me.centrePos.y = Bitmaths.bytesToFloat(data, 5);	
+				var nameLength = Integer.valueOf(Bitmaths.bytesToString(data,  1 + 4, 2)) - 10;
+				String name = Bitmaths.bytesToString(data, 1 + 4 + 2, nameLength);
 				
-//				System.out.println(PlayerHandler.Me.centrePos.x + ", " + PlayerHandler.Me.centrePos.y);
-				// System.out.println("Hello");
+				var joining = (Bitmaths.bytesToString(data, 1 + 4 + 2 + nameLength, 1).equals("1"));
+				
+				var colourLength = data.length - ( 1 + 4 + 2 + nameLength + 1);
+				var colour = Integer.valueOf(Bitmaths.bytesToString(data, 1 + 4 + 2 + nameLength + 1, colourLength)) - (((255 << 8) + 255) << 8) + 255 + 1;
+				
+				
+				if(joining) main.players.addPlayer(new Player(false, ID, name, new Color(colour), new Vec2f()));
+				else main.players.removePlayer(ID);
+				
 				break;
 				
 			case 5:
@@ -139,6 +145,7 @@ public class ServerLink implements Runnable{
 					out.write(echoData);
 				}
 				break;
+				
 			default:
 				return;
 			}
@@ -150,10 +157,32 @@ public class ServerLink implements Runnable{
 		try {
 			Thread.sleep(1000);
 			ID = in.readLong();
+			
 			PlayerHandler.Me.ID = ID;
+			
 			System.out.println("ID: " + ID);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void sendMyData() {
+		var nameLength = Integer.toString(PlayerHandler.Me.name.length() + 10);
+		var name = PlayerHandler.Me.name;
+		var colour = Integer.toString(PlayerHandler.Me.colour.getRGB());
+		
+		int payload = 2 + name.length() + colour.length();
+		
+		String[] myData = {nameLength, name, colour};
+		
+		byte[] myDataBytes = Bitmaths.stringArrayToBytes(myData);
+		myDataBytes = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(payload), myDataBytes);
+		myDataBytes = Bitmaths.pushByteToData((byte) 70, myDataBytes);
+		
+		try {
+			sendData(myDataBytes);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
