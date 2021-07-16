@@ -46,8 +46,8 @@ public class Client implements Runnable{
 	public float radOfVision =  0.5f;       //radius of region balls are sent to client.
 	public float radOfInf = 0.5f;			//radius of region balls are attracted to the client.
 	
-	public static float attractionCoefficient = 0.001f; //multiplied by number of owned balls to give attraction strength.
-	public static float influenceCoefficient = 0.01f; //multiplied by number of balls to give area of influence. 
+	public static final float attractionCoefficient = 0.001f; //multiplied by number of owned balls to give attraction strength.
+	public static final float influenceCoefficient = 0.01f; //multiplied by number of balls to give area of influence. 
 	//NOTE: May make radius of influence proportional to number of local balls so, rate of area increase slows
 	//		as it gets bigger.
 	
@@ -109,6 +109,10 @@ public class Client implements Runnable{
 			
 			switch (data[0]) {
 			
+			case 71:
+				readyToRecieveUDP = true;
+				System.out.println("Client class, ready for UDP");
+				break;
 			case 70:
 				var nameLength = Integer.valueOf(Bitmaths.bytesToString(data, 1, 2)) - 10;
 				var name = Bitmaths.bytesToString(data, 3, nameLength);
@@ -118,6 +122,7 @@ public class Client implements Runnable{
 				this.colour = new Color(colour);
 				
 				//Colour last thing to be sent, relies on knowing the length of everything else.
+				break;
 			case 5:
 				var receiveTime = System.nanoTime();
 				
@@ -194,6 +199,18 @@ public class Client implements Runnable{
 		
 		try {
 			out.write(clientData);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void finishSetUp(){
+		byte[] data = {5};
+		data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(1), data);
+		data = Bitmaths.pushByteToData((byte) 71, data);
+		try {
+			out.write(data);
+			System.out.println("client class- last set up data sent");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -308,6 +325,11 @@ public class Client implements Runnable{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void updateRadii() {
+		radOfInf = (float) Math.sqrt(influenceCoefficient*ownedBalls.size()/Math.PI) + 0.1f;
+		radOfVision = 3*radOfInf;
 	}
 	
 	/**

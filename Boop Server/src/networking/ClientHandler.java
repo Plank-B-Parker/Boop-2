@@ -112,6 +112,8 @@ public class ClientHandler{
 			for(Ball ball: ballsToRemove) {
 				client.ownedBalls.remove(ball);
 			}
+			
+			client.updateRadii();
 		}
 		
 		

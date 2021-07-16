@@ -106,6 +106,7 @@ public class Main {
 			
 			
 			if (doRender && System.nanoTime() - frameTimer >= nsPerFrameLimit) {
+				display.updateRadiusOfVision(1f/60f);
 				render(timeAfterLastTick / 1000000000f);
 				processInputs();
 				frames++;

@@ -24,6 +24,8 @@ public class ServerLink implements Runnable{
 	public long ID = -1;
 	
 	volatile boolean serverConnection = false;
+	boolean setUpDataRecieved = false;
+	boolean establishedUDP = false;
 	
 	DataInputStream in;
 	DataOutputStream out;
@@ -54,6 +56,11 @@ public class ServerLink implements Runnable{
 				byte[] data = recieveData();
 				if (data.length != 0) dataBuffer.add(data);
 				handleAllTCPData();
+				//When client is fully initialised and set up, tell server to start sending udp.
+				if(setUpDataRecieved && !establishedUDP) {
+					readyForUDP();
+					establishedUDP = true;
+				}
 				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -102,6 +109,10 @@ public class ServerLink implements Runnable{
 			byte[] data = dataBuffer.poll();
 			
 			switch (data[0]) {
+			case 71:
+				setUpDataRecieved = true;
+				System.out.println("Server Link Class, last data recieved");
+				break;
 			case 70:
 				//Last thing sent.
 				//Other Players info.
@@ -183,6 +194,17 @@ public class ServerLink implements Runnable{
 		
 		try {
 			sendData(myDataBytes);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void readyForUDP() {
+		byte[] data = {5};
+		data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(1), data);
+		data = Bitmaths.pushByteToData((byte) 71, data);
+		try {
+			sendData(data);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -87,8 +87,8 @@ public class Ball {
 		float x = pos.x;
 		float y = pos.y;
 
-		double a = Math.sqrt(2)*Display.getDiameterOfVisionInServer() / 4;
-		double b = Math.sqrt(2)/Display.getDiameterOfVisionInServer();
+		double a = Math.sqrt(2)*Display.getDiameterOfVision() / 4;
+		double b = Math.sqrt(2)/Display.getDiameterOfVision();
 		
 		//Scaling for screen.
 		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);
@@ -133,7 +133,10 @@ public class Ball {
 		if(ownerID > 0) {
 			boolean pain = (players.getPlayerByID(ownerID) == null);
 			if(pain == true && pain != false) {
-				System.out.println("ouch, it hurts man. Not cool");
+				System.out.println("ouch, it hurts man. Not cool - class : Ball ");
+				System.out.println("is players list null?: " + players == null);
+				System.out.println("number of players: " + players.size());
+				System.out.println("their ID: " + players.get(0).ID);
 			}
 			
 			colour = players.getPlayerByID(ownerID).colour;
@@ -157,8 +160,8 @@ public class Ball {
 		float x = pos.x;
 		float y = pos.y;
 
-		double a = Math.sqrt(2)*Display.getDiameterOfVisionInServer() / 4;
-		double b = Math.sqrt(2)/Display.getDiameterOfVisionInServer();
+		double a = Math.sqrt(2)*Display.getDiameterOfVision() / 4;
+		double b = Math.sqrt(2)/Display.getDiameterOfVision();
 		
 		//Scaling for screen.
 		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);

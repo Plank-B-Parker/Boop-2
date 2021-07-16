@@ -40,7 +40,7 @@ public class Storage {
 			ball.phys.calcDrag();
 		}
 		
-		for(Player player: players) {
+		for(Player player: players.trackedPlayers) {
 			for(Ball ball: player.localBalls) {
 				if(ball.getID() != -1) {
 					ball.phys.calcAttraction(player.localBalls);

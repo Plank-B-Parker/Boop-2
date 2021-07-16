@@ -51,7 +51,7 @@ public class ClientAccept implements Runnable{
 				
 				setUpClient(client, socket);
 				
-				client.readyToRecieveUDP = true;
+				//Handle data in client allows client to be ready for UDP.
 				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -66,6 +66,7 @@ public class ClientAccept implements Runnable{
 		
 		//
 		clientHandler.addClient(client);
+		client.finishSetUp();
 	}
 	
 	private Client createNewClient() {

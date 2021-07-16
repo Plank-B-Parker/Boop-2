@@ -23,7 +23,7 @@ public class PlayerHandler extends ArrayList<Player> {
 	private ArrayList<Player> playersToRemove = new ArrayList<>(); 		//Left players to be removed.
 	private ArrayList<Long> playersToBeUpdatedID = new ArrayList<>();	//Players' IDs from server update.
 	private ArrayList<float[]> playersToBeUpdatedData = new ArrayList<>();	//Players' data from server update. 
-	private ArrayList<Player> trackedPlayers = new ArrayList<>();		//Players being tracked by client. 
+	public ArrayList<Player> trackedPlayers = new ArrayList<>();		//Players being tracked by client. 
 	public static final float timeBeforeWeDontCareAboutSomeone = 5;
 	
 	public PlayerHandler() {

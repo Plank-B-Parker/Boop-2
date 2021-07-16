@@ -78,7 +78,7 @@ public class UdpLink implements Runnable{
 		}
 	}
 	
-	
+	private boolean firstBall = false;
 	private void handleData(byte[] data) {
 		// Data[0] is packetID and the next 4 bytes (int)
 		// is the number of udp packets sent by the server
@@ -87,6 +87,10 @@ public class UdpLink implements Runnable{
 		case 2: // New balls
 			recievedPacketsUDP.incrementAndGet();
 			
+			if(!firstBall) {
+				System.out.println("UDP LINK: GOT BALL DATA");
+				firstBall = true;
+			}
 			byte[] newData = Arrays.copyOfRange(data, 5, data.length);
 			
 			float[] ballData = new float[newData.length / 4];

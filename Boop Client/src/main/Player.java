@@ -29,7 +29,6 @@ public class Player {
 	//Bellow are the variables above, from the server.
 	private Vec2f centreInServer = new Vec2f();	
 	private Vec2f velocityInServer = new Vec2f();
-	private float radInServer = 0.5f;
 	
 	//Acceleration used to match speed and position on server.
 	private Vec2f acceleration = new Vec2f();
@@ -64,7 +63,7 @@ public class Player {
 		///////////////////////
 		tempVecs.endOfMethod();
 		
-		return (disp.lengthSq() <= (radOfInf + b.getRad())*(radOfInf+b.getRad()));
+		return (disp.lengthSq() <= (radOfInf + b.getRad())*(radOfInf + b.getRad()));
 	}
 	
 	public void updatePos(float dt) {
@@ -140,7 +139,7 @@ public class Player {
 		centreInServer.y = posY;
 		velocityInServer.x = velX;
 		velocityInServer.y = velY;
-		this.radInServer = radOfInf;
+		this.radOfInf = radOfInf;
 	}
 	
 	public void updateAcc() {

@@ -38,7 +38,10 @@ public class Display implements ActionListener{
 	public static final Font HEADER_FONT = new Font("Calibri", Font.PLAIN, 22);
 	
 	//Scaling and offset for rendering.
-	private static float radOfVision = 0f; 	//The height of the screen on the server.
+	private static float radOfVision = 0f; 	//Radius of vision that client sees.
+	private static float radInServer = 0f;  //Radius of vision in server.
+	private static float growthRate = 1f;  	//How fast radius of Vision grows.
+	
 	public static float aspectRatio = WINDOW_WIDTH/WINDOW_HEIGHT;
 	
 	public Display(Main main, Canvas canvas) {
@@ -192,11 +195,15 @@ public class Display implements ActionListener{
 		}
 	}
 	
-	public static void setDiameterInServerFromRadOfInf(float radOfInf) {
-		radOfVision = radOfInf;
+	public void updateRadiusOfVision(float dt) {
+		radOfVision += growthRate*(radInServer - radOfVision)*dt;
 	}
 	
-	public static float getDiameterOfVisionInServer() {
+	public static void setDiameterInServerFromRadOfInf(float radOfInf) {
+		radInServer = 3*radOfInf;
+	}
+	
+	public static float getDiameterOfVision() {
 		return 2*radOfVision;
 	}
 

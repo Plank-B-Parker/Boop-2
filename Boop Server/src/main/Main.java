@@ -63,7 +63,7 @@ public class Main {
 		if (deterministicPhysics) random = new Random(3);
 		else random = new Random();
 		
-		for(int i = 0; i < 10; i++) {
+		for(int i = 0; i < 100; i++) {
 			Ball ball = new Ball(1);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -74,7 +74,7 @@ public class Main {
 		
 		
 		
-		for(int i = 0; i < 1; i++) {
+		for(int i = 0; i < 10; i++) {
 			Ball ball = new Ball(2);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
@@ -305,8 +305,11 @@ public class Main {
 			int x = (int) ((client.centrePos.x + 1) * 0.5 * windowHeight);
 			int y = (int) ((client.centrePos.y + 1) * 0.5 * windowHeight);
 			int rad = (int) ((client.radOfVision) * 0.5 * windowHeight);
+			int radInf = (int) ((client.radOfInf) * 0.5 * windowHeight);
 			
 			g.drawOval(x - rad, y - rad, 2*rad, 2*rad);
+			g.setColor(Color.BLUE);
+			g.drawOval(x - radInf, y - radInf, 2*radInf, 2*radInf);
 			
 			g.setColor(Color.GREEN);
 			// TODO draw rectangle to show client's viewport.
