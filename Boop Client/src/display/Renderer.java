@@ -13,50 +13,56 @@ import math.Vec2f;
 
 public class Renderer {
 	public Graphics2D g;
-	public Font f;
-	public Color c;
 	public Vec2f centre;
 	
 	public Renderer() {
-		
+		//TODO?
 	}
 	
 	public void setGraphics(Graphics2D g2d) {
 		g = g2d;
 	}
-	
-	public void drawString(String s, Font f, Color c, Vec2f pos, int pixOffsetX, int pixOffsetY) {
-		drawString(s, f, c, pos, PlayerHandler.Me.centrePos, pixOffsetX, pixOffsetY);
+
+	public void setColour(Color colour) {
+		g.setColor(colour);
 	}
-	public void drawString(String s, Font f, Color c, int pixOffsetX, int pixOffsetY) {
+
+	public void setFont(Font font) {
+		g.setFont(font);
+	}
+	
+	public void drawString(String s, Vec2f pos, int pixOffsetX, int pixOffsetY) {
+		drawString(s, pos, PlayerHandler.Me.centrePos, pixOffsetX, pixOffsetY);
+	}
+
+	public void drawString(String s, int pixOffsetX, int pixOffsetY) {
+		drawString(s, PlayerHandler.Me.centrePos, PlayerHandler.Me.centrePos, pixOffsetX, pixOffsetY);
 		
 	}
-	public void drawString(String s, Font f, Color c, Vec2f pos, Vec2f centre) {
-		
+	public void drawString(String s, Vec2f pos, Vec2f centre) {
+		drawString(s, pos, centre, 0, 0);
 	}
-	public void drawString(String s, Font f, Color c, Vec2f pos) {
-		
+	public void drawString(String s, Vec2f pos) {
+		drawString(s, pos, PlayerHandler.Me.centrePos, 0, 0);
 	}
 	
-	
-	
-	public void drawString(String s, Font f, Color c, Vec2f pos, Vec2f centre, int pixOffsetX, int pixOffsetY) {
+	public void drawString(String s, Vec2f pos, Vec2f centre, int pixOffsetX, int pixOffsetY) {
 		var coords = globalToLocalCoords(pos, centre);
 		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
-		g.setFont(f);
-		g.setColor(c);
 		g.drawString(s, coords.x + pixOffsetX, coords.y + pixOffsetY);
 	}
-	public void drawLineSegment(Vec2f beginning, Vec2f end, boolean shortestPath, Color c) {
-		drawLineSegment(beginning, end, shortestPath, c, PlayerHandler.Me.centrePos);
+
+	public void drawLineSegment(Vec2f beginning, Vec2f end, boolean shortestPath) {
+		drawLineSegment(beginning, end, shortestPath, PlayerHandler.Me.centrePos);
 	}
+
 	/**
 	 * Needs testing.
 	 * @param beginning
 	 * @param end
 	 * @param centre
 	 */
-	public void drawLineSegment(Vec2f beginning, Vec2f end, boolean shortestPath, Color c, Vec2f centre) {
+	public void drawLineSegment(Vec2f beginning, Vec2f end, boolean shortestPath, Vec2f centre) {
 		//Draws two lines, from beginning to end and then end to beginning
 		//Want to use this to draw a faint grid in the background.
 		
@@ -94,37 +100,34 @@ public class Renderer {
 		Vec2f.scale(e1, e1, Display.WINDOW_WIDTH);
 		Vec2f.scale(e2, e2, Display.WINDOW_WIDTH);
 		
-		g.setColor(c);
 		g.drawLine((int)b1.x, (int)b1.y, (int)e1.x, (int)e1.y);
 		g.drawLine((int)b2.x, (int)b2.y, (int)e2.x, (int)e2.y);
 	}
 	
-	public void drawCircle(Vec2f pos, float rad, Color c, Vec2f centre) {
+	public void drawCircle(Vec2f pos, float rad, Vec2f centre) {
 		var coords = globalToLocalCoords(pos, centre);
 		
 		var R = (int) (scaleLengthToLocal(rad)*Display.WINDOW_WIDTH);
 		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
 		
-		g.setColor(c);
 		g.drawOval((int)(coords.x - R), (int)(coords.y - R), R, R);
 	}
 	
-	public void drawCircle(Vec2f pos, float rad, Color c) {
-		drawCircle(pos, rad, c, PlayerHandler.Me.centrePos);
+	public void drawCircle(Vec2f pos, float rad) {
+		drawCircle(pos, rad, PlayerHandler.Me.centrePos);
 	}
 	
-	public void fillCircle(Vec2f pos, float rad, Vec2f centre, Color c) {
+	public void fillCircle(Vec2f pos, float rad, Vec2f centre) {
 		var coords = globalToLocalCoords(pos, centre);
 		
 		var R = (int) (scaleLengthToLocal(rad)*Display.WINDOW_WIDTH);
 		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
 		
-		g.setColor(c);
 		g.fillOval((int)(coords.x - R), (int)(coords.y - R), 2*R, 2*R);
 	}
 	
-	public void fillCircle(Vec2f pos, float rad, Color c) {
-		fillCircle(pos, rad, PlayerHandler.Me.centrePos, c);
+	public void fillCircle(Vec2f pos, float rad) {
+		fillCircle(pos, rad, PlayerHandler.Me.centrePos);
 	}
 	
 	public static Vec2f globalToLocalCoords(Vec2f coord) {

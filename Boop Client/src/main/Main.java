@@ -196,16 +196,19 @@ public class Main {
 		r.g.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
 		
 		
+		r.g.setColor(Color.gray);
 		r.g.setStroke(new BasicStroke(3));
 		var numlines = 4;
 		for(float i = -1; i <= 1; i+= 1f/(float)numlines) {
-			r.drawLineSegment(new Vec2f(i,-1), new Vec2f(i,0.999f), false, Color.gray);
-			r.drawLineSegment(new Vec2f(-1,i), new Vec2f(0.999f, i), false, Color.gray);
+			r.drawLineSegment(new Vec2f(i,-1), new Vec2f(i,0.999f), false);
+			r.drawLineSegment(new Vec2f(-1,i), new Vec2f(0.999f, i), false);
 		}
-		
+
+		r.g.setColor(Color.DARK_GRAY);
+		r.g.setFont(new Font("SansSerif", Font.PLAIN, 15));
 		for(float x = -1; x <= 1; x += 1/(float)numlines) {
 			for(float y = -1; y <= 1; y += 1/(float)numlines) {
-				r.drawString("(" + x + ", " + y + ")", new Font("SansSerif", Font.PLAIN, 15), Color.DARK_GRAY, new Vec2f(x + 0.0025f,y + 0.0075f), PlayerHandler.Me.centrePos);
+				r.drawString("(" + x + ", " + y + ")",new Vec2f(x + 0.0025f,y + 0.0075f), PlayerHandler.Me.centrePos);
 			}
 		}
 		
