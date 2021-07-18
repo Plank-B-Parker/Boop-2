@@ -13,6 +13,9 @@ import math.Vec2f;
 
 public class Renderer {
 	public Graphics2D g;
+	public Font f;
+	public Color c;
+	public Vec2f centre;
 	
 	public Renderer() {
 		
@@ -22,12 +25,27 @@ public class Renderer {
 		g = g2d;
 	}
 	
+	public void drawString(String s, Font f, Color c, Vec2f pos, int pixOffsetX, int pixOffsetY) {
+		drawString(s, f, c, pos, PlayerHandler.Me.centrePos, pixOffsetX, pixOffsetY);
+	}
+	public void drawString(String s, Font f, Color c, int pixOffsetX, int pixOffsetY) {
+		
+	}
 	public void drawString(String s, Font f, Color c, Vec2f pos, Vec2f centre) {
+		
+	}
+	public void drawString(String s, Font f, Color c, Vec2f pos) {
+		
+	}
+	
+	
+	
+	public void drawString(String s, Font f, Color c, Vec2f pos, Vec2f centre, int pixOffsetX, int pixOffsetY) {
 		var coords = globalToLocalCoords(pos, centre);
 		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
 		g.setFont(f);
 		g.setColor(c);
-		g.drawString(s, coords.x, coords.y);
+		g.drawString(s, coords.x + pixOffsetX, coords.y + pixOffsetY);
 	}
 	public void drawLineSegment(Vec2f beginning, Vec2f end, boolean shortestPath, Color c) {
 		drawLineSegment(beginning, end, shortestPath, c, PlayerHandler.Me.centrePos);
