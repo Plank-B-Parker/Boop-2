@@ -196,7 +196,7 @@ public class UDP implements Runnable{
 		var offset = 0;
 		
 		for (var client : clients) {
-			if (!client.isReadyForPacket(200, Packet.CLIENTDATA)) continue;
+			if (!client.isReadyForPacket(1000, Packet.CLIENTDATA)) continue;
 			
 			offset = numClients * numItemsPerObj;
 			

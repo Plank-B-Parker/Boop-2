@@ -42,7 +42,7 @@ public class Display implements ActionListener{
 	private static float radInServer = 0f;  //Radius of vision in server.
 	private static float growthRate = 1f;  	//How fast radius of Vision grows.
 	
-	public static float aspectRatio = WINDOW_WIDTH/WINDOW_HEIGHT;
+	public static float aspectRatio = (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT;
 	
 	public Display(Main main, Canvas canvas) {
 		this.main = main;
@@ -67,7 +67,7 @@ public class Display implements ActionListener{
 			public void componentResized(ComponentEvent componentEvent) {
 				WINDOW_HEIGHT = frame.getHeight();
 				WINDOW_WIDTH = frame.getWidth();
-				aspectRatio = WINDOW_WIDTH/WINDOW_HEIGHT;
+				aspectRatio = (float)WINDOW_WIDTH/(float)WINDOW_HEIGHT;
 			}
 		});
 		

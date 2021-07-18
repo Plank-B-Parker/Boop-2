@@ -27,7 +27,7 @@ public class PlayerHandler extends ArrayList<Player> {
 	public static final float timeBeforeWeDontCareAboutSomeone = 5;
 	
 	public PlayerHandler() {
-		add(Me);
+		super.add(Me);
 	}
 	
 	public void updatePlayers(final List<Ball> balls, float dt) {
@@ -83,7 +83,7 @@ public class PlayerHandler extends ArrayList<Player> {
 	private void processServerUpdate() {
 		
 		for(Player player: playersToAdd) {
-			add(player);
+			super.add(player);
 		}
 		for(Player player: playersToRemove) {
 			remove(player);
@@ -126,14 +126,15 @@ public class PlayerHandler extends ArrayList<Player> {
 	/**
 	 * Only use when someone joins server and server notifies client.
 	 */
-	public void addPlayer(Player p) {
+	public boolean add(Player p) {
 		playersToAdd.add(p);
+		return true;
 	}
 	
 	/**
 	 * Only use when someone leaves server and server notifies client.
 	 */
-	public void removePlayer(long ID) {
+	public void remove(long ID) {
 		playersToRemove.add(getPlayerByID(ID));
 	}
 	

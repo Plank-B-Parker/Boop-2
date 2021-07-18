@@ -33,8 +33,9 @@ public class Player {
 	//Acceleration used to match speed and position on server.
 	private Vec2f acceleration = new Vec2f();
 	private Vec2f trackingVel = new Vec2f();  //Velocity used to smoothly reduce displacement error.
-	private float cP = 0.001f;
-	private float cV = -0.005f;
+	//Interesting problem: find coefficients for fastest rise time, with oscillations bellow a particular value;
+	private float cP = 100f;
+	private float cV = 15f;
 	
 	
 	public static final float attractionCoefficient = 0.001f; //multiplied by number of owned balls to give attraction strength.
@@ -59,7 +60,7 @@ public class Player {
 		tempVecs.startOfMethod();
 		/////////////////////////
 		Vec2f disp = tempVecs.getVec();
-		Physics.disp(disp, centrePos, b.phys.pos);
+		Physics.disp(disp, centreInServer, b.phys.pos);
 		///////////////////////
 		tempVecs.endOfMethod();
 		
@@ -68,29 +69,52 @@ public class Player {
 	
 	public void updatePos(float dt) {
 		Vec2f.increment(centrePos, centrePos, velocity, dt);
+		Vec2f.increment(centreInServer, centreInServer, velocityInServer, dt);
 		
 		if (centrePos.y < -1) centrePos.y += 2;
 		if (centrePos.x < -1) centrePos.x += 2;
 		if (centrePos.y > 1) centrePos.y -= 2;
 		if (centrePos.x > 1) centrePos.x -= 2;
+		
+		if (centreInServer.y < -1) centreInServer.y += 2;
+		if (centreInServer.x < -1) centreInServer.x += 2;
+		if (centreInServer.y > 1) centreInServer.y -= 2;
+		if (centreInServer.x > 1) centreInServer.x -= 2;
 	}
 	
 	public void updateVel(float dt) {
 		Vec2f.increment(trackingVel, trackingVel, acceleration, dt);
-		if(this == PlayerHandler.Me)
+		if(this == PlayerHandler.Me) {
 			Vec2f.scale(velocity, direction, maxSpeed);
+			Vec2f.scale(velocityInServer, direction, maxSpeed);
+		}
 		else
 			Vec2f.scale(velocity, velocity, 0);
 		
 		Vec2f.add(velocity, velocity, trackingVel);
 	}
 	
-	public void updateTimer(float dt) {
-		timeSinceLastUpdate += dt;
+	public void updateAcc() {
+		// acc = cP*(posServer - pos) + cV(velServer - vel)
+		
+		//cP*(posServer - pos)
+		var posTerm = Vec2f.minDisp(centreInServer, centrePos);
+		posTerm = Vec2f.scale(posTerm, cP);
+		
+		//cV*(velServer - vel)
+		var velTerm = Vec2f.sub(velocityInServer, velocity);
+		velTerm = Vec2f.scale(velTerm, cV);
+		
+		//posTerm + velTerm
+		acceleration = Vec2f.add(posTerm, velTerm);
 	}
 	
-	public void resetTimer() {
-		timeSinceLastUpdate = 0;
+	public void serverUpdate(float posX, float posY, float velX, float velY, float radOfInf) {
+		centreInServer.x = posX;
+		centreInServer.y = posY;
+		velocityInServer.x = velX;
+		velocityInServer.y = velY;
+		this.radOfInf = radOfInf;
 	}
 	
 	public static Vec2f direction = new Vec2f(0,0);
@@ -134,27 +158,12 @@ public class Player {
 		
 	}
 	
-	public void serverUpdate(float posX, float posY, float velX, float velY, float radOfInf) {
-		centreInServer.x = posX;
-		centreInServer.y = posY;
-		velocityInServer.x = velX;
-		velocityInServer.y = velY;
-		this.radOfInf = radOfInf;
+	public void updateTimer(float dt) {
+		timeSinceLastUpdate += dt;
 	}
 	
-	public void updateAcc() {
-		// acc = cP*(posServer - pos) + cV(velServer - vel)
-		
-		//cP*(posServer - pos)
-		var posTerm = Vec2f.sub(centreInServer, centrePos);
-		posTerm = Vec2f.scale(posTerm, cP);
-		
-		//cV*(velServer - vel)
-		var velTerm = Vec2f.sub(velocityInServer, velocity);
-		velTerm = Vec2f.scale(velTerm, cV);
-		
-		//posTerm + velTerm
-		acceleration = Vec2f.add(posTerm, velTerm);
+	public void resetTimer() {
+		timeSinceLastUpdate = 0;
 	}
 
 	public final long getMsPing() {
@@ -165,5 +174,12 @@ public class Player {
 		this.msPing = msPing;
 	}
 	
+	/**Used for physics updates
+	 * Exact coordinates send from server.
+	 * @return
+	 */
+	public Vec2f getExactCentre() {
+		return centreInServer;
+	}
 }
 

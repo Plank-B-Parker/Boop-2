@@ -1,5 +1,6 @@
 package main;
 
+import java.awt.BasicStroke;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Font;
@@ -10,6 +11,7 @@ import java.net.InetAddress;
 
 import balls.Storage;
 import display.Display;
+import display.Renderer;
 import math.Bitmaths;
 import math.Vec2f;
 import networking.Packet;
@@ -29,6 +31,7 @@ public class Main {
 	
 	public Storage storage = new Storage();
 	public PlayerHandler players = new PlayerHandler();
+	public Renderer renderer = new Renderer();
 	
 	protected Keyboard keyboard;
 	protected Mouse mouse;
@@ -168,21 +171,69 @@ public class Main {
 			return;
 		}
 		do {
-			//having two graphics objects is really expensive.
-			Graphics2D g2d = (Graphics2D) bs.getDrawGraphics();
+			//Render Order: Background, Balls, HUD.
 			
+			Graphics2D g2d = (Graphics2D) bs.getDrawGraphics();
+			renderer.setGraphics(g2d);
+			
+			//Background:
 			g2d.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
+			drawBackGround(renderer);
+			
+			//Balls.
 			storage.renderBalls(g2d, dt, players, keyboard.isActive(Key.F));
 
+			//HUD.
 			drawPerformance(g2d);
-			
-			//Drawing client centre for debug.
-			g2d.setColor(Color.MAGENTA);
-			g2d.fillOval(Display.WINDOW_WIDTH/2, Display.WINDOW_HEIGHT/2, 3, 3);
+			drawPlayerCentre(g2d);	//Drawing client centre for debug.
 			
 			g2d.dispose();
 			bs.show();
 		}while(bs.contentsLost());
+	}
+	
+	private void drawBackGround(Renderer r) {
+		r.g.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
+		
+		
+		r.g.setStroke(new BasicStroke(3));
+		var numlines = 4;
+		for(float i = -1; i <= 1; i+= 1f/(float)numlines) {
+			r.drawLineSegment(new Vec2f(i,-1), new Vec2f(i,0.999f), false, Color.gray);
+			r.drawLineSegment(new Vec2f(-1,i), new Vec2f(0.999f, i), false, Color.gray);
+		}
+		
+		for(float x = -1; x <= 1; x += 1/(float)numlines) {
+			for(float y = -1; y <= 1; y += 1/(float)numlines) {
+				r.drawString("(" + x + ", " + y + ")", new Font("SansSerif", Font.PLAIN, 15), Color.DARK_GRAY, new Vec2f(x + 0.0025f,y + 0.0075f), PlayerHandler.Me.centrePos);
+			}
+		}
+		
+		
+	}
+	
+	//Make a renderer class with methods like this.
+	private void drawPlayerCentre(Graphics2D g) {
+		g.setColor(Color.ORANGE);
+
+		
+		Vec2f pos = Vec2f.minDisp(PlayerHandler.Me.getExactCentre(), PlayerHandler.Me.centrePos);
+		
+		float x = pos.x;
+		float y = pos.y;
+
+		double a = Math.sqrt(2)*Display.getDiameterOfVision() / 4;
+		double b = Math.sqrt(2)/Display.getDiameterOfVision();
+		
+		//Scaling for screen.
+		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);
+		int Y = (int)(((y + a)*b*Display.WINDOW_WIDTH) - (Display.WINDOW_WIDTH - Display.WINDOW_HEIGHT)/2);
+		
+		g.fillOval(X - 3, Y - 3, 2*3, 2*3);
+		
+		
+		g.setColor(Color.MAGENTA);
+		g.fillOval(Display.WINDOW_WIDTH/2, Display.WINDOW_HEIGHT/2, 3, 3);
 	}
 
 	public void drawPerformance(Graphics2D g2d) {

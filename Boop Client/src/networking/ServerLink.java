@@ -124,11 +124,11 @@ public class ServerLink implements Runnable{
 				var joining = (Bitmaths.bytesToString(data, 1 + 4 + 2 + nameLength, 1).equals("1"));
 				
 				var colourLength = data.length - ( 1 + 4 + 2 + nameLength + 1);
-				var colour = Integer.valueOf(Bitmaths.bytesToString(data, 1 + 4 + 2 + nameLength + 1, colourLength)) - (((255 << 8) + 255) << 8) + 255 + 1;
+				var colour = Integer.valueOf(Bitmaths.bytesToString(data, 1 + 4 + 2 + nameLength + 1, colourLength));
 				
 				
-				if(joining) main.players.addPlayer(new Player(false, ID, name, new Color(colour), new Vec2f()));
-				else main.players.removePlayer(ID);
+				if(joining) main.players.add(new Player(false, ID, name, new Color(colour), new Vec2f()));
+				else main.players.remove(ID);
 				
 				break;
 				

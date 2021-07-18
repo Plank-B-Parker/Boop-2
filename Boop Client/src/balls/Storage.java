@@ -44,7 +44,7 @@ public class Storage {
 			for(Ball ball: player.localBalls) {
 				if(ball.getID() != -1) {
 					ball.phys.calcAttraction(player.localBalls);
-					ball.phys.calcClientAttraction(player.centrePos, 0.01f);
+					ball.phys.calcClientAttraction(player.getExactCentre(), 0.01f);
 				}
 			}
 		}
