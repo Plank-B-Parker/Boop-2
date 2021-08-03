@@ -1,22 +1,105 @@
 package networking;
 
-import java.io.IOException;
+import java.awt.Color;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import balls.Ball;
 import math.Bitmaths;
 
-public class ClientHandler{
+public class ClientHandler implements Runnable{
 	
 	List<Client> clientsToAdd = new ArrayList<>(4);
 	List<Client> clientsToRemove = new ArrayList<>(4);
 	List<Client> clients = new ArrayList<>();
 	
 	private boolean everyOneKnowsAboutEveryOne = true;
+	
+	private Thread thread;
+	BlockingQueue<byte[]> dataBuffer;
+	
+	// Support for idea 1. A shared buffer between all clients and this class.
+	public ClientHandler() {
+		dataBuffer = Client.dataBufferAll;
+		thread = new Thread(this, "Client-Handler");
+		thread.setDaemon(true);
+	}
+	
+	@Override
+	public void run() {
+		while (ClientAccept.serverON) {
+			try {
+				byte[] data = dataBuffer.poll(2, TimeUnit.MILLISECONDS);
+				
+				if (data == null) continue; // TODO adjust polling time to help branch predictor
+				
+				handleData(data);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				Thread.currentThread().interrupt();
+			}
+		}
+	}
+	
+	private void handleData(byte[] data) {
+		// NOTE: Index 0 is packetID, Index 1-8 is the Client's ID (long)
+		// Payload starts at Index 9 !!!
+		var type = PacketData.getEnumByID(data[0]);
+		var client = findClientByID(Bitmaths.bytesToLong(data, 1));
+		
+		// Index at the start of the payload
+		final int headIndex = 9;
+		
+		if (client == null) return;
+		
+		switch (type) {
+		case CLIENT_JOIN:
+			client.setReadyToRecieveUDP(true);
+			System.out.println("Client class, ready for UDP");
+			break;
+		case CLIENT_DATA:
+			var nameLength = Integer.valueOf(Bitmaths.bytesToString(data, headIndex, 2)) - 10;
+			var name = Bitmaths.bytesToString(data, headIndex + 2, nameLength);
+			var colour = Integer.valueOf(Bitmaths.bytesToString(data, headIndex + 2 + nameLength, data.length - (headIndex + 2 + nameLength)));
+			
+			client.name = name;
+			client.colour = new Color(colour);
+			
+			//Colour last thing to be sent, relies on knowing the length of everything else.
+			break;
+		case PING:
+			var receiveTime = System.nanoTime();
+			
+			// Server is the originator when the packet contains both server and client time.
+			var isOriginator = data.length == PacketData.PING.getObjectSize() + headIndex;
+			
+			// Calculate ping and store data
+			if (isOriginator) {
+				var receivedClient = Bitmaths.bytesToLong(data, headIndex);
+				long serverToClient = receivedClient - Bitmaths.bytesToLong(data, headIndex + 8);
+				long clientToServer = receiveTime - receivedClient;
+				long rtt = serverToClient + clientToServer;
+				client.msPing = rtt / 1000000;
+			}
+			// Add time received to packet and echo back to client.
+			else {
+				byte[] echoData = new byte[8];
+				System.arraycopy(data, headIndex, echoData, 0, 8);
+				echoData = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(receiveTime), echoData);
+				echoData = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(16), echoData);
+				echoData = Bitmaths.pushByteToData(PacketData.PING.getID(), echoData);
+				client.sendData(echoData);
+			}
+			break;
+		default:
+			System.out.println("Packet type not supported to handle: " + data[0] + " ClientHandler");
+			break;
+		}
+	}
 	
 	public void updateClients(List<Ball> balls, float dt) {
 		if(clients == null) return;
@@ -102,7 +185,6 @@ public class ClientHandler{
 		for(Client client: clients) {
 			
 			List<Ball> ballsToRemove = new ArrayList<>();
-			//System.out.println("local balls size: " + client.localBalls.size());
 			
 			for(Ball ball: client.ownedBalls) {
 				if(ball.ownerID < 0)
@@ -126,18 +208,13 @@ public class ClientHandler{
 	public void pingClients() {
 		for (var client : clients) {
 			
-			if (!client.isReadyForPacket(1000, Packet.PING)) continue;
+			if (!client.isReadyForPacket(1000, PacketData.PING)) continue;
 			
 			long sendTime = System.nanoTime();
 			byte[] payload = Bitmaths.longToBytes(sendTime);
 			payload = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(8), payload); // payload length
-			payload = Bitmaths.pushByteToData(Packet.PING.getID(), payload);
-			try {
-				client.out.write(payload);
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.out.println("Something went wrong with this client: " + client.getIdentity());
-			}
+			payload = Bitmaths.pushByteToData(PacketData.PING.getID(), payload);
+			client.sendData(payload);
 		}
 	}
 	
@@ -177,7 +254,7 @@ public class ClientHandler{
 	
 	/**
 	 * Adds a client into the buffer.
-	 * @param client The client to be added.
+	 * @param newClient The client to be added.
 	 * @see {@link #moveWaitingClients}
 	 * Use this method to move the clients from the buffer to the clients list.
 	 */
@@ -225,10 +302,35 @@ public class ClientHandler{
 		return null;
 	}
 	
+	private Client findClientByID(long ID) {
+		for (var client : clients) {
+			if (client.getIdentity() == ID) return client;
+		}
+		
+		for (var client : clientsToAdd) {
+			if (client.getIdentity() == ID) return client;
+		}
+		
+		return null;
+	}
+	
 	/**
 	 * @return A reference to an unmodifiable list of all clients. (Elements are still mutable).
 	 */
 	public List<Client> getClients(){
 		return Collections.unmodifiableList(clients);
+	}
+	
+	public void startHandlingTcp() {
+		thread.start();
+	}
+	
+	public void stopHandlingTcp() {
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			Thread.currentThread().interrupt();
+		}
 	}
 }

@@ -9,6 +9,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -24,8 +25,8 @@ import math.Vec2f;
 import networking.Client;
 import networking.ClientAccept;
 import networking.ClientHandler;
-import networking.Packet;
-import networking.UDP;
+import networking.PacketData;
+import networking.UdpIo;
 
 public class Main {
 	
@@ -114,6 +115,7 @@ public class Main {
 			public void windowClosing(WindowEvent we) {
 				clientAcceptor.terminateServer();
 				udp.disconnect();
+				udpHandler.stopUdpHandler();
 				System.exit(0);
 			}
 		});
@@ -122,13 +124,18 @@ public class Main {
 	}
 	
 	ClientAccept clientAcceptor;
-	UDP udp;
+	UdpIo udp;
+	UdpIo.UdpHandler udpHandler;
 	
 	public void setupConnections() {
 		clientAcceptor = new ClientAccept(clientHandler);
-		udp = new UDP(clientAcceptor);
+		udp = new UdpIo(clientHandler);
+		udpHandler = udp.new UdpHandler();
+		
 		clientAcceptor.startServer();
-		udp.startUDP();
+		clientHandler.startHandlingTcp();
+		udp.startUdpIo();
+		udpHandler.startUdpHandler();
 	}
 	
 	private static final double TICK_RATE = 60.0;
@@ -145,7 +152,7 @@ public class Main {
 	
 	public void mainLoop() {
 		running = true;
-				
+		
 		final double NS_PER_UPDATE = 1000000000.0 / TICK_RATE;
 		double nsPerFrameLimit = 1000000000.0 / fps_cap;
 
@@ -230,11 +237,11 @@ public class Main {
 			}
 			
 			if (System.nanoTime() - timer >= 1000000000) {
-				packetsRecievedPerSec = udp.RecievedPacketsUDP.get() - packetsRecievedLastTotal;
-				packetsSentPerSec = udp.SentPacketsUDP.get() - packetsSentLastTotal;
+				packetsRecievedPerSec = UdpIo.recievedPacketsUDP.get() - packetsRecievedLastTotal;
+				packetsSentPerSec = UdpIo.sentPacketsUDP.get() - packetsSentLastTotal;
 				
-				packetsRecievedLastTotal = udp.RecievedPacketsUDP.get();
-				packetsSentLastTotal = udp.SentPacketsUDP.get();
+				packetsRecievedLastTotal = UdpIo.recievedPacketsUDP.get();
+				packetsSentLastTotal = UdpIo.sentPacketsUDP.get();
 				
 				TPS = ticks;
 				FPS = frames;
@@ -348,17 +355,25 @@ public class Main {
 	public void clockSynchronise() {
 		final List<Client> clients = clientHandler.getClients();
 		
+		List<Client> readyClients = new ArrayList<>();
+		
 		for (Client client : clients) {
+			if (client.isReadyForPacket(1000, PacketData.CLOCK_SYN) || !client.isReadyToRecieveUDP()) {
+				readyClients.add(client);
+			}
+		}
+		
+		for (Client client : readyClients) {
 			byte[] data = Bitmaths.longToBytes(System.currentTimeMillis());
-			data = Bitmaths.pushByteToData(Packet.CLOCK_SYN.getID(), data);
-			data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(client.udpPacketsSent.incrementAndGet()), data);
+			data = Bitmaths.pushByteToData(PacketData.CLOCK_SYN.getID(), data);
+			data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(client.incrementUdpPacketsSent()), data);
 			
 			udp.sendData(data, client.getIpv4Address(), client.getClientPort());
 		}
 		
 	}
 	
-	public static void main(String args[]){
+	public static void main(String[] args){
 		var t = Thread.currentThread();
 		t.setName("Main-Loop");
 		

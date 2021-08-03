@@ -14,7 +14,7 @@ import display.Display;
 import display.Renderer;
 import math.Bitmaths;
 import math.Vec2f;
-import networking.Packet;
+import networking.PacketData;
 import networking.ServerLink;
 import networking.UdpLink;
 
@@ -23,10 +23,8 @@ public class Main {
 	public volatile boolean running = false;
 	protected Canvas canvas = new Canvas();
 	public Display display;
-	public ServerLink serverLink;
-	public UdpLink udpLink;
 	
-	private long[] timeSinceLastPacket = new long[Packet.values().length];
+	private long[] timeSinceLastPacket = new long[PacketData.getEnums().length];
 	public volatile boolean disconnectedByServer = false;
 	
 	public Storage storage = new Storage();
@@ -49,9 +47,18 @@ public class Main {
 		canvas.addMouseMotionListener(mouse);
 	}
 	
+	
+	private ServerLink serverLink;
+	private ServerLink.ServerLinkHandler serverLinkHandler;
+	private UdpLink udpLink;
+	private UdpLink.UdpLinkHandler udpLinkHandler;
+	
+	// Connections are created but not running. Starts from a button in StartMenu class
 	public void setupConnections() {
 		serverLink = new ServerLink(this);
+		serverLinkHandler = serverLink.new ServerLinkHandler();
 		udpLink = new UdpLink(this);
+		udpLinkHandler = udpLink.new UdpLinkHandler();
 	}
 	
 	private static final double TICK_RATE = 60.0;
@@ -102,7 +109,6 @@ public class Main {
 				if (!serverLink.getServerConnection() || !udpLink.isConnected()) break;
 				
 				sendInputs();
-				udpLink.processServerUpdate();
 				
 				timeAfterLastTransmit -= NS_PER_UPDATE;
 			}
@@ -117,11 +123,11 @@ public class Main {
 			}
 			
 			if (System.nanoTime() - timer >= 1000000000) {
-				packetsRecievedPerSec = udpLink.recievedPacketsUDP.get() - packetsRecievedLastTotal;
-				packetsSentPerSec = udpLink.sentPacketsUDP.get() - packetsSentLastTotal;
+				packetsRecievedPerSec = UdpLink.recievedPacketsUDP.get() - packetsRecievedLastTotal;
+				packetsSentPerSec = UdpLink.sentPacketsUDP.get() - packetsSentLastTotal;
 				
-				packetsRecievedLastTotal = udpLink.recievedPacketsUDP.get();
-				packetsSentLastTotal = udpLink.sentPacketsUDP.get();
+				packetsRecievedLastTotal = UdpLink.recievedPacketsUDP.get();
+				packetsSentLastTotal = UdpLink.sentPacketsUDP.get();
 				
 				display.updatePlayerID(PlayerHandler.Me.ID);
 				
@@ -148,12 +154,12 @@ public class Main {
 	private void sendInputs() {
 		// sends any input changes to the server
 		
-		if (!isServerReadyForPacket(100, Packet.DUMMY)) return;
+		if (!isServerReadyForPacket(100, PacketData.CLIENT_DIR)) return;
 		
 		byte[] data = new byte[0];
 		data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.x), data);
 		data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.y), data);
-		data = Bitmaths.pushByteToData((byte)5, data);
+		data = Bitmaths.pushByteToData(PacketData.CLIENT_DIR.getID(), data);
 		udpLink.sendData(data);
 	}
 	
@@ -254,7 +260,7 @@ public class Main {
 	 * @param msDelayBetweenPackets Delay in milliseconds between each packet of this type.
 	 * @param packet The packet type being sent.
 	 */
-	public boolean isServerReadyForPacket(float msDelayBetweenPackets, Packet packet) {
+	public boolean isServerReadyForPacket(float msDelayBetweenPackets, PacketData packet) {
 		long currentTime = System.currentTimeMillis();
 		long lastPacketTime = timeSinceLastPacket[packet.ordinal()];
 		long dt = currentTime - lastPacketTime;
@@ -268,15 +274,19 @@ public class Main {
 		return true;
 	}
 	
-	// Called by the Display Class when user starts game (A separate event thread!!!).
+	// Called by the StartMenu Class when user starts game (A separate event thread!!!).
 	public void connectToServer(InetAddress serverIP) throws IOException {
 		serverLink.connectToServer(serverIP);
+		serverLinkHandler.startServerLinkHandler();
 		udpLink.connectToServerUDP(serverIP, serverLink.getMyPort());
+		udpLinkHandler.startUdpLinkHandler();
 	}
 	
 	public void disconnectServer() {
 		serverLink.stopRunningTCP();
+		serverLinkHandler.stopServerLinkHandler();
 		udpLink.stopRunningUDP();
+		udpLinkHandler.stopUdpLinkHandler();
 		System.out.println("Successfully disconnected");
 	}
 	
@@ -290,6 +300,7 @@ public class Main {
 	
 	public void stopGame() {
 		// disconnect
+		disconnectServer();
 		running = false;
 	}
 	

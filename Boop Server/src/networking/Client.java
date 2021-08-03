@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,21 +22,30 @@ public class Client implements Runnable{
 	
 	private Socket myClientSocket;
 	
-	DataInputStream in;
-	DataOutputStream out;
+	private DataInputStream in;
+	private DataOutputStream out;
 	
 	private long ID = 0;
 	private InetAddress ipv4Address;
-	private long msPing = 0;
+	long msPing = 0;
 	
 	private int clientPort;
 	
-	public LinkedBlockingQueue<byte[]> dataBuffer;
+	// TODO Idea 1. All clients share same buffer but impl has a lock on item insertion
+	// so throughput is limited when adding data.
+	// (Low ping clients are favoured more in a queue)
+	static final BlockingQueue<byte[]> dataBufferAll = new LinkedBlockingQueue<>(120);
+	
+	// TODO Idea 2. Each client has their own smaller buffer but throughput is maximised.
+	// Requires much more memory and every buffer must be checked/handled for data in a loop
+	// meaning the delay in handling a client increases as number of clients increase.
+	// (Ping value does not make a difference here)
+	private final BlockingQueue<byte[]> dataBuffer;
 	
 	private volatile boolean connected = false;
-	public volatile boolean readyToRecieveUDP = false;
+	private volatile boolean readyToRecieveUDP = false;
 	
-	Thread clientThread;
+	private Thread clientThread;
 	
 	//Set these values up at client and have them sent.
 	String name = "Pakistan > India";
@@ -54,19 +65,19 @@ public class Client implements Runnable{
 	public List<Ball> ownedBalls = new ArrayList<>();	//list of balls that the player possesses.
 	public List<Ball> localBalls = new ArrayList<>(); // All balls in the  territory.
 	
-	private long[] timeSinceLastPacket = new long[Packet.values().length];
+	private long[] timeSinceLastPacket = new long[PacketData.getEnums().length]; // in milliseconds
 
 	private float maxSpeed = 0.3f; //Speed that the client's centre moves
 	private boolean[] pressedKeys = new boolean[4]; // Array to track which keys are being pressed
 	
-	public AtomicInteger udpPacketsSent = new AtomicInteger(0);
-	public AtomicInteger udpPacketsRecieved = new AtomicInteger(0);
+	private AtomicInteger udpPacketsSent = new AtomicInteger(0);
+	private AtomicInteger udpPacketsRecieved = new AtomicInteger(0);
 	
 	
 	public Client() {
 		clientThread = new Thread(this, "Client-Thread");
+		clientThread.setDaemon(true);
 		
-		// Accessing thread will be blocked until the queue is not empty.
 		dataBuffer = new LinkedBlockingQueue<>(30);
 		
 		centrePos.set(0f, 0f);
@@ -77,8 +88,7 @@ public class Client implements Runnable{
 		while(connected && ClientAccept.serverON) {
 			// Read data in stream and store in buffer
 			try {
-				dataBuffer.add(recieveData());
-				handleAllData();
+				dataBufferAll.add(recieveData());
 			} catch (IOException e) {
 				e.printStackTrace();
 				disconnect();
@@ -87,71 +97,36 @@ public class Client implements Runnable{
 		}
 	}
 	
+	/**
+	 * Reads the exact length of data for the packet and returns the data with altered header information
+	 * <p>
+	 * Will remove the length of payload (integer) and instead add the ID of the client to the array
+	 * </p>
+	 * @return payload of the packet received with additional information
+	 * @throws IOException
+	 */
 	private byte[] recieveData() throws IOException{
 		var packetID = in.readByte();
-		if (packetID == Packet.DISCONNECT.getID()) throw new IOException();
+		if (packetID == PacketData.DISCONNECT.getID()) throw new IOException();
 		
 		// Reads the correct length of data to store into the dataBuffer.
 		var len = in.readInt();
-		byte[] data = new byte[len + 1];
-		data[0] = packetID;
+		byte[] data = new byte[len];
+		data = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(ID), data);
+		data = Bitmaths.pushByteToData(packetID, data);
 		
 		byte[] payload = in.readNBytes(len);
 		
-		System.arraycopy(payload, 0, data, 1, len);
+		System.arraycopy(payload, 0, data, 9, len);
 		
 		return data;
 	}
 	
-	private void handleAllData() throws IOException{
-		while (!dataBuffer.isEmpty()) {
-			byte[] data = dataBuffer.poll();
-			
-			switch (data[0]) {
-			
-			case 71:
-				readyToRecieveUDP = true;
-				System.out.println("Client class, ready for UDP");
-				break;
-			case 70:
-				var nameLength = Integer.valueOf(Bitmaths.bytesToString(data, 1, 2)) - 10;
-				var name = Bitmaths.bytesToString(data, 3, nameLength);
-				var colour = Integer.valueOf(Bitmaths.bytesToString(data, 3 + nameLength, data.length - (3 + nameLength)));
-				
-				this.name = name;
-				this.colour = new Color(colour);
-				
-				//Colour last thing to be sent, relies on knowing the length of everything else.
-				break;
-			case 5:
-				var receiveTime = System.nanoTime();
-				
-				// Server is the sender when the packet contains both server and client time.
-				var isServerSender = data.length == Packet.PING.getObjectSize() + 1;
-				
-				// Calculate ping and store data
-				if (isServerSender) {
-					var receivedClient = Bitmaths.bytesToLong(data, 1);
-					long serverToClient = receivedClient - Bitmaths.bytesToLong(data, 9);
-					long clientToServer = receiveTime - receivedClient;
-					long rtt = serverToClient + clientToServer;
-					msPing = rtt / 1000000;
-				}
-				// Add time received to packet and echo back to client.
-				else {
-					byte[] echoData = new byte[8];
-					System.arraycopy(data, 1, echoData, 0, 8);
-					echoData = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(receiveTime), echoData);
-					echoData = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(16), echoData);
-					echoData = Bitmaths.pushByteToData(Packet.PING.getID(), echoData);
-					out.write(echoData);
-				}
-				
-				break;
-			default:
-				System.out.println("Tcp packet id not supported: " + data[0]);
-				break;
-			}
+	public void sendData(byte[] data) {
+		try {
+			out.write(data);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -166,7 +141,7 @@ public class Client implements Runnable{
 		
 		in = new DataInputStream(myClientSocket.getInputStream());
 		out = new DataOutputStream(myClientSocket.getOutputStream());
-		out.writeLong(ID);
+		sendData(Bitmaths.longToBytes(ID));
 		
 		ipv4Address = socket.getInetAddress();
 		clientPort = socket.getPort();
@@ -195,25 +170,17 @@ public class Client implements Runnable{
 		
 		byte[] clientData = Bitmaths.stringArrayToBytes(clientStringData);
 		clientData = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(payload), clientData);
-		clientData = Bitmaths.pushByteToData((byte) 70, clientData);
+		clientData = Bitmaths.pushByteToData(PacketData.CLIENT_JOIN.getID(), clientData);
 		
-		try {
-			out.write(clientData);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		sendData(clientData);
 	}
 	
 	public void finishSetUp(){
 		byte[] data = {5};
 		data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(1), data);
-		data = Bitmaths.pushByteToData((byte) 71, data);
-		try {
-			out.write(data);
-			System.out.println("client class- last set up data sent");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		data = Bitmaths.pushByteToData(PacketData.CLIENT_JOIN.getID(), data);
+		sendData(data);
+		System.out.println("client class- last set up data sent");
 	}
 	
 	public void disconnect(){
@@ -221,8 +188,8 @@ public class Client implements Runnable{
 			connected = false;
 			try {
 				if (!myClientSocket.isClosed()) {
-					byte[] disconnect = {Packet.DISCONNECT.getID()};
-					out.write(disconnect);
+					byte[] disconnect = {PacketData.DISCONNECT.getID()};
+					sendData(disconnect);
 					myClientSocket.close();
 				}
 			} catch (IOException e1) {
@@ -244,13 +211,13 @@ public class Client implements Runnable{
 	 * @param msDelayBetweenPackets Delay in milliseconds between each packet of this type.
 	 * @param packet The packet type being sent.
 	 */
-	public boolean isReadyForPacket(float msDelayBetweenPackets, Packet packet) {
+	public boolean isReadyForPacket(float msDelayBetweenPackets, PacketData packet) {
 		long currentTime = System.currentTimeMillis();
 		long lastPacketTime = timeSinceLastPacket[packet.ordinal()];
 		long dt = currentTime - lastPacketTime;
 		
 		
-		if (dt < msDelayBetweenPackets || !readyToRecieveUDP) {
+		if (dt < msDelayBetweenPackets) {
 			return false;
 		}
 		
@@ -318,13 +285,9 @@ public class Client implements Runnable{
 		clientPosData[0] = (float) 3 * 4; // 3 floats * 4 bytes = 12 byte payload (length)
 		
 		byte[] clientPos = Bitmaths.floatArrayToBytes(clientPosData);
-		clientPos = Bitmaths.pushByteToData((byte) 70, clientPos);
+		clientPos = Bitmaths.pushByteToData(PacketData.CLIENT_DATA.getID(), clientPos);
 		
-		try {
-			out.write(clientPos);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		sendData(clientPos);
 	}
 	
 	public void updateRadii() {
@@ -360,7 +323,29 @@ public class Client implements Runnable{
 		return msPing;
 	}
 	
-//	public void updateLocalBalls() {
-//		
-//	}
+	public final int incrementUdpPacketsReceived() {
+		return udpPacketsRecieved.incrementAndGet();
+	}
+	
+	
+	public final int getUdpPacketsReceived() {
+		return udpPacketsRecieved.get();
+	}
+	
+	public final int incrementUdpPacketsSent() {
+		return udpPacketsSent.incrementAndGet();
+	}
+	
+	public final int getUdpPacketsSent() {
+		return udpPacketsSent.get();
+	}
+
+	public final boolean isReadyToRecieveUDP() {
+		return readyToRecieveUDP;
+	}
+
+	public final void setReadyToRecieveUDP(boolean readyToRecieveUDP) {
+		this.readyToRecieveUDP = readyToRecieveUDP;
+	}
+
 }

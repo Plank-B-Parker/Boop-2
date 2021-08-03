@@ -8,8 +8,9 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import display.Display;
@@ -17,136 +18,62 @@ import main.Main;
 import main.PlayerHandler;
 import math.Bitmaths;
 
+/**
+ * Deals with the receiving and sending of packets using the UDP protocol.
+ * <p>
+ * Packets received are put into a linked blocking queue for the handler class to deal
+ * with.
+ */
 public class UdpLink implements Runnable{
 	
 	private DatagramSocket socket;
 	private InetAddress serverIP;
 	volatile boolean connected = false;
-	
-	//Contains all the packets sent from server before they are processed.
-	private ArrayList<byte[]> updateQueue = new ArrayList<>();
+	private BlockingQueue<DatagramPacket> packets;
 	
 	private Thread threadUDP;
 	Main main;
 	
 	public UdpLink(Main main) {
 		this.main = main;
+		packets = new LinkedBlockingQueue<>(60);
 		
-		threadUDP = new Thread(this, "UDP-Thread");
+		threadUDP = new Thread(this, "Udp-Link");
 		threadUDP.setDaemon(true);
 	}
 	
-	public AtomicInteger recievedPacketsUDP = new AtomicInteger(0);
-	public AtomicInteger sentPacketsUDP = new AtomicInteger(0);
+	public static final AtomicInteger recievedPacketsUDP = new AtomicInteger(0);
+	public static final AtomicInteger sentPacketsUDP = new AtomicInteger(0);
 	
 	@Override
 	public void run() {
 		while (connected) {
-			byte[] data = new byte[Packet.MAX_PAYLOAD_SIZE];
+			byte[] data = new byte[PacketData.MAX_PAYLOAD_SIZE];
 			
 			DatagramPacket packet = new DatagramPacket(data, data.length);
 			try {
 				socket.receive(packet);
-				handleData(packet.getData());
-				//updateQueue.add(packet.getData());
-			} catch (IOException e) {
+				boolean enqueued = packets.offer(packet, 2, TimeUnit.MILLISECONDS);
+				
+				if (!enqueued) {
+					System.out.println("No space to enqueue udp packet: UdpIO class run()");
+				}
+				
+			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
+				Thread.currentThread().interrupt();
 				if (e.getClass() == SocketTimeoutException.class) {
 					System.out.println("UDP Socket Timeout");
 				}
-				else {closeConnection();}
-				
+				else {
+					closeConnection();
+				}
+				break;
 			}
 			
 			
 		}
 		
-	}
-	
-	public void processServerUpdate() {
-		if (! connected) return;
-		
-		int numPackets = updateQueue.size();
-		
-		byte[][] updates = new byte[numPackets][];
-		updateQueue.toArray(updates);
-		updateQueue = new ArrayList<>();
-		
-		for(int i = 0; i < numPackets; i++) {
-			byte[] data = updates[i];
-			handleData(data);
-		}
-	}
-	
-	private boolean firstBall = false;
-	private void handleData(byte[] data) {
-		// Data[0] is packetID and the next 4 bytes (int)
-		// is the number of udp packets sent by the server
-		// TODO Use above number to deal with out of order packets and packet loss.
-		switch (data[0]) {
-		case 2: // New balls
-			recievedPacketsUDP.incrementAndGet();
-			
-			if(!firstBall) {
-				System.out.println("UDP LINK: GOT BALL DATA");
-				firstBall = true;
-			}
-			byte[] newData = Arrays.copyOfRange(data, 5, data.length);
-			
-			float[] ballData = new float[newData.length / 4];
-			ByteBuffer.wrap(newData).asFloatBuffer().get(ballData);
-			
-			int numberOfItems = Packet.NEW_BALLS.getNumberOfItems();
-			int bytesPerBall = Packet.NEW_BALLS.getMaxPayload() / Packet.NEW_BALLS.getNumObj();
-			int numberOfEntities = newData.length / bytesPerBall;
-			
-			// update balls
-			float currentBall[] = new float[numberOfItems];
-			for (int i = 0; i < numberOfEntities; i++) {
-				int offset = i * numberOfItems;
-				
-				//Put all data into currentBall.
-				for(int j = 0; j < numberOfItems; j++) {
-						currentBall[j] = ballData[offset + j];
-					}
-				
-				main.storage.setBallData(currentBall);
-				
-				// System.out.println("Packet number: " + Bitmaths.bytesToInt(data, 0));
-				// System.out.println("Packets recieved: " + recievedPacketsUDP.get());
-				// System.out.println("////////////////////////////////");
-			}
-			
-			break;
-		case 7: // Clock synchronisation
-			recievedPacketsUDP.incrementAndGet();
-			break;
-			
-		case 70:// Handle player positions here
-			recievedPacketsUDP.incrementAndGet();
-			
-			byte[] newDataa = Arrays.copyOfRange(data, 5, data.length);
-			
-			for(var i = 0; i < newDataa.length; i += Packet.CLIENTDATA.getObjectSize()) {
-				var posX = Bitmaths.bytesToFloat(newDataa, i);
-				var posY = Bitmaths.bytesToFloat(newDataa, i + 4);
-				var velX = Bitmaths.bytesToFloat(newDataa, i + 8);
-				var velY = Bitmaths.bytesToFloat(newDataa, i + 12);
-				var radOfInf = Bitmaths.bytesToFloat(newDataa, i + 16);
-				var ID = Bitmaths.bytesToLong(newDataa, i + 20);
-		
-				if(ID == PlayerHandler.Me.ID)
-					Display.setDiameterInServerFromRadOfInf(radOfInf);
-				main.players.serverUpdatePlayer(ID, posX, posY, velX, velY, radOfInf);
-			}
-			
-			
-			// System.out.println("I'm recieving client info - UdpLink CLASS");
-			break;
-			
-		default:
-			return;
-		}
 	}
 	
 	public void sendData(byte[] data) {
@@ -164,17 +91,11 @@ public class UdpLink implements Runnable{
 		this.serverIP = serverIPaddress;
 		
 		try {
-			this.socket = new DatagramSocket(localPort);
-			this.socket.setSoTimeout(5000);
+			socket = new DatagramSocket(localPort);
+			socket.setSoTimeout(5000);
 			
 			System.out.println("My UDP port: " + socket.getLocalPort());
 			System.out.println("My Local IP: " + InetAddress.getLocalHost());
-			
-			byte[] test = Bitmaths.intToBytes(localPort);
-			byte[] test2 = Bitmaths.pushByteToData((byte) 10, test);
-			
-			sendData(test2);
-			sendData(test2);
 			
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -218,4 +139,110 @@ public class UdpLink implements Runnable{
 	public boolean isConnected() {
 		return connected;
 	}
-}
+	
+	public class UdpLinkHandler implements Runnable{
+		
+		private Thread thread;
+		
+		public UdpLinkHandler() {
+			thread = new Thread(this, "UdpLink-Handler");
+			thread.setDaemon(true);
+		}
+		
+		@Override
+		public void run() {
+			while (connected) {
+				try {
+					var packet = packets.poll(2, TimeUnit.MILLISECONDS);
+					
+					if (packet == null) continue; // TODO adjust polling time to help branch predictor
+					
+					handleData(packet);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					Thread.currentThread().interrupt();
+				}
+			}
+		}
+		
+		private boolean firstBall = false;
+		private void handleData(DatagramPacket packet) {
+			// Data[0] is packetID and the next 4 bytes (int)
+			// is the number of udp packets sent by the server
+			
+			byte[] payload = new byte[packet.getData().length - 5];
+			System.arraycopy(packet.getData(), 5, payload, 0, packet.getLength() - 5);
+			PacketData dataPacket = PacketData.getEnumByID(packet.getData()[0]);
+			
+			switch (dataPacket) {
+			case NEW_BALLS:
+				recievedPacketsUDP.incrementAndGet();
+				
+				if(!firstBall) {
+					System.out.println("UDP LINK: GOT BALL DATA");
+					firstBall = true;
+				}
+				
+				float[] ballData = new float[payload.length / 4];
+				ByteBuffer.wrap(payload).asFloatBuffer().get(ballData);
+				
+				int numberOfItems = PacketData.NEW_BALLS.getNumberOfItems();
+				int bytesPerBall = PacketData.NEW_BALLS.getMaxPayload() / PacketData.NEW_BALLS.getNumObj();
+				int numberOfEntities = payload.length / bytesPerBall;
+				
+				// update balls
+				var currentBall = new float[numberOfItems];
+				for (int i = 0; i < numberOfEntities; i++) {
+					int offset = i * numberOfItems;
+					
+					//Put all data into currentBall.
+					for(var j = 0; j < numberOfItems; j++) {
+							currentBall[j] = ballData[offset + j];
+						}
+					
+					main.storage.setBallData(currentBall);
+				}
+				
+				break;
+			case CLOCK_SYN:
+				recievedPacketsUDP.incrementAndGet();
+				break;
+				
+			case CLIENT_DATA:
+				recievedPacketsUDP.incrementAndGet();
+				
+				for(var i = 0; i < payload.length; i += PacketData.CLIENT_DATA.getObjectSize()) {
+					var posX = Bitmaths.bytesToFloat(payload, i);
+					var posY = Bitmaths.bytesToFloat(payload, i + 4);
+					var velX = Bitmaths.bytesToFloat(payload, i + 8);
+					var velY = Bitmaths.bytesToFloat(payload, i + 12);
+					var radOfInf = Bitmaths.bytesToFloat(payload, i + 16);
+					var ID = Bitmaths.bytesToLong(payload, i + 20);
+			
+					if(ID == PlayerHandler.Me.ID)
+						Display.setDiameterInServerFromRadOfInf(radOfInf);
+					main.players.serverUpdatePlayer(ID, posX, posY, velX, velY, radOfInf);
+				}
+				break;
+			default:
+				System.out.println("Packet type not supported to handle: " + packet.getData()[0] + " UdpLinkHandler class");
+				return;
+			}
+		}
+		
+		public void startUdpLinkHandler() {
+			thread.start();
+		}
+		
+		public void stopUdpLinkHandler() {
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				Thread.currentThread().interrupt();
+			}
+		}
+		
+	} // End of UdpLinkHandler
+	
+} // End of UdpLink class

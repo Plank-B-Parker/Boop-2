@@ -1,22 +1,16 @@
 package networking;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class ClientAccept implements Runnable{
 	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5435601507210685540L;
 	ServerSocket serverSocket;
 	public static final int PORT = 2300;
-	Thread clientAcceptor;
+	private Thread clientAcceptor;
 	static volatile boolean serverON = false;
 	
 	ClientHandler clientHandler;
@@ -35,6 +29,7 @@ public class ClientAccept implements Runnable{
 		}
 		
 		clientAcceptor = new Thread(this, "Client-Acceptor");
+		clientAcceptor.setDaemon(true);
 	}
 
 	@Override
@@ -50,8 +45,6 @@ public class ClientAccept implements Runnable{
 				var socket = serverSocket.accept();
 				
 				setUpClient(client, socket);
-				
-				//Handle data in client allows client to be ready for UDP.
 				
 			} catch (IOException e) {
 				e.printStackTrace();

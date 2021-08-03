@@ -1,14 +1,13 @@
 package math;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.LongBuffer;
 import java.util.Arrays;
 
 public final class Bitmaths {
 	
 	private Bitmaths() { }
+	
+	// Longs
 	
 	public static byte[] longToBytes(long value) {
 		return ByteBuffer.allocate(8).putLong(value).array();
@@ -37,6 +36,8 @@ public final class Bitmaths {
 		return ByteBuffer.wrap(bytes).asLongBuffer().array();
 	}
 	
+	// Floats
+	
 	public static byte[] floatToBytes(float value) {
 		return ByteBuffer.allocate(4).putFloat(value).array();
 	}
@@ -63,6 +64,8 @@ public final class Bitmaths {
 	public static float[] bytesToFloatArray(byte[] bytes) {
 		return ByteBuffer.wrap(bytes).asFloatBuffer().array();
 	}
+	
+	// Integers
 	
 	public static byte[] intToBytes(int value) {
 		return ByteBuffer.allocate(4).putInt(value).array();
@@ -91,6 +94,37 @@ public final class Bitmaths {
 		return ByteBuffer.wrap(bytes).asIntBuffer().array();
 	}
 	
+	public static byte[] shortToBytes(short value) {
+		return ByteBuffer.allocate(4).putInt(value).array();
+	}
+	
+	// Shorts
+	
+	public static short bytesToShort(byte[] bytes) {
+		return ByteBuffer.wrap(bytes).getShort();
+	}
+	
+	public static short bytesToShort(byte[] bytes, int index) {
+		if (index > bytes.length - 2) return -1;
+		return ByteBuffer.wrap(bytes).getShort(index);
+	}
+	
+	public static byte[] shortArrayToBytes(short[] shorts) {
+		var byteBuffer = ByteBuffer.allocate(shorts.length * 2);
+		var shortBuffer = byteBuffer.asShortBuffer();
+		
+		for (short s: shorts) {
+			shortBuffer.put(s);
+		}
+		return byteBuffer.array();
+	}
+	
+	public static short[] bytesToShortArray(byte[] bytes) {
+		return ByteBuffer.wrap(bytes).asShortBuffer().array();
+	}
+	
+	// Bytes
+	
 	public static byte[] pushByteToData(byte frontByte, byte[] data) {
 		byte[] newData = new byte[data.length + 1];
 		System.arraycopy(data, 0, newData, 1, data.length);
@@ -108,10 +142,12 @@ public final class Bitmaths {
 		return newData;
 	}
 	
+	/**
+	 * Returns the bytes for the primitive type of the number.
+	 */
 	public static byte[] numberToBytes(Number number) {
 		byte[] bytes = intToBytes(number.intValue());
 		
-
 		if (number.getClass() == Float.class) {
 			bytes = floatToBytes(number.floatValue());
 		}
@@ -119,12 +155,15 @@ public final class Bitmaths {
 			bytes = longToBytes(number.longValue());
 		}
 		else if (number.getClass() == Short.class) {
-			number.shortValue();
+			bytes = shortToBytes(number.shortValue());
 		}
 		
 		return bytes;
 	}
 	
+	/**
+	 * Converts the array of numbers into bytes for their respective primitive types.
+	 */
 	public static byte[] numberArrayToBytes(Number[] numbers) {
 		byte[] bytes = new byte[0];
 		

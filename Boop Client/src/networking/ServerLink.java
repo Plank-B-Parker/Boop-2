@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import main.Main;
 import main.Player;
@@ -24,15 +25,15 @@ public class ServerLink implements Runnable{
 	public long ID = -1;
 	
 	volatile boolean serverConnection = false;
-	boolean setUpDataRecieved = false;
-	boolean establishedUDP = false;
+	volatile boolean setUpDataRecieved = false;
+	volatile boolean establishedUDP = false;
 	
 	DataInputStream in;
 	DataOutputStream out;
 	
-	Thread threadTCP;
+	private Thread threadTCP;
 	
-	public LinkedBlockingQueue<byte[]> dataBuffer;
+	private LinkedBlockingQueue<byte[]> dataBuffer;
 	
 	Main main;
 	
@@ -50,14 +51,20 @@ public class ServerLink implements Runnable{
 		readIDfromServer();
 		sendMyData();
 		
-		while(serverConnection) {
+		while (serverConnection) {
 			try {
 				// Read data in stream and store in buffer	
 				byte[] data = recieveData();
-				if (data.length != 0) dataBuffer.add(data);
-				handleAllTCPData();
+				// Is there any data to offer and does the buffer have space to do so?
+				if (data.length != 0) {
+					var enqueued = dataBuffer.offer(data, 2, TimeUnit.MILLISECONDS);
+					if (!enqueued) {
+						System.out.println("No space to enqueue tcp packet: ServerLinkHandler class run()");
+					}
+				}
+				
 				//When client is fully initialised and set up, tell server to start sending udp.
-				if(setUpDataRecieved && !establishedUDP) {
+				if (setUpDataRecieved && !establishedUDP) {
 					readyForUDP();
 					establishedUDP = true;
 				}
@@ -66,6 +73,9 @@ public class ServerLink implements Runnable{
 				e.printStackTrace();
 				main.disconnectedByServer = true;
 				closeConnection();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				Thread.currentThread().interrupt();
 			}
 			
 		}
@@ -77,15 +87,15 @@ public class ServerLink implements Runnable{
 		byte packetID = in.readByte();
 		if (packetID == -1) return new byte[0];
 		
-		if (packetID == Packet.DISCONNECT.getID()) {
+		if (packetID == PacketData.DISCONNECT.getID()) {
 			main.disconnectedByServer = true;
 			return new byte[0];
 		}
 		
 		var len = in.readInt();
 		
-		var packet = Packet.getPacketByID(packetID);
-		if (packet == null || len > packet.getMaxPayload() || len < 0) return new byte[0];
+		var packet = PacketData.getEnumByID(packetID);
+		if (packet == PacketData.INVALID || len > packet.getMaxPayload() || len < 0) return new byte[0];
 		
 		byte[] data = new byte[len + 1];
 		data[0] = packetID;
@@ -99,69 +109,6 @@ public class ServerLink implements Runnable{
 	
 	public void sendData(byte[] data) throws IOException {
 		out.write(data);
-	}
-	
-	// Handles all available data in the buffer
-	public void handleAllTCPData() throws IOException {
-		
-		// Handles each type of packet. (Plan to add methods for specific data handling)
-		while (!dataBuffer.isEmpty()) {
-			byte[] data = dataBuffer.poll();
-			
-			switch (data[0]) {
-			case 71:
-				setUpDataRecieved = true;
-				System.out.println("Server Link Class, last data recieved");
-				break;
-			case 70:
-				//Last thing sent.
-				//Other Players info.
-				var ID = Long.parseLong(Bitmaths.bytesToString(data, 1, 4));
-				
-				var nameLength = Integer.valueOf(Bitmaths.bytesToString(data,  1 + 4, 2)) - 10;
-				String name = Bitmaths.bytesToString(data, 1 + 4 + 2, nameLength);
-				
-				var joining = (Bitmaths.bytesToString(data, 1 + 4 + 2 + nameLength, 1).equals("1"));
-				
-				var colourLength = data.length - ( 1 + 4 + 2 + nameLength + 1);
-				var colour = Integer.valueOf(Bitmaths.bytesToString(data, 1 + 4 + 2 + nameLength + 1, colourLength));
-				
-				
-				if(joining) main.players.add(new Player(false, ID, name, new Color(colour), new Vec2f()));
-				else main.players.remove(ID);
-				
-				break;
-				
-			case 5:
-				var receiveTime = System.nanoTime();
-				
-				// Client is the sender when the packet contains both client and server time.
-				var isClientSender = data.length == Packet.PING.getObjectSize() + 1;
-				
-				// Calculate ping and store data
-				if (isClientSender) {
-					var receivedServer = Bitmaths.bytesToLong(data, 1);
-					long clientToServer = receivedServer - Bitmaths.bytesToLong(data, 9);
-					long serverToClient = receiveTime - receivedServer;
-					long rtt = clientToServer + serverToClient;
-					PlayerHandler.Me.setMsPing(rtt / 1000000);
-				}
-				// Add time received to packet and echo back to server.
-				else {
-					byte[] echoData = new byte[8];
-					System.arraycopy(data, 1, echoData, 0, 8);
-					echoData = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(receiveTime), echoData);
-					echoData = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(16), echoData);
-					echoData = Bitmaths.pushByteToData(Packet.PING.getID(), echoData);
-					out.write(echoData);
-				}
-				break;
-				
-			default:
-				return;
-			}
-		}
-		
 	}
 	
 	private void readIDfromServer() {
@@ -190,7 +137,7 @@ public class ServerLink implements Runnable{
 		
 		byte[] myDataBytes = Bitmaths.stringArrayToBytes(myData);
 		myDataBytes = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(payload), myDataBytes);
-		myDataBytes = Bitmaths.pushByteToData((byte) 70, myDataBytes);
+		myDataBytes = Bitmaths.pushByteToData(PacketData.CLIENT_DATA.getID(), myDataBytes);
 		
 		try {
 			sendData(myDataBytes);
@@ -199,15 +146,12 @@ public class ServerLink implements Runnable{
 		}
 	}
 	
-	private void readyForUDP() {
+	private void readyForUDP() throws IOException{
+		System.out.println("Informing server that I'm ready for UDP");
 		byte[] data = {5};
 		data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(1), data);
-		data = Bitmaths.pushByteToData((byte) 71, data);
-		try {
-			sendData(data);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		data = Bitmaths.pushByteToData(PacketData.CLIENT_JOIN.getID(), data);
+		sendData(data);
 	}
 	
 	public void connectToServer(InetAddress serverIP) throws IOException{
@@ -264,4 +208,106 @@ public class ServerLink implements Runnable{
 		return serverConnection;
 	}
 	
-}
+	public class ServerLinkHandler implements Runnable {
+
+		private Thread thread;
+		
+		public ServerLinkHandler() {
+			thread = new Thread(this, "ServerLink-Handler");
+			thread.setDaemon(true);			
+		}
+		
+		@Override
+		public void run() {
+			while (serverConnection) {
+				try {
+					var data = dataBuffer.poll(2, TimeUnit.MILLISECONDS); 
+					
+					if (data == null) continue; // TODO adjust polling time to help branch predictor
+					
+					handleTCPData(data);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					Thread.currentThread().interrupt();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		public void handleTCPData(byte[] data) throws IOException {
+			
+			var packetType = PacketData.getEnumByID(data[0]);
+			
+			switch (packetType) {
+			case CLIENT_JOIN:
+				setUpDataRecieved = true;
+				System.out.println("Server Link Class, last data recieved");
+				break;
+			case CLIENT_DATA:
+				//Last thing sent.
+				//Other Players info.
+				var playerID = Long.parseLong(Bitmaths.bytesToString(data, 1, 4));
+				
+				var nameLength = Integer.valueOf(Bitmaths.bytesToString(data,  1 + 4, 2)) - 10;
+				String name = Bitmaths.bytesToString(data, 1 + 4 + 2, nameLength);
+				
+				var joining = (Bitmaths.bytesToString(data, 1 + 4 + 2 + nameLength, 1).equals("1"));
+				
+				var colourLength = data.length - ( 1 + 4 + 2 + nameLength + 1);
+				var colour = Integer.valueOf(Bitmaths.bytesToString(data, 1 + 4 + 2 + nameLength + 1, colourLength));
+				
+				
+				if(joining) main.players.add(new Player(false, playerID, name, new Color(colour), new Vec2f()));
+				else main.players.remove(playerID);
+				
+				break;
+				
+			case PING:
+				var receiveTime = System.nanoTime();
+				
+				// Client is the sender when the packet contains both client and server time.
+				var isClientSender = data.length == PacketData.PING.getObjectSize() + 1;
+				
+				// Calculate ping and store data
+				if (isClientSender) {
+					var receivedServer = Bitmaths.bytesToLong(data, 1);
+					long clientToServer = receivedServer - Bitmaths.bytesToLong(data, 9);
+					long serverToClient = receiveTime - receivedServer;
+					long rtt = clientToServer + serverToClient;
+					PlayerHandler.Me.setMsPing(rtt / 1000000);
+				}
+				// Add time received to packet and echo back to server.
+				else {
+					byte[] echoData = new byte[8];
+					System.arraycopy(data, 1, echoData, 0, 8);
+					echoData = Bitmaths.pushByteArrayToData(Bitmaths.longToBytes(receiveTime), echoData);
+					echoData = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(16), echoData);
+					echoData = Bitmaths.pushByteToData(PacketData.PING.getID(), echoData);
+					out.write(echoData);
+				}
+				break;
+				
+			default:
+				return;
+			}
+			
+		}
+		
+		public void startServerLinkHandler() {
+			thread.start();
+		}
+		
+		public void stopServerLinkHandler() {
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				Thread.currentThread().interrupt();
+			}
+		}
+		
+		
+	} // End of ServerLinkHandler class
+	
+} // End of ServerLink class
