@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import display.Display;
+import main.GameState;
 import main.Keyboard;
 import main.Main;
 
@@ -41,7 +42,7 @@ public abstract class Bot extends Main {
 		display = new Display(this, canvas);
 		display.setVisible(doRender);
 
-		keyboard = new Keyboard();
+		keyboard = new Keyboard(gameStateFocus);
 		mouse = new BotMouse(acceptMouseInput);
 		
 		display.addKeyListener(keyboard);
@@ -49,7 +50,7 @@ public abstract class Bot extends Main {
 	}
 	
 	public void connectToServer(InetAddress serverIP) throws IOException {
-		display.showCard("Game");
+		display.showCard(GameState.MAIN_GAME.toString());
 		super.connectToServer(serverIP);
 	}
 

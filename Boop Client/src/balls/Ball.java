@@ -132,14 +132,15 @@ public class Ball {
 		}
 		if(ownerID > 0) {
 			boolean pain = (players.getPlayerByID(ownerID) == null);
-			if(pain == true && pain != false) {
+			if(pain) {
 				System.out.println("ouch, it hurts man. Not cool - class : Ball ");
-				System.out.println("is players list null?: " + players == null);
 				System.out.println("number of players: " + players.size());
 				System.out.println("their ID: " + players.get(0).ID);
 			}
+			else {
+				colour = players.getPlayerByID(ownerID).colour;
+			}
 			
-			colour = players.getPlayerByID(ownerID).colour;
 		}
 		
 		g.setColor(colour);

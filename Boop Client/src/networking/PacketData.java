@@ -5,28 +5,28 @@ package networking;
  */
 public enum PacketData {
 	
-	CLOCK_SYN	((byte) 1, 8, 1, 1),
-	PING		((byte) 2, 16, 1, 2),
-	PACKET_LOSS	((byte) 3, 4, 1, 1),
+	CLOCK_SYN	 ((byte) 1, 8, 1, 1, Protocol.TCP),
+	PING		 ((byte) 2, 16, 1, 2, Protocol.TCP),
+	PACKET_LOSS	 ((byte) 3, 4, 1, 1, Protocol.TCP),
 	
-	NEW_BALLS	((byte) 60, 1372, 49, 7),
-	OLD_BALLS	((byte) 61, 1392, 58, 6),
+	NEW_BALLS	 ((byte) 60, 1372, 49, 7, Protocol.UDP),
+	OLD_BALLS	 ((byte) 61, 1392, 58, 6, Protocol.UDP),
 	
-	CLIENT_DATA	((byte) 70, 896, 32, 6),
-	CLIENT_JOIN ((byte) 71, 1352, 13, 5),
-	CLIENT_INPUT((byte) 72, 5, 1, 5), // numberOfItems == number of Enums in Key class.
-	CLIENT_DIR	((byte) 73, 8, 1, 2),
+	CLIENT_DATA	 ((byte) 70, 896, 32, 6, Protocol.UDP),
+	CLIENT_SETUP ((byte) 71, 8, 1, 1, Protocol.TCP),
+	CLIENT_JOIN  ((byte) 72, 1352, 13, 5, Protocol.TCP),
+	CLIENT_INPUT ((byte) 73, 5, 1, 5, Protocol.UDP), // numberOfItems == number of Enums in Key class.
+	CLIENT_DIR	 ((byte) 74, 8, 1, 2, Protocol.UDP),
 	
-	DISCONNECT	((byte) -5, 0, 0, 0),
-	DUMMY		((byte) -8, 8, 1, 1),
+	DISCONNECT	 ((byte) -5, 0, 0, 0, Protocol.TCP),
+	DUMMY		 ((byte) -8, 8, 1, 1, Protocol.UDP),
 	
 	/**
 	 * Returned by {@link #getEnumById(byte)} if an enum object does not exist for the given packetID.
 	 */
-	INVALID		((byte) -127, 0, 0, 0);
+	INVALID		((byte) -127, 0, 0, 0, Protocol.UDP);
 	
 	public static final int MAX_PAYLOAD_SIZE = 1400;
-	public static final int FREE_PAYLOAD_SIZE = 1395;
 	
 	// Cache array to save time and in this case elements are immutable.
 	private static final PacketData[] values = values();
@@ -37,37 +37,47 @@ public enum PacketData {
 	private final int numObj;
 	private final int numberOfItems;
 	private final int objectSize;
+	private final Protocol protocol;
 	
-	private PacketData(byte packetID, int maxPayload, int numObj, int numberOfItems) {
+	private PacketData(byte packetID, int maxPayload, int numObj, int numberOfItems, Protocol protocol) {
 		this.packetID = packetID;
 		this.maxPayload = maxPayload;
 		this.numObj = numObj;
 		this.numberOfItems = numberOfItems;
+		this.protocol = protocol;
 		
 		objectSize = numObj != 0 ? maxPayload / numObj : 0;
 	}
 
-	public final byte getID() {
+	public byte getID() {
 		return packetID;
 	}
 
-	public final int getMaxPayload() {
+	public int getMaxPayload() {
 		return maxPayload;
 	}
 	
-	public final int getNumObj() {
+	public int getNumObj() {
 		return numObj;
 	}
 
-	public final int getNumberOfItems() {
+	public int getNumberOfItems() {
 		return numberOfItems;
 	}
 	
-	public final int getObjectSize() {
+	public Protocol getProtocol() {
+		return protocol;
+	}
+	
+	public int getObjectSize() {
 		return objectSize;
 	}
 	
-	public static final PacketData[] getEnums() {
+	public int getHeaderlessPayloadSize() {
+		return MAX_PAYLOAD_SIZE - protocol.getHeaderLength();
+	}
+	
+	public static PacketData[] getEnums() {
 		return values;
 	}
 	
@@ -75,7 +85,7 @@ public enum PacketData {
 	 * Returns an enum that exists with that packetID else an INVALID enum object is returned
 	 * @param packetID identifies a specific enum object
 	 */
-	public static final PacketData getEnumByID(byte packetID) {
+	public static PacketData getEnumByID(byte packetID) {
 		PacketData packet = INVALID;
 		
 		for (var p : values) {
@@ -88,4 +98,20 @@ public enum PacketData {
 		return packet;
 	}
 
-}
+	public enum Protocol{
+		TCP(5), // PacketID(byte) + Payload length(int) 
+		UDP(5); // PacketID(byte) + Packet Sequence(int)
+		
+		private final int headerLength;
+		
+		private Protocol(int headerLength) {
+			this.headerLength = headerLength;
+		}
+		
+		public int getHeaderLength() {
+			return headerLength;
+		}
+		
+	}
+	
+} // End of PacketData Enum

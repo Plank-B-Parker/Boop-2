@@ -9,7 +9,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferStrategy;
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -20,12 +19,10 @@ import balls.Storage;
 import debug.Key;
 import debug.Keyboard;
 import debug.Mouse;
-import math.Bitmaths;
 import math.Vec2f;
 import networking.Client;
-import networking.ClientAccept;
 import networking.ClientHandler;
-import networking.PacketData;
+import networking.Server;
 import networking.UdpIo;
 
 public class Main {
@@ -113,9 +110,7 @@ public class Main {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
-				clientAcceptor.terminateServer();
-				udp.disconnect();
-				udpHandler.stopUdpHandler();
+				server.stopServer();
 				System.exit(0);
 			}
 		});
@@ -123,19 +118,11 @@ public class Main {
 		frame.setVisible(true);
 	}
 	
-	ClientAccept clientAcceptor;
-	UdpIo udp;
-	UdpIo.UdpHandler udpHandler;
+	Server server;
 	
 	public void setupConnections() {
-		clientAcceptor = new ClientAccept(clientHandler);
-		udp = new UdpIo(clientHandler);
-		udpHandler = udp.new UdpHandler();
-		
-		clientAcceptor.startServer();
-		clientHandler.startHandlingTcp();
-		udp.startUdpIo();
-		udpHandler.startUdpHandler();
+		server = new Server(clientHandler);
+		server.startServer();
 	}
 	
 	private static final double TICK_RATE = 60.0;
@@ -215,17 +202,21 @@ public class Main {
 				final List<Client> clients = clientHandler.getClients();
 				if (clients.isEmpty()) break;
 				
-				clientHandler.pingClients();
+				server.synchroniseClientClocks(clients);
+				
+				server.pingClients();
 				
 				// Send position, velocity, influence and ID about every client to every client.
-				udp.sendAllClientInfo(clients);
+				server.sendAllClientInfo(clients);
 				
 				final List<Ball> balls = storage.getBalls();
 				
 				// send ballz
-				udp.sendBalls(balls, clients);
+				server.sendBalls(balls, clients);
 				
-				
+				// submit data to the packetHandler to handle data
+				server.submitEveryClientsData(clients);
+				server.submitAllUdpData();
 				timeAfterLastTransmit -= NS_PER_UPDATE;
 			}
 			
@@ -348,31 +339,6 @@ public class Main {
 		debug_ball.setPos(x, y);
 	}
 	
-	/**
-	 * Synchronises the client's clock to the server.
-	 * This stops the client manipulating time and correctly works out time sensitive information.
-	 */
-	public void clockSynchronise() {
-		final List<Client> clients = clientHandler.getClients();
-		
-		List<Client> readyClients = new ArrayList<>();
-		
-		for (Client client : clients) {
-			if (client.isReadyForPacket(1000, PacketData.CLOCK_SYN) || !client.isReadyToRecieveUDP()) {
-				readyClients.add(client);
-			}
-		}
-		
-		for (Client client : readyClients) {
-			byte[] data = Bitmaths.longToBytes(System.currentTimeMillis());
-			data = Bitmaths.pushByteToData(PacketData.CLOCK_SYN.getID(), data);
-			data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(client.incrementUdpPacketsSent()), data);
-			
-			udp.sendData(data, client.getIpv4Address(), client.getClientPort());
-		}
-		
-	}
-	
 	public static void main(String[] args){
 		var t = Thread.currentThread();
 		t.setName("Main-Loop");
@@ -381,5 +347,6 @@ public class Main {
 		main.createDisplay();
 		main.setupConnections();
 		main.mainLoop();
+		main.server.stopServer();
 	}
 }

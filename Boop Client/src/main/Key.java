@@ -1,33 +1,36 @@
 package main;
 
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Contains information about the functionality of a physical key and which GameState it's applicable in
+ */
 public enum Key {
+	
+	MOVE_UP(KeyEvent.VK_W, true, -1, GameState.MAIN_GAME),
+	MOVE_LEFT(KeyEvent.VK_A, true, -1, GameState.MAIN_GAME),
+	MOVE_DOWN(KeyEvent.VK_S, true, -1, GameState.MAIN_GAME),
+	MOVE_RIGHT(KeyEvent.VK_D, true, -1, GameState.MAIN_GAME),
 
-	W("Up", KeyEvent.VK_W, true, false, -1),
-	A("Left", KeyEvent.VK_A, true, false, -1),
-	S("Down", KeyEvent.VK_S, true, false, -1),
-	D("Right", KeyEvent.VK_D, true, false, -1),
-
-	F("Exact Coordinates", KeyEvent.VK_F, false, true, -1);
+	RENDER_BALLS_EXACT(KeyEvent.VK_F, false, -1, GameState.MAIN_GAME);
 	
+	// Cache array to save time and in this case elements are immutable.
+	private static final Key[] values = values();
 	
-	private String name;
-	private int keyCode;
-	private boolean hold;
-	private boolean toggle;
-	private long delay;
+	// Enforce immutability to stop setter methods from changing values.
 	
-	private Key(String name, int keyCode, boolean hold, boolean toggle, long delay){
-		this.name = name;
+	private final int keyCode; 		// which button on the keyboard that this action represents
+	private final boolean hold; 	// whether the action is a hold button or a toggle
+	private final long msDelay; 	// how long it takes before the key is considered active (only for Hold)
+	private final GameState scope; 	// The scope of which a Key is active for
+	
+	private Key(int keyCode, boolean hold, long msDelay, GameState scope){
 		this.keyCode = keyCode;
 		this.hold = hold;
-		this.toggle = toggle;
-		this.delay = delay;
-	}
-
-	public String getName() {
-		return name;
+		this.msDelay = msDelay;
+		this.scope = scope;
 	}
 
 	public int getKeyCode() {
@@ -38,11 +41,24 @@ public enum Key {
 		return hold;
 	}
 
-	public boolean isToggle() {
-		return toggle;
+	public long getMsDelay() {
+		return msDelay;
 	}
-
-	public long getDelay() {
-		return delay;
+	
+	public GameState getScope() {
+		return scope;
+	}
+	
+	public static Key[] getEnums() {
+		return values;
+	}
+	
+	public static List<Key> getAllKeysByKeyCode(int keyCode) {
+		List<Key> keys = new ArrayList<>();
+		for (var key : values) {
+			if (key.getKeyCode() == keyCode) keys.add(key);
+		}
+		
+		return keys;
 	}
 }

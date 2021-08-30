@@ -22,10 +22,10 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import main.GameState;
 import main.Keyboard;
 import main.Main;
 import main.PlayerHandler;
-import math.Vec2f;
 
 public class Display implements ActionListener{
 	Main main;
@@ -88,12 +88,11 @@ public class Display implements ActionListener{
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
-				main.disconnectServer();
+				main.stopGame();
 				System.exit(0);
 			}
 		});
 		frame.validate();
-		//canvas.setVisible(true);
 		frame.setVisible(true);
 	}
 	
@@ -109,11 +108,12 @@ public class Display implements ActionListener{
 		cards.setBackground(Color.WHITE);
 		
 		
-		Card startMenu = new StartMenu("startmenu", this);
-		Card optionsMenu = new OptionsMenu("options", this);
-		// Options menu requires development
+		Card startMenu = new StartMenu(GameState.START_MENU.toString(), this);
+		Card optionsMenu = new OptionsMenu(GameState.OPTIONS_MENU.toString(), this);
+		// TODO Options menu requires development
 		// Open/close on ESC key. Use the "show" method.
 		// Have a disconnect and settings option eventually
+		// Possibly create a new cards objects for stuff to be accessed during game-play
 		
 		cards.add(startMenu, startMenu.getName());
 		cardArray.add(startMenu);
@@ -122,7 +122,7 @@ public class Display implements ActionListener{
 		cardArray.add(optionsMenu);
 		
 		// Shows the only JPanel that has this name in the parent container
-		cl.show(cards, "startmenu");
+		showCard(GameState.START_MENU.toString());
 		cards.validate();
 		cards.setVisible(true);
 	}
@@ -162,11 +162,17 @@ public class Display implements ActionListener{
 	}
 	
 	public void showCard(String cardName) {
-		if(cardName == null || cardName == "" || cardName == "Game") {
+		if(cardName.equals(GameState.MAIN_GAME.toString())) {
 			cards.setVisible(false);
+			main.gameStateFocus.put(GameState.START_MENU, false);
+			main.gameStateFocus.put(GameState.OPTIONS_MENU, false);
+			main.gameStateFocus.put(GameState.MAIN_GAME, true);
 		} else {
 			cards.setVisible(true);
 			cl.show(cards, cardName);
+			main.gameStateFocus.put(GameState.START_MENU, false);
+			main.gameStateFocus.put(GameState.OPTIONS_MENU, false);
+			main.gameStateFocus.put(GameState.valueOf(cardName), true);
 	}
 	}
 	

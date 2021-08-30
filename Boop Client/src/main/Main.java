@@ -8,14 +8,14 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferStrategy;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.EnumMap;
+import java.util.Map;
 
 import balls.Storage;
 import display.Display;
 import display.Renderer;
-import math.Bitmaths;
 import math.Vec2f;
-import networking.PacketData;
-import networking.ServerLink;
+import networking.Client;
 import networking.UdpLink;
 
 public class Main {
@@ -23,8 +23,8 @@ public class Main {
 	public volatile boolean running = false;
 	protected Canvas canvas = new Canvas();
 	public Display display;
+	public Map<GameState, Boolean> gameStateFocus = new EnumMap<>(GameState.class);
 	
-	private long[] timeSinceLastPacket = new long[PacketData.getEnums().length];
 	public volatile boolean disconnectedByServer = false;
 	
 	public Storage storage = new Storage();
@@ -38,9 +38,14 @@ public class Main {
 	public boolean debugging;
 	
 	public void createDisplay() {
+		// Fill gameState map with default values
+		for (var state : GameState.values()) {
+			gameStateFocus.put(state, false);
+		}
+		
 		display = new Display(this, canvas);
-
-		keyboard = new Keyboard();
+		
+		keyboard = new Keyboard(gameStateFocus);
 		mouse = new Mouse();
 		
 		display.addKeyListener(keyboard);
@@ -48,17 +53,10 @@ public class Main {
 	}
 	
 	
-	private ServerLink serverLink;
-	private ServerLink.ServerLinkHandler serverLinkHandler;
-	private UdpLink udpLink;
-	private UdpLink.UdpLinkHandler udpLinkHandler;
-	
+	Client client;
 	// Connections are created but not running. Starts from a button in StartMenu class
 	public void setupConnections() {
-		serverLink = new ServerLink(this);
-		serverLinkHandler = serverLink.new ServerLinkHandler();
-		udpLink = new UdpLink(this);
-		udpLinkHandler = udpLink.new UdpLinkHandler();
+		client = new Client(players, storage);
 	}
 	
 	private static final double TICK_RATE = 60.0;
@@ -101,14 +99,9 @@ public class Main {
 			}
 			
 			while (timeAfterLastTransmit >= NS_PER_UPDATE) {
-				if (disconnectedByServer && serverLink.getServerConnection()) {
-					disconnectServer();
-					disconnectedByServer = false;
-				}
+				if (!client.isServerConnected()) break;
 				
-				if (!serverLink.getServerConnection() || !udpLink.isConnected()) break;
-				
-				sendInputs();
+				client.sendInputs();
 				
 				timeAfterLastTransmit -= NS_PER_UPDATE;
 			}
@@ -143,24 +136,12 @@ public class Main {
 	
 	private void processInputs() {
 		// Updates current state of data based on latest input.
-		if(mouse.mouseMoved || keyboard.somethingHapended) {
+		if(mouse.mouseMoved || keyboard.hasSomethingHappened()) {
 			mouse.mouseMoved = false;
-			keyboard.somethingHapended = false;
+			keyboard.clearSomethingHappened();
 		}
 		Player.processInputs(keyboard, mouse);
 		
-	}
-	
-	private void sendInputs() {
-		// sends any input changes to the server
-		
-		if (!isServerReadyForPacket(100, PacketData.CLIENT_DIR)) return;
-		
-		byte[] data = new byte[0];
-		data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.x), data);
-		data = Bitmaths.pushByteArrayToData(Bitmaths.floatToBytes(Player.direction.y), data);
-		data = Bitmaths.pushByteToData(PacketData.CLIENT_DIR.getID(), data);
-		udpLink.sendData(data);
 	}
 	
 	private void fixedUpdate(float dt) {
@@ -187,7 +168,7 @@ public class Main {
 			drawBackGround(renderer);
 			
 			//Balls.
-			storage.renderBalls(g2d, dt, players, keyboard.isActive(Key.F));
+			storage.renderBalls(g2d, dt, players, keyboard.isActive(Key.RENDER_BALLS_EXACT));
 
 			//HUD.
 			drawPerformance(g2d);
@@ -255,38 +236,14 @@ public class Main {
 		g2d.drawString("Rx: " + packetsRecievedPerSec, 140, 75);
 	}
 	
-	/**
-	 * Check if it's time to send the server a particular packet given a delay between the last one.
-	 * @param msDelayBetweenPackets Delay in milliseconds between each packet of this type.
-	 * @param packet The packet type being sent.
-	 */
-	public boolean isServerReadyForPacket(float msDelayBetweenPackets, PacketData packet) {
-		long currentTime = System.currentTimeMillis();
-		long lastPacketTime = timeSinceLastPacket[packet.ordinal()];
-		long dt = currentTime - lastPacketTime;
-		
-		
-		if (dt < msDelayBetweenPackets) {
-			return false;
-		}
-		
-		timeSinceLastPacket[packet.ordinal()] = currentTime;
-		return true;
-	}
-	
 	// Called by the StartMenu Class when user starts game (A separate event thread!!!).
+	// TODO Decide weather to add custom ports or stick to a specific one
 	public void connectToServer(InetAddress serverIP) throws IOException {
-		serverLink.connectToServer(serverIP);
-		serverLinkHandler.startServerLinkHandler();
-		udpLink.connectToServerUDP(serverIP, serverLink.getMyPort());
-		udpLinkHandler.startUdpLinkHandler();
+		client.connectToServer(serverIP, Client.SERVER_PORT);
 	}
 	
 	public void disconnectServer() {
-		serverLink.stopRunningTCP();
-		serverLinkHandler.stopServerLinkHandler();
-		udpLink.stopRunningUDP();
-		udpLinkHandler.stopUdpLinkHandler();
+		client.disconnectFromServer();
 		System.out.println("Successfully disconnected");
 	}
 	

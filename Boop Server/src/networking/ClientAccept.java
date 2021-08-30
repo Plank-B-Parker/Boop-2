@@ -1,100 +1,69 @@
 package networking;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.List;
-import java.util.Random;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.nio.channels.ServerSocketChannel;
+import java.util.concurrent.BlockingQueue;
 
-public class ClientAccept implements Runnable{
-	
-	ServerSocket serverSocket;
-	public static final int PORT = 2300;
-	private Thread clientAcceptor;
-	static volatile boolean serverON = false;
-	
-	ClientHandler clientHandler;
-	
-	
-	Random random = new Random();
-	
-	public ClientAccept(ClientHandler clientHandler) {
+public class ClientAccept implements Runnable {
+
+	private final Server server;
+	ServerSocketChannel serverChannel;
+	private BlockingQueue<Client> clientQueue;
+
+	private ClientHandler clientHandler;
+
+	private static final SocketAddress WILDCARD_ADDRESS = new InetSocketAddress(Server.PORT);
+
+	ClientAccept(Server server, ClientHandler clientHandler, BlockingQueue<Client> socketQueue) {
+		this.server = server;
 		this.clientHandler = clientHandler;
+		this.clientQueue = socketQueue;
+
 		try {
-			serverSocket = new ServerSocket(PORT);
-			
-			System.out.println("ServerIP: " + serverSocket.getLocalSocketAddress());
+			// Binds channel to local IP-address at server-port
+			serverChannel = ServerSocketChannel.open();
+			serverChannel.bind(WILDCARD_ADDRESS);
+			serverChannel.configureBlocking(false);
+
+			System.out.println("ServerIP: " + serverChannel.getLocalAddress());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		clientAcceptor = new Thread(this, "Client-Acceptor");
-		clientAcceptor.setDaemon(true);
+
 	}
 
 	@Override
 	public void run() {
-		while(serverON) {
+		var client = clientHandler.createNewClient();
+
+		while (server.serverON) {
 			try {
-				// creates new client with a unique ID
-				var client = createNewClient();
-				
-				System.out.println("Waiting for new Client");
-				
-				// Blocking method
-				var socket = serverSocket.accept();
-				
-				setUpClient(client, socket);
-				
+				var socketChannel = serverChannel.accept();
+				if (socketChannel == null)
+					continue;
+
+				client.setClientChannel(socketChannel);
+				clientQueue.put(client);
+
+				client = clientHandler.createNewClient();
 			} catch (IOException e) {
 				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				Thread.currentThread().interrupt();
 			}
 		}
 	}
-	
-	private void setUpClient(Client client, Socket socket)throws IOException {
-		client.setupConnection(socket);
-		//Anything to send or recieve here:
-		
-		
-		//
-		clientHandler.addClient(client);
-		client.finishSetUp();
+
+	public void closeServerChannel() throws IOException {
+		serverChannel.close();
+		clientQueue.clear();
 	}
-	
-	private Client createNewClient() {
-		var client = new Client();
-		List<Client> clients = clientHandler.getClients();
-		
-		var validID = true;
-		
-		do {
-			client.setIdentity((long) (Math.random() * 1000 + 1000));
-			for (var i = 0; i < clients.size(); i++) {
-				if (clients.get(i).getIdentity() == client.getIdentity()) {
-					validID = false;
-				}
-			}
-		} while (!validID); // While ID is not valid
-		
-		return client;
+
+	public BlockingQueue<Client> getClientBuffer() {
+		return clientQueue;
 	}
-	
-	public void startServer() {
-		serverON = true;
-		clientAcceptor.start();
-	}
-	
-	
-	public void terminateServer() {
-		serverON = false;
-		clientHandler.disconnectAllClients();
-		try {
-			serverSocket.close();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
+
 }

@@ -10,6 +10,7 @@ import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 
 import main.Actions;
+import main.GameState;
 
 public class StartMenu extends Card{
 
@@ -27,10 +28,10 @@ public class StartMenu extends Card{
 	protected void init(Display display) {
 		setLayout(null);
 		setBackground(new Color(255,255,255,0));
-		createComponents(display);
+		createComponents();
 	}
 	
-	private void createComponents(Display display) {
+	private void createComponents() {
 		JButton start = createButton(590, 300, 100, 60, "Start", Actions.START.name());
 		JButton exit = createButton(590, 400, 100, 60, "Exit", Actions.CLOSE.name());
 		start.setFont(Display.TEXT_FONT);
@@ -59,11 +60,13 @@ public class StartMenu extends Card{
 //				return;
 //			}
 			display.main.connectToServer(ip);
-			display.showCard("Game");
+			display.showCard(GameState.MAIN_GAME.toString());
 		}
 		
 		else if (action.equals(Actions.CLOSE.name())) {
 			// close program and connections here
+			display.main.stopGame();
+			System.exit(0);
 		}
 	}
 	

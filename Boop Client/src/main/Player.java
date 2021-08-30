@@ -123,19 +123,19 @@ public class Player {
 		Vec2f.scale(direction, direction, 0);
 	
 		//Calculate direction from keyboard.
-		if (keyboard.isActive(Key.W)) {
+		if (keyboard.isActive(Key.MOVE_UP)) {
 			direction.y -= 1;
 		}
 
-		if (keyboard.isActive(Key.A)) {
+		if (keyboard.isActive(Key.MOVE_LEFT)) {
 			direction.x -= 1;
 		}
 
-		if (keyboard.isActive(Key.S)) {
+		if (keyboard.isActive(Key.MOVE_DOWN)) {
 			direction.y += 1;
 		}
 
-		if (keyboard.isActive(Key.D)) {
+		if (keyboard.isActive(Key.MOVE_RIGHT)) {
 			direction.x += 1;
 		}
 		
