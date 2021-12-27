@@ -294,7 +294,7 @@ public class UDP implements Runnable{
 				offset = numberOfItems *  b1;
 				
 				floatData[packetsFilled][offset] = (float) ball.getID();
-				floatData[packetsFilled][offset + 1] = (float) ball.getType();
+				floatData[packetsFilled][offset + 1] = (float) ball.getType().ordinal();
 				floatData[packetsFilled][offset + 2] = ball.phys.pos.x;
 				floatData[packetsFilled][offset + 3] = ball.phys.pos.y;
 				floatData[packetsFilled][offset + 4] = ball.phys.vel.x;

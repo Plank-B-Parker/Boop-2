@@ -42,7 +42,6 @@ public class ClientHandler{
 				
 				if(!client.isInReach(ball)) {
 					ballsToRemove.add(ball);
-					ball.phys.magnetic = false;
 					//Set ID as not owned. Should be set to contested in later code if it is contested.
 					ball.setOwnerID(-1);
 				}
@@ -62,9 +61,6 @@ public class ClientHandler{
 				if(client.isInReach(ball)) {
 					
 					long ownerID = ball.getOwnerID();
-					
-					//Make sure balls in territories are magnetic.
-					ball.phys.magnetic = true;
 					
 					//If the ball already belongs to the current client... well, it belongs to the current client.
 					if(ownerID == client.getIdentity()) {

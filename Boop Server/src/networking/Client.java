@@ -339,7 +339,7 @@ public class Client implements Runnable{
 	 */
 	public boolean isInReach(Ball b) {
 		var disp = new Vec2f();
-		Physics.disp(disp, centrePos, b.phys.pos);
+		Vec2f.minDisp(disp, centrePos, b.phys.pos);
 		
 		return (disp.lengthSq() <= (radOfInf + b.getRad())*(radOfInf+b.getRad()));
 	}
@@ -351,7 +351,7 @@ public class Client implements Runnable{
 	 */
 	public boolean isInSendingRange(Ball b) {
 		var disp = new Vec2f();
-		Physics.disp(disp, centrePos, b.phys.pos);
+		Vec2f.minDisp(disp, centrePos, b.phys.pos);
 		
 		return (disp.lengthSq() <= (radOfVision + b.getRad())*(radOfVision + b.getRad()));
 	}

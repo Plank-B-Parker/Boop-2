@@ -2,11 +2,6 @@ package balls;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
-import java.util.List;
-
-import networking.Client;
-import networking.ClientAccept;
 import main.Main;
 import math.Physics;
 import math.Vec2f;
@@ -14,9 +9,7 @@ import math.Vec2f;
 public class Ball {
 
 	private int ID = -1;
-	private int type;
-	private float rad;
-	private Color colour;
+	private BallType type;
 	
 	//-1 if no one owns it, -2 if ball is contested.
 	public long ownerID = -1;
@@ -31,10 +24,15 @@ public class Ball {
 		setType(type);
 	}
 	
+	public Ball(BallType type) {
+		this.type = type;
+		phys.setType(this.type);
+	}
+	
 	public float[] getData() {
 		float data[] = new float[7];
 		data[0] = ID;
-		data[1] = type;
+		data[1] = type.ordinal();
 		data[2] = phys.pos.x;
 		data[3] = phys.pos.y;
 		data[4] = phys.vel.x; 
@@ -45,7 +43,7 @@ public class Ball {
 	
 	public void render(Graphics2D g, float dt) {
 		Vec2f pos = phys.pos;
-		Vec2f vel = phys.pos;
+		//Vec2f vel = phys.pos;
 		
 		float x = pos.x;
 		float y = pos.y;
@@ -53,27 +51,27 @@ public class Ball {
 		//Scaling for screen.
 		int X = (int)((x + 1)*0.5*Main.windowHeight);
 		int Y = (int)((y + 1)*0.5*Main.windowHeight);
-		int Rad = (int)(0.5*rad*Main.windowHeight);
+		int Rad = (int)(0.5*type.getRadius()*Main.windowHeight);
 		
 		//Second set of coordinates for edge.
 		int X2 = X;
 		int Y2 = Y;
 		
-		if(x + rad > 1) {
+		if(x + type.getRadius() > 1) {
 			X2 = X - Main.windowHeight;
 		}
-		else if(x - rad < -1) {
+		else if(x - type.getRadius() < -1) {
 			X2 = X + Main.windowHeight;
 		}
 		
-		if(y + rad > 1) {
+		if(y + type.getRadius() > 1) {
 			Y2 = Y - Main.windowHeight;
 		}
-		else if(y - rad < -1) {
+		else if(y - type.getRadius() < -1) {
 			Y2 = Y + Main.windowHeight;
 		}
 		
-		g.setColor(colour);
+		g.setColor(type.getColour());
 		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
 		if(X2 != X || Y2 != Y) {
 			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
@@ -108,46 +106,17 @@ public class Ball {
 		phys.vel.y = vel.y;
 	}
 	
-	public int getType() {
+	public BallType getType() {
 		return type;
 	}
 	
 	public void setType(int type) {
-		this.type = type;
-		switch(type) {
-		case 1:
-			phys.mass = 1;
-			phys.bounciness = 0.1f;
-			rad = 0.01f;
-			colour = Color.BLUE;
-			break;
-		case 2:
-			phys.mass = 16;
-			phys.bounciness = 0.1f;
-			rad = 0.04f;
-			colour = Color.RED;
-			break;
-		case 3:
-			phys.mass = 1;
-			phys.bounciness = 0.1f;
-			rad = 0.01f;
-			colour = Color.ORANGE;
-			break;
-		case 4:
-			phys.mass = 1;
-			phys.bounciness = 0.1f;
-			rad = 0.01f;
-			colour = Color.BLUE;
-			break;
-		}
+		this.type = BallType.getType(type);
+		phys.setType(this.type);
 	}
 
 	public float getRad() {
-		return rad;
-	}
-	
-	public void setRad(float rad) {
-		this.rad = rad;
+		return type.getRadius();
 	}
 
 	public long getOwnerID() {
@@ -159,11 +128,7 @@ public class Ball {
 	}
 
 	public Color getColour() {	
-		return colour;
-	}
-	
-	public void setColour(Color colour) {
-		this.colour = colour;
+		return type.getColour();
 	}
 	
 	public void setID(int ID) {

@@ -36,7 +36,7 @@ public class Storage {
 			for(Client client: clients) {
 				for(Ball ball: client.localBalls) {
 					ball.phys.calcAttraction(client.localBalls);
-					ball.phys.calcClientAttraction(client.centrePos, 0.01f);
+					ball.phys.calcClientAttraction(client.centrePos, 15f, client.radOfInf);
 				}
 			}
 		}

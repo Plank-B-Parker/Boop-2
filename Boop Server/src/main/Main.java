@@ -15,6 +15,7 @@ import java.util.Random;
 import javax.swing.JFrame;
 
 import balls.Ball;
+import balls.BallType;
 import balls.Storage;
 import debug.Key;
 import debug.Keyboard;
@@ -36,7 +37,7 @@ public class Main {
 	public Keyboard keyboard;
 	public Mouse mouse;
 	
-	private Ball debug_ball = new Ball(1);
+	private Ball ghost_ball = new Ball(0);
 	
 	BufferStrategy bs;
 	
@@ -52,10 +53,11 @@ public class Main {
 		//Add keyboard listener.
 		canvas.addKeyListener(keyboard);
 		canvas.addMouseMotionListener(mouse);
+		canvas.addMouseListener(mouse);
 		
-		storage.add(debug_ball);
+		storage.add(ghost_ball);
 		//temporary
-		debug_ball.setID(-5);
+		ghost_ball.setID(-5);
 		
 		Random random;
 		
@@ -63,23 +65,29 @@ public class Main {
 		if (deterministicPhysics) random = new Random(3);
 		else random = new Random();
 		
-		for(int i = 0; i < 100; i++) {
-			Ball ball = new Ball(1);
+		for(int i = 0; i < 300; i++) {
+			Ball ball = new Ball(BallType.PLAIN);
+			Ball ball2 = new Ball(BallType.SHRAPNEL);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
+			Vec2f.scale(ball.phys.pos, ball.phys.pos, 1f);
+			Vec2f.add(ball.phys.pos, ball.phys.pos, new Vec2f(0.5f,0));
+			
+			ball2.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
 			//ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
 			//ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
 			storage.add(ball);
+			//storage.add(ball2);
 		}
 		
 		
 		
-		for(int i = 0; i < 1; i++) {
-			Ball ball = new Ball(2);
+		for(int i = 0; i < 0; i++) {
+			Ball ball = new Ball(BallType.EXPLOSIVE);
 			ball.setPos(2f*(random.nextFloat() - 0.5f), 2f*(random.nextFloat() - 0.5f));
 			//ball.setPos(0, -0.98f*i);
-			ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
-			ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
+			//ball.phys.vel.x = 2f*(random.nextFloat() - 0.5f);
+			//ball.phys.vel.y = 2f*(random.nextFloat() - 0.5f);
 			storage.add(ball);
 		}
 		
@@ -216,7 +224,7 @@ public class Main {
 				final List<Ball> balls = storage.getBalls();
 				
 				// send ballz
-				udp.sendBalls(balls, clients);
+				//udp.sendBalls(balls, clients);
 				
 				
 				timeAfterLastTransmit -= NS_PER_UPDATE;
@@ -224,7 +232,7 @@ public class Main {
 			
 			if (System.nanoTime() - frameTimer >= nsPerFrameLimit) {
 				render(timeAfterLastTick / 1000000000f);
-				processInputs();
+				processInputs(timeAfterLastTick / 1000000000f);
 				frameTimer += nsPerFrameLimit;
 				frames++;
 			}
@@ -246,10 +254,26 @@ public class Main {
 		
 	}
 	
-	public void processInputs() {
+	float timmer = 0;
+	public void processInputs(float dt) {
 		boolean prevPause = physpaused;
+		
 		physpaused = keyboard.isActive(Key.K);
+		
 		if (prevPause != physpaused) keyboard.resetCount(Key.L);
+		
+		if (mouse.isHeld && timmer > 0.05) {
+			var newBall = new Ball(0);
+			
+			var smallOffset = new Vec2f((float)(Math.random())/100,(float)(Math.random())/100);
+			newBall.setPos(Vec2f.add(mouse.getMousePos(), smallOffset));
+			
+			storage.add(newBall);
+			
+			timmer = 0;
+		}
+		
+		timmer += dt;
 	}
 	
 	public void fixedUpdate(float dt) {
@@ -278,7 +302,7 @@ public class Main {
 			if (keyboard.isActive(Key.SPACE)) renderGrid(g2d);
 			
 			if (keyboard.isActive(Key.G)) debugBall();
-			else debug_ball.setPos(-10, -10);
+			else ghost_ball.setPos(-10, -10);
 			
 			storage.renderBalls(g2d, dt);
 			
@@ -310,6 +334,9 @@ public class Main {
 			g.drawOval(x - rad, y - rad, 2*rad, 2*rad);
 			g.setColor(Color.BLUE);
 			g.drawOval(x - radInf, y - radInf, 2*radInf, 2*radInf);
+			g.setColor(Color.YELLOW);
+			float number = 3f;
+			g.drawOval(x - (int)(radInf/number), y - (int)(radInf/number), (int)(2*radInf/number), (int)(2*radInf/number));
 			
 			g.setColor(Color.GREEN);
 			// TODO draw rectangle to show client's viewport.
@@ -336,9 +363,7 @@ public class Main {
 	
 	private void debugBall() {
 		Vec2f pos = mouse.getMousePos();
-		float x = pos.x / windowHeight * 2 - 1;
-		float y = pos.y / windowHeight * 2 - 1;
-		debug_ball.setPos(x, y);
+		ghost_ball.setPos(pos);
 	}
 	
 	/**

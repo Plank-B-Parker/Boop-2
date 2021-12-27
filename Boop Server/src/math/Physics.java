@@ -1,25 +1,31 @@
 package math;
 
 import java.util.List;
+
 import balls.Ball;
+import balls.BallType;
 import balls.Storage;
 
 public class Physics {
 	
-	//For pos, x and y go between -1 and 1.
-	//If they go above 1, then loop back to -1.
-	//If they go below -1, they loop to 1. 
+	//Motion and position attributes. 
 	public Vec2f pos = new Vec2f();
 	public Vec2f vel = new Vec2f();
 	public Vec2f acc = new Vec2f();
+	//For pos, x and y go between -1 and 1.
+	//If they go above 1, then loop back to -1.
+	//If they go below -1, they loop to 1.
 	
-	public float mass;
-	public float mag = 0.02f;
-	public boolean magnetic = false;
-	public float bounciness = 1f;
-	private static float dragCoefficient = 10f;
+	//Material attributes.
+	private float mass;
+	private float bounciness = 1f;
 	
+	//Game attributes.
 	private Ball owner;
+	
+	//Global world attributes.
+	private static float dragCoefficient = 5f;
+	private static float magStrength = 0.01f;
 	
 	//Temp variables to avoid object creation;
 	static VecPool tempVecs = new VecPool();
@@ -40,16 +46,8 @@ public class Physics {
 		
 		float KE = 0.5f*mass*vel.lengthSq();
 		float PE = 0;
-		
-		Vec2f disp = tempVecs.getVec();
 
-		for (Ball ball: balls) {
-			if(ball == owner)
-				continue;
-			disp(disp, ball.phys.pos, pos);
-			float dist = (float)Math.sqrt(disp.lengthSq());
-			PE -= mag*ball.phys.mag/dist;
-		}
+		//Calculate potential energy.
 		
 		/////////////////////////
 		tempVecs.endOfMethod();
@@ -66,23 +64,29 @@ public class Physics {
 		Vec2f.increment(pos, pos, vel, dt);
 		
 		//Set pos to be between -1 and 1;
-		normalisePos();
+		pos.nomaliseCoordinates();
 	}
 	
 	//Might try a more accurate integration method if I figure it out.
-	public void updateRungaCutta(float dt) {
+	private void updateRungaCutta(float dt) {
 		
 	}
 	
 	/**
-	 * Calculates the attractions of the ball to other balls in the list. 
+	 * Computes and adds the force of attraction to other balls in the list. 
 	 * @param balls: The balls this ball is attracted to.
 	 */
 	public void calcAttraction(List<Ball> balls) {
-		//Strong mid range attractive force.
-		addAttraction(balls, 1f, owner.getRad()*5, 0.5f);
-		//weaker small range repulsive force
-		addAttraction(balls, -10f, owner.getRad(), owner.getRad()*5f);
+		addAttraction(balls, 0f, 3f);
+	}
+	
+	/**
+	 * Computes and adds force attracting ball to client's centre.
+	 * @param clientPos
+	 * @param clientStrength
+	 */
+	public void calcClientAttraction(Vec2f clientPos, float clientStrength, float radOfInf) {
+		this.addAttraction(clientPos, clientStrength, radOfInf/3f);
 	}
 	
 	/**
@@ -96,15 +100,7 @@ public class Physics {
 	 * Adds drag to acceleration.
 	 */
 	public void calcDrag() {
-		addDrag();
-	}
-	
-	public void calcClientAttraction(Vec2f clientPos, float clientStrength) {
-		this.addAttraction(clientPos, clientStrength);
-	}
-	
-	//Drag force.
-	private void addDrag() {
+		//Df = - Cd * |v| * v
 		Vec2f.increment(acc, acc, vel, -dragCoefficient*(float)Math.sqrt(vel.lengthSq())/mass);
 	}
 	
@@ -114,9 +110,11 @@ public class Physics {
 	 * @param balls: A list of balls that could be colliding.
 	 */
 	public static void checkCollision(Storage balls) {
+		//Using vec pool as this generates a lot of vectors every update.
 		tempVecs.startOfMethod();
 		/////////////////////////
 		
+		//Vector for displacement between each pair of balls.
 		Vec2f disp = tempVecs.getVec();
 		
 		for(var i = 0; i < balls.numBalls - 1; i++) {
@@ -126,27 +124,26 @@ public class Physics {
 			//Go through every ball after current ball in list.
 			for(var j = i + 1; j < balls.numBalls; j++) {
 				var otherBall = balls.getBall(j);
+				if (otherBall.getID() == -1) continue; //The ball's not real :(
 				
-				if (otherBall.getID() == -1) continue;
-				
-				disp(disp, otherBall.phys.pos, ball.phys.pos);
-				float minimumDistance = ball.getRad() + otherBall.getRad();
+				Vec2f.minDisp(disp, otherBall.phys.pos, ball.phys.pos);	//disp = p2 - p1
+				float minimumDistance = ball.getRad() + otherBall.getRad();	// Minimum distance = distance between balls when they touch.
 				
 				//If distance between centres is bigger that the sum of the radi than skip.
-				if (disp.lengthSq() > minimumDistance*minimumDistance) {
+				if (disp.lengthSq() > minimumDistance*minimumDistance)
 					continue;
-				}
 				
 				float distance = (float)Math.sqrt(disp.lengthSq());
-				float overlap = minimumDistance - distance;
+				float overlap = minimumDistance - distance;	//Overlap of two balls radii.
 				
-				//Normalise disp.
+				//Normalise disp to length 1.
 				Vec2f.scale(disp, disp, 1f/distance);
 				
 				//Move balls apart to stop overlap.
 				ball.moveBall(disp, -overlap*0.5f);
 				otherBall.moveBall(disp, overlap*0.5f);
 				
+				//Impulse is momentum given to each ball due to collision.
 				float impulse = calcImpulse(ball, otherBall, disp);
 				
 				//Add impulse to the velocities.
@@ -154,19 +151,19 @@ public class Physics {
 				Vec2f.increment(otherBall.phys.vel, otherBall.phys.vel, disp, impulse/otherBall.phys.mass);
 				
 				
-				// If the types of each ball are exploding types, explode them into 16 smaller balls with 2J of explosion power
-				if (ball.getType() == 2 && otherBall.getType() == 2) {
-					Vec2f pos1 = tempVecs.getVec();
-					Vec2f pos2 = tempVecs.getVec();
+				// If the types of each ball are exploding types, explode them into 16 smaller balls with 4J of explosion power
+				if (ball.getType() == BallType.EXPLOSIVE && otherBall.getType() == BallType.EXPLOSIVE) {
 					
-					pos1 = ball.phys.pos.copy();
-					pos2 = otherBall.phys.pos.copy();
+					Vec2f pos1 = ball.phys.pos.copy();
+					Vec2f pos2 = otherBall.phys.pos.copy();
 					
-					ball.phys.explode(balls, 16, 0f);
-					otherBall.phys.explode(balls, 16, 0f);
+					int numberOfParts = (int) (BallType.EXPLOSIVE.getMass()/BallType.SHRAPNEL.getMass());
+					
+					ball.phys.explode(balls, numberOfParts, 5f);
+					otherBall.phys.explode(balls, numberOfParts, 5f);
 
-					shockwave(balls, pos1, 0.02f);
-					shockwave(balls, pos2, 0.02f);
+					shockwave(balls, pos1, 0.16f);
+					shockwave(balls, pos2, 0.16f);
 				}
 			}
 		}
@@ -175,8 +172,16 @@ public class Physics {
 		tempVecs.endOfMethod();
 	}
 	
-	//Calculates impulse of a collision.
+	/**
+	 * Calculates impulse of a collision.
+	 * @param ball1
+	 * @param ball2
+	 * @param norm
+	 * @return
+	 */
 	private static float calcImpulse(Ball ball1, Ball ball2, Vec2f norm) {
+		//Formula: 0.5*(e1 + e2)*dot(v1 - v2, normal)/(1/m1 + 1/m2)
+		
 		float e1 = ball1.phys.bounciness, e2 = ball2.phys.bounciness;
 		float m1 = ball1.phys.mass, m2 = ball2.phys.mass;
 		
@@ -186,121 +191,102 @@ public class Physics {
 		return (1+bounce)*(Vec2f.dot(v1, norm) - Vec2f.dot(v2, norm))/(1/m1 + 1/m2);
 	}
 	
-	/**
-	 * Calculates minimum distance between two points.
-	 * @param result
-	 * @param pos2
-	 * @param pos1
-	 */
-	public static void disp(Vec2f result, Vec2f pos2, Vec2f pos1) {
-		float x = pos2.x - pos1.x;
-		float y = pos2.y - pos1.y;
-		
-		if(x > 1) {
-			x = x-2;
-		}
-		if(x < -1) {
-			x = x+2;
-		}
-		
-		if(y > 1) {
-			y = y-2;
-		}
-		if(y < -1) {
-			y = y+2;
-		}
-		
-		result.x = x;
-		result.y = y;
-		
-		//Length of this vector is often divided by. Avoid 0 displacement. Might remove later.
-		if(x == 0 && y == 0) {
-			result.x = (float) Math.random();
-			result.y = (float) Math.random();
-		}
-	}
 	
-	//adds gravitational attraction to acc.
 	/**
-	 * Avoid making min Dist 0 as you can get infinite force if you're not careful.
-	 * @param acc: Current acceleration.
+	 * Adds magnetic attraction to acc due to other balls.
+	 * Avoid making minDist 0 as you can get infinite force if you're not careful.
 	 * @param balls: List of balls that this ball could be attracted to.
-	 * @param attractionStrength: Repulsive if negative.
 	 * @param minDist: Balls closer than this wont be affected.
 	 * @param maxDist: Balls farther than this wont be affected.
 	 */
-	private void addAttraction(List<Ball> balls, float attractionStrength, float minDist, float maxDist) {
+	private void addAttraction(List<Ball> balls, float minDist, float maxDist) {
 		tempVecs.startOfMethod();
 		/////////////////////////
+		
+		Vec2f disp = tempVecs.getVec();	//Vector for displacement.
 		
 		for(Ball ball: balls) {
 			//Skip if the other ball is this ball.
 			if (ball == owner) continue;
 			
-			Vec2f disp = tempVecs.getVec();
-			disp(disp, ball.phys.pos, pos);
+			Vec2f.minDisp(disp, ball.phys.pos, pos);	//p2 - p1
+			var distSq = disp.lengthSq();	//Distance squared.
 			
-			//If distance is less than minDist then skip.
-			if(disp.lengthSq()<minDist*minDist)
-				continue;
-			//If distance is bigger than maxDist then skip.
-			if(disp.lengthSq()>maxDist*maxDist)
+			//If distance is less than minDist or bigger than maxDist, then skip.
+			if(distSq < minDist*minDist || distSq > maxDist*maxDist)
 				continue;
 			
-			float distCubed = disp.lengthSq();
-			distCubed *= Math.sqrt(distCubed);
-			Vec2f.increment(acc, acc, disp, attractionStrength*mag*ball.phys.mag/(mass*distCubed));
+			//Get force constants for this type pairing.
+			float[] forceConstants = BallType.getTypeForces(owner.getType(), ball.getType());
+
+			//Near forces are repulsive if both magNears are the same sign.
+			Vec2f nearForce = tempVecs.getVec();
+			float nearForceConstant = forceConstants[0];
+			Vec2f.scale(nearForce, disp, magStrength*nearForceConstant/(mass*distSq*distSq));
+			
+			//Formula: F = (S * K1 ) * (r/|r|^4)
+			
+			
+			//Far forces are attractive if both magNears are the same sign.
+			Vec2f farForce = tempVecs.getVec();
+			float farForceConstant = forceConstants[1];
+			Vec2f.scale(farForce, disp, magStrength*farForceConstant/(mass*distSq));
+			
+			//Formula: F = (S * K2 ) * (r/|r|^2)
+			
+			Vec2f.add(acc, acc, nearForce);
+			Vec2f.add(acc, acc, farForce);
 		}
 		
 		///////////////////////
 		tempVecs.endOfMethod();
 	}
 	
-	private void addAttraction(Vec2f pos, float strength) {
+	/**
+	 * Adds magnetic attraction to acc due to a magnetic zone or area in the map
+	 * @param pos - Position of zone.
+	 * @param attractionStrength - Strength of attraction.
+	 * @param magDensity - Magnetic density.
+	 * @param rad - Radius of zone.
+	 */
+	private void addAttraction(Vec2f pos, float magDensity, float rad) {
 		tempVecs.startOfMethod();
 		/////////////////////////
 		
-		Vec2f disp = tempVecs.getVec();
-		disp(disp, pos, this.pos);
+		//Get force constant from type.
+		float forceConstant = BallType.getClientForce(owner.getType());
+		
+		Vec2f disp = tempVecs.getVec();	//Vector for displacement
+		Vec2f.minDisp(disp, pos, this.pos);	//p2 - p1
 		
 		float distSq = disp.lengthSq();
-		if(distSq < 0.005) return;
 		
-		float distCubed = (float)(distSq*Math.sqrt(distSq));
-		Vec2f.increment(acc, acc, disp, strength/(mass*distCubed));
+		//Area of magnetic zone.
+		float area = (float) Math.PI*Math.min(distSq, rad*rad);	//If outside of magnetic zone, then use area of entire zone.
+		
+		Vec2f.increment(acc, acc, disp, magStrength*forceConstant*magDensity*area/(mass*distSq));	//Using magFar for this.
+		//Formula: F = (K * m1 * area * magDensity) * (r/|r|^2)
 		
 		///////////////////////
 		tempVecs.endOfMethod();
 	}
 	
-	//Sets pos components to go between -1 and 1.
-	private void normalisePos() {
-		if(pos.x > 1) 
-			pos.x = -1 + pos.x%1f;
-		if(pos.x < -1)
-			pos.x = 1 + pos.x%1f;
-		
-		if(pos.y > 1) 
-			pos.y = -1 + pos.y%1f;
-		if(pos.y < -1)
-			pos.y = 1 + pos.y%1f;
-	}
 	
-	
-	private static int removeCount = 0;
-	// Makes a ball explode into a given number of parts with a given amount of extra energy
+	/**
+	 *  Makes a ball explode into a given number of parts with a given amount of extra energy
+	 * @param balls - Balls list.
+	 * @param parts - Number of parts.
+	 * @param energy - Shock wave energy.
+	 */
 	private void explode(Storage balls, int parts, float energy) {
 		tempVecs.startOfMethod();
 		/////////////////////////
 		
 		// Remove the ball that is exploding
 		owner.remove();
-		removeCount++;
-		System.out.println(removeCount);
 		
 		// Calculate the new radius and mass of each smaller ball part
 		float newRad = (float) (owner.getRad() / Math.sqrt(parts));
-		float newMass = mass / parts;
 		
 		// The small balls will spawn on the vertices of a regular polygon, with as many sides as there parts,
 		// with sides the length of a small ball's diameter and centred on the original ball's position.
@@ -317,9 +303,7 @@ public class Physics {
 		// Spawn in the small balls
 		for (var i = 0; i < parts; i++) {
 			
-			var ball = new Ball(3);
-			ball.setRad(newRad);
-			ball.phys.mass = newMass;
+			var ball = new Ball(BallType.SHRAPNEL);
 			
 			Vec2f direction = tempVecs.getVec();
 			direction.x = (float)Math.cos(angleDif * i);
@@ -347,22 +331,35 @@ public class Physics {
 			
 			var disp = tempVecs.getVec();
 			Vec2f.sub(disp, ball.phys.pos, centre);
-			float distCubed = disp.lengthSq();
-			distCubed *= Math.sqrt(distCubed);
 			
-			Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*distCubed + 0.01f));
+			Vec2f.increment(ball.phys.vel, ball.phys.vel, disp, impulse/(ball.phys.mass*disp.lengthSq() + 0.00001f));
 		}
 		
 		///////////////////////
 		tempVecs.endOfMethod();
 	}
 
+	/**
+	 * Returns the owner of the Physics object.
+	 * @return
+	 */
 	public final Ball getOwner() {
 		return owner;
 	}
-
+	/**
+	 * Sets the owner of the Physics object.
+	 * @param owner
+	 */
 	public final void setOwner(Ball owner) {
 		this.owner = owner;
+	}
+	
+	/**
+	 * Sets the material attributes of ball using type.
+	 */
+	public void setType(BallType type) {
+		mass = type.getMass();
+		bounciness = type.getBounciness();
 	}
 	
 }
