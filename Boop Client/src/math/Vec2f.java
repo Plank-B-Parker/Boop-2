@@ -1,7 +1,6 @@
 package math;
 
 public class Vec2f {
-	// COPIED from server file
 	
 	public float x = 0;
 	public float y = 0;
@@ -26,7 +25,7 @@ public class Vec2f {
 	 * @param x
 	 * @param y
 	 */
-	public void set(float x, float y) {
+	public void set(final float x, final float y) {
 		this.x = x;
 		this.y = y;
 	}
@@ -38,7 +37,7 @@ public class Vec2f {
 	 * @param A
 	 * @param B
 	 */
-	public static Vec2f add(Vec2f result, Vec2f A, Vec2f B) {
+	public static Vec2f add(Vec2f result, final Vec2f A, final Vec2f B) {
 		result.x = A.x + B.x;
 		result.y = A.y + B.y;
 		
@@ -52,7 +51,7 @@ public class Vec2f {
 	 * @param A
 	 * @param B
 	 */
-	public static Vec2f add(Vec2f A, Vec2f B) {
+	public static Vec2f add(final Vec2f A, final Vec2f B) {
 		Vec2f result = new Vec2f();
 		return add(result, A, B);
 	}
@@ -64,7 +63,7 @@ public class Vec2f {
 	 * @param A
 	 * @param B
 	 */
-	public static Vec2f sub(Vec2f result, Vec2f A, Vec2f B) {
+	public static Vec2f sub(Vec2f result, final Vec2f A, final Vec2f B) {
 		result.x = A.x - B.x;
 		result.y = A.y - B.y;
 		
@@ -78,7 +77,7 @@ public class Vec2f {
 	 * @param A
 	 * @param B
 	 */
-	public static Vec2f sub(Vec2f A, Vec2f B) {
+	public static Vec2f sub(final Vec2f A, final Vec2f B) {
 		Vec2f result = new Vec2f();
 		return sub(result, A, B);
 	}
@@ -91,7 +90,7 @@ public class Vec2f {
 	 * @param pos2
 	 * @param pos1
 	 */
-	public static Vec2f minDisp(Vec2f result, Vec2f pos2, Vec2f pos1) {
+	public static Vec2f minDisp(Vec2f result, final Vec2f pos2, final Vec2f pos1) {
 		float x = pos2.x - pos1.x;
 		float y = pos2.y - pos1.y;
 		
@@ -122,7 +121,7 @@ public class Vec2f {
 	 * @param pos2
 	 * @param pos1
 	 */
-	public static Vec2f minDisp(Vec2f pos2, Vec2f pos1) {
+	public static Vec2f minDisp(final Vec2f pos2, final Vec2f pos1) {
 		return minDisp(new Vec2f(), pos2, pos1);
 	}
 	
@@ -133,7 +132,7 @@ public class Vec2f {
 	 * @param A
 	 * @param B
 	 */
-	public static Vec2f scale(Vec2f result, Vec2f A, float k) {
+	public static Vec2f scale(Vec2f result, final Vec2f A, final float k) {
 		result.x = A.x*k;
 		result.y = A.y*k;
 		
@@ -146,7 +145,7 @@ public class Vec2f {
 	 * @param A
 	 * @param B
 	 */
-	public static Vec2f scale(Vec2f A, float k) {
+	public static Vec2f scale(final Vec2f A, final float k) {
 		return scale(new Vec2f(), A, k);
 	}
 	
@@ -158,7 +157,7 @@ public class Vec2f {
 	 * @param B
 	 * @param k
 	 */
-	public static Vec2f increment(Vec2f result, Vec2f A, Vec2f B, float k) {
+	public static Vec2f increment(Vec2f result, final Vec2f A, final Vec2f B, final float k) {
 		result.x = A.x + k*B.x;
 		result.y = A.y + k*B.y;
 		
@@ -172,7 +171,7 @@ public class Vec2f {
 	 * @param B
 	 * @param k
 	 */
-	public static Vec2f increment(Vec2f A, Vec2f B, float k) {
+	public static Vec2f increment(final Vec2f A, final Vec2f B, final float k) {
 		return increment(new Vec2f(), A, B, k);
 	}
 	
@@ -182,19 +181,29 @@ public class Vec2f {
 	 * @param B
 	 * @return
 	 */
-	public static float dot(Vec2f A, Vec2f B) {
+	public static float dot(final Vec2f A, final Vec2f B) {
 		return A.x*B.x + A.y*B.y;
 	}
+	
+	/**
+	 * Returns the magnitude/length of instance vector.
+	 * @return
+	 */
 	public float lengthSq() {
 		return x*x + y*y;
 	}
+	
 	/**
 	 * Sets vector to length 1 in same direction.
 	 */
 	public void normalise() {
 		scale(this,this, (float) (1/Math.sqrt(lengthSq())));
 	}
-	public void nomaliseCordinates() {
+	
+	/**
+	 * Sets coordinate to the minimum displacement between the coordinate and origin.
+	 */
+	public void nomaliseCoordinates() {
 		minDisp(this, this, Origin);
 	}
 }

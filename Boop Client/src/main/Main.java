@@ -176,39 +176,48 @@ public class Main {
 			Graphics2D g2d = (Graphics2D) bs.getDrawGraphics();
 			renderer.setGraphics(g2d);
 			
+			//Check if debugging;
+			boolean debugging = keyboard.isActive(Key.F);
+			
 			//Background:
 			g2d.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
-			drawBackGround(renderer);
+			drawBackGround(renderer, debugging);
 			
 			//Balls.
-			storage.renderBalls(g2d, dt, players, keyboard.isActive(Key.F));
+			storage.renderBalls(renderer, dt, players, debugging);
 
 			//HUD.
 			drawPerformance(g2d);
-			drawPlayerCentre(g2d);	//Drawing client centre for debug.
+			
+			//Debug layer
+			if(debugging) {
+				drawPlayerCentre(renderer);	//Drawing client centre for debug.
+			}
 			
 			g2d.dispose();
 			bs.show();
 		}while(bs.contentsLost());
 	}
 	
-	private void drawBackGround(Renderer r) {
+	private void drawBackGround(Renderer r, boolean debugging) {
 		r.g.clearRect(0, 0, Display.WINDOW_WIDTH, Display.WINDOW_HEIGHT);
-		
+		r.setCentre(PlayerHandler.Me.centrePos);
 		
 		r.g.setColor(Color.gray);
-		r.g.setStroke(new BasicStroke(3));
+		r.g.setStroke(new BasicStroke(2));
 		var numlines = 4;
-		for(float i = -1; i <= 1; i+= 1f/(float)numlines) {
+		for(float i = -1; i < 1; i+= 1f/(float)numlines) {
 			r.drawLineSegment(new Vec2f(i,-1), new Vec2f(i,0.999f), false);
 			r.drawLineSegment(new Vec2f(-1,i), new Vec2f(0.999f, i), false);
 		}
 
+		if(debugging) return;
+		
 		r.g.setColor(Color.DARK_GRAY);
 		r.g.setFont(new Font("SansSerif", Font.PLAIN, 15));
-		for(float x = -1; x <= 1; x += 1/(float)numlines) {
+		for(float x = -1; x < 1; x += 1/(float)numlines) {
 			for(float y = -1; y <= 1; y += 1/(float)numlines) {
-				r.drawString("(" + x + ", " + y + ")",new Vec2f(x + 0.0025f,y + 0.0075f), PlayerHandler.Me.centrePos);
+				r.drawString("(" + x + ", " + y + ")",new Vec2f(x,y), 10, 20);
 			}
 		}
 		
@@ -216,27 +225,13 @@ public class Main {
 	}
 	
 	//Make a renderer class with methods like this.
-	private void drawPlayerCentre(Graphics2D g) {
-		g.setColor(Color.ORANGE);
-
-		
-		Vec2f pos = Vec2f.minDisp(PlayerHandler.Me.getExactCentre(), PlayerHandler.Me.centrePos);
-		
-		float x = pos.x;
-		float y = pos.y;
-
-		double a = Math.sqrt(2)*Display.getDiameterOfVision() / 4;
-		double b = Math.sqrt(2)/Display.getDiameterOfVision();
-		
-		//Scaling for screen.
-		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);
-		int Y = (int)(((y + a)*b*Display.WINDOW_WIDTH) - (Display.WINDOW_WIDTH - Display.WINDOW_HEIGHT)/2);
-		
-		g.fillOval(X - 3, Y - 3, 2*3, 2*3);
+	private void drawPlayerCentre(Renderer r) {
+		r.setColour(Color.orange);
+		r.drawCircle(PlayerHandler.Me.getExactCentre(), 10);
 		
 		
-		g.setColor(Color.MAGENTA);
-		g.fillOval(Display.WINDOW_WIDTH/2, Display.WINDOW_HEIGHT/2, 3, 3);
+		r.setColour(Color.MAGENTA);
+		r.fillCircle(Display.WINDOW_WIDTH/2, Display.WINDOW_HEIGHT/2, 3);
 	}
 
 	public void drawPerformance(Graphics2D g2d) {

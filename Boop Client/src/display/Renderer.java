@@ -31,38 +31,28 @@ public class Renderer {
 		g.setFont(font);
 	}
 	
-	public void drawString(String s, Vec2f pos, int pixOffsetX, int pixOffsetY) {
-		drawString(s, pos, PlayerHandler.Me.centrePos, pixOffsetX, pixOffsetY);
+	public void setCentre(Vec2f centre) {
+		this.centre = centre;
 	}
 
 	public void drawString(String s, int pixOffsetX, int pixOffsetY) {
-		drawString(s, PlayerHandler.Me.centrePos, PlayerHandler.Me.centrePos, pixOffsetX, pixOffsetY);
+		drawString(s, centre, pixOffsetX, pixOffsetY);
 		
 	}
-	public void drawString(String s, Vec2f pos, Vec2f centre) {
-		drawString(s, pos, centre, 0, 0);
-	}
 	public void drawString(String s, Vec2f pos) {
-		drawString(s, pos, PlayerHandler.Me.centrePos, 0, 0);
+		drawString(s, pos, 0, 0);
 	}
 	
-	public void drawString(String s, Vec2f pos, Vec2f centre, int pixOffsetX, int pixOffsetY) {
+	public void drawString(String s, Vec2f pos, int pixOffsetX, int pixOffsetY) {
 		var coords = globalToLocalCoords(pos, centre);
 		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
 		g.drawString(s, coords.x + pixOffsetX, coords.y + pixOffsetY);
 	}
 
-	public void drawLineSegment(Vec2f beginning, Vec2f end, boolean shortestPath) {
-		drawLineSegment(beginning, end, shortestPath, PlayerHandler.Me.centrePos);
+	public void drawLineSegment(int pixX1, int pixY1, int pixX2, int pixY2) {
+		g.drawLine(pixX1, pixY1, pixX2, pixY2);
 	}
-
-	/**
-	 * Needs testing.
-	 * @param beginning
-	 * @param end
-	 * @param centre
-	 */
-	public void drawLineSegment(Vec2f beginning, Vec2f end, boolean shortestPath, Vec2f centre) {
+	public void drawLineSegment(Vec2f beginning, Vec2f end, boolean shortestPath) {
 		//Draws two lines, from beginning to end and then end to beginning
 		//Want to use this to draw a faint grid in the background.
 		
@@ -104,30 +94,62 @@ public class Renderer {
 		g.drawLine((int)b2.x, (int)b2.y, (int)e2.x, (int)e2.y);
 	}
 	
-	public void drawCircle(Vec2f pos, float rad, Vec2f centre) {
-		var coords = globalToLocalCoords(pos, centre);
-		
-		var R = (int) (scaleLengthToLocal(rad)*Display.WINDOW_WIDTH);
-		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
-		
-		g.drawOval((int)(coords.x - R), (int)(coords.y - R), R, R);
-	}
-	
 	public void drawCircle(Vec2f pos, float rad) {
-		drawCircle(pos, rad, PlayerHandler.Me.centrePos);
+		drawCircle(pos, rad, 0,0);
 	}
 	
-	public void fillCircle(Vec2f pos, float rad, Vec2f centre) {
+	public void drawCircle(Vec2f pos, int rad) {
+		drawCircle(pos, rad, 0,0);
+	}
+	
+	public void drawCircle(int X, int Y, int R) {
+		drawCircle(Vec2f.Origin, R, X, Y);
+	}
+	
+	public void drawCircle(Vec2f pos, float rad, int pixOffsetX, int pixOffsetY) {
 		var coords = globalToLocalCoords(pos, centre);
 		
 		var R = (int) (scaleLengthToLocal(rad)*Display.WINDOW_WIDTH);
 		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
 		
-		g.fillOval((int)(coords.x - R), (int)(coords.y - R), 2*R, 2*R);
+		g.drawOval((int)(coords.x + pixOffsetX - R), (int)(coords.y + pixOffsetY - R), R, R);
+	}
+	
+	public void drawCircle(Vec2f pos, int rad, int pixOffsetX, int pixOffsetY) {
+		var coords = globalToLocalCoords(pos, centre);
+		
+		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
+		
+		g.drawOval((int)(coords.x + pixOffsetX - rad), (int)(coords.y + pixOffsetY - rad), rad, rad);
 	}
 	
 	public void fillCircle(Vec2f pos, float rad) {
-		fillCircle(pos, rad, PlayerHandler.Me.centrePos);
+		fillCircle(pos, rad, 0,0);
+	}
+	
+	public void fillCircle(Vec2f pos, int rad) {
+		fillCircle(pos, rad, 0,0);
+	}
+	
+	public void fillCircle(int X, int Y, int R) {
+		fillCircle(Vec2f.Origin, R, X, Y);
+	}
+	
+	public void fillCircle(Vec2f pos, float rad, int pixOffsetX, int pixOffsetY) {
+		var coords = globalToLocalCoords(pos, centre);
+		
+		var R = (int) (scaleLengthToLocal(rad)*Display.WINDOW_WIDTH);
+		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
+		
+		g.fillOval((int)(coords.x + pixOffsetX - R), (int)(coords.y + pixOffsetY - R), R, R);
+	}
+	
+	public void fillCircle(Vec2f pos, int rad, int pixOffsetX, int pixOffsetY) {
+		var coords = globalToLocalCoords(pos, centre);
+		
+		Vec2f.scale(coords, coords, Display.WINDOW_WIDTH);
+		
+		g.fillOval((int)(coords.x + pixOffsetX - rad), (int)(coords.y + pixOffsetY - rad), rad, rad);
 	}
 	
 	public static Vec2f globalToLocalCoords(Vec2f coord) {

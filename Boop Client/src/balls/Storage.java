@@ -1,11 +1,11 @@
 package balls;
 
 import java.awt.Color;
-import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import display.Renderer;
 import main.Player;
 import main.PlayerHandler;
 import math.Physics;
@@ -89,18 +89,20 @@ public class Storage {
 		}
 	}
 	
-	public void renderBalls(Graphics2D g, float dt, PlayerHandler players, boolean debugging) {
+	public void renderBalls(Renderer r, float dt, PlayerHandler players, boolean debugging) {
 		float energy = 0;
 		synchronized (balls) {
 			for (Ball ball: balls) {
 				if(ball.getID() == -1) continue;
-				ball.renderScaled(g, dt, players,debugging);
+				ball.render(r, dt, players,debugging);
 				energy += ball.phys.calcEnergy(balls);
 			}
 		}
 
-		g.setColor(Color.PINK);
-		g.drawString("energy: " + energy, 20, 200);
+		if(debugging) {
+			r.setColour(Color.PINK);
+			r.drawString("energy: " + energy, -600, -200);
+		}
 	}
 	
 	/**

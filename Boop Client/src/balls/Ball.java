@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 
 import display.Display;
-import main.Player;
+import display.Renderer;
 import main.PlayerHandler;
 import math.Physics;
 import math.Vec2f;
@@ -76,53 +76,15 @@ public class Ball {
 		return data;
 	}
 	
-	public void renderScaled(Graphics2D g, float dt, PlayerHandler players, boolean debugging) {
-
-		vecPool.startOfMethod();
-
-		Vec2f pos = vecPool.getVec();
-
-		Vec2f.minDisp(pos, clientPos, PlayerHandler.Me.centrePos);
-
-		float x = pos.x;
-		float y = pos.y;
-
-		double a = Math.sqrt(2)*Display.getDiameterOfVision() / 4;
-		double b = Math.sqrt(2)/Display.getDiameterOfVision();
-		
-		//Scaling for screen.
-		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);
-		int Y = (int)(((y + a)*b*Display.WINDOW_WIDTH) - (Display.WINDOW_WIDTH - Display.WINDOW_HEIGHT)/2);
-		int Rad = (int)(b*rad*Display.WINDOW_WIDTH);
-		
-		//Second set of coordinates for edge.
-		int X2 = X;
-		int Y2 = Y;
-		
-		if(x + rad > 1) {
-			X2 = (int) (X - 2*b*Display.WINDOW_WIDTH);
-		}
-		else if(x - rad < -1) {
-			X2 = (int) (X + 2*b*Display.WINDOW_WIDTH);
-		}
-		
-		if(y + rad > 1) {
-			Y2 = (int) (Y - 2*b*Display.WINDOW_WIDTH);
-		}
-		else if(y - rad < -1) {
-			Y2 = (int) (Y + 2*b*Display.WINDOW_WIDTH);
-		}
-		
-		
-		vecPool.endOfMethod();
-		
+	public void render(Renderer r, float dt, PlayerHandler players, boolean debugging) {
 		//FOR DEBUGGING: 
 		if(debugging) {
 			//ExactCoords
-			renderExactCoordinates(g, dt);
+			r.setColour(Color.PINK);
+			r.fillCircle(phys.pos, rad);
 			//TIMER
-			g.setColor(Color.WHITE);
-			g.drawString("t:" + (float)(Math.round(100*timeAlive))/100f, X-Rad-10, Y-Rad-10);
+			r.setColour(Color.WHITE);
+			r.drawString("t:" + (float)(Math.round(100*timeAlive))/100f, clientPos, -10, -10);
 			//
 		}
 		
@@ -142,98 +104,9 @@ public class Ball {
 			colour = players.getPlayerByID(ownerID).colour;
 		}
 		
-		g.setColor(colour);
+		r.setColour(colour);
 		
-		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
-		if(X2 != X || Y2 != Y) {
-			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
-		}
-	}
-	
-	private void renderExactCoordinates(Graphics2D g, float dt) {
-		vecPool.startOfMethod();
-
-		Vec2f pos = vecPool.getVec();
-
-		Vec2f.minDisp(pos, phys.pos, PlayerHandler.Me.centrePos);
-
-		float x = pos.x;
-		float y = pos.y;
-
-		double a = Math.sqrt(2)*Display.getDiameterOfVision() / 4;
-		double b = Math.sqrt(2)/Display.getDiameterOfVision();
-		
-		//Scaling for screen.
-		int X = (int)((x + a)*b*Display.WINDOW_WIDTH);
-		int Y = (int)(((y + a)*b*Display.WINDOW_WIDTH) - (Display.WINDOW_WIDTH - Display.WINDOW_HEIGHT)/2);
-		int Rad = (int)(b*rad*Display.WINDOW_WIDTH);
-		
-		//Second set of coordinates for edge.
-		int X2 = X;
-		int Y2 = Y;
-		
-		if(x + rad > 1) {
-			X2 = (int) (X - 2*b*Display.WINDOW_WIDTH);
-		}
-		else if(x - rad < -1) {
-			X2 = (int) (X + 2*b*Display.WINDOW_WIDTH);
-		}
-		
-		if(y + rad > 1) {
-			Y2 = (int) (Y - 2*b*Display.WINDOW_WIDTH);
-		}
-		else if(y - rad < -1) {
-			Y2 = (int) (Y + 2*b*Display.WINDOW_WIDTH);
-		}
-		
-		g.setColor(Color.PINK);
-		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
-		if(X2 != X || Y2 != Y) {
-			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
-		}
-		
-		/////FOR DEBUGGING: TIMER
-//		g.setColor(Color.WHITE);
-//		g.drawString("t:" + (float)(Math.round(100*timeAlive))/100f, X, Y);
-		////////
-
-		vecPool.endOfMethod();
-	}
-	
-	public void renderExactCoordinatesUnscaled(Graphics2D g, float dt) {
-		Vec2f pos = phys.pos;
-		
-		float x = pos.x;
-		float y = pos.y;
-		
-		//Scaling for screen.
-		int X = (int)((x + 1)*0.5*Display.WINDOW_HEIGHT);
-		int Y = (int)((y + 1)*0.5*Display.WINDOW_HEIGHT);
-		int Rad = (int)(0.5*rad*Display.WINDOW_HEIGHT);
-		
-		//Second set of coordinates for edge.
-		int X2 = X;
-		int Y2 = Y;
-		
-		if(x + rad > 1) {
-			X2 = X - Display.WINDOW_HEIGHT;
-		}
-		else if(x - rad < -1) {
-			X2 = X + Display.WINDOW_HEIGHT;
-		}
-		
-		if(y + rad > 1) {
-			Y2 = Y - Display.WINDOW_HEIGHT;
-		}
-		else if(y - rad < -1) {
-			Y2 = Y + Display.WINDOW_HEIGHT;
-		}
-		
-		g.setColor(Color.red);
-		g.fillOval(X - Rad, Y - Rad, 2*Rad, 2*Rad);
-		if(X2 != X || Y2 != Y) {
-			g.fillOval(X2 - Rad, Y2 - Rad, 2*Rad, 2*Rad);
-		}
+		r.fillCircle(clientPos, rad);
 	}
 	
 	public void updateClientPrediction(float dt) {

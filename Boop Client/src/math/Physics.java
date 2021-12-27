@@ -182,9 +182,7 @@ public class Physics {
 		float bounce = (e1 + e2)*0.5f;
 		Vec2f v1 = ball1.phys.vel, v2 = ball2.phys.vel;
 		
-		float impulse = (1+bounce)*(Vec2f.dot(v1, norm) - Vec2f.dot(v2, norm))/(1/m1 + 1/m2);
-		
-		return impulse;
+		return (1+bounce)*(Vec2f.dot(v1, norm) - Vec2f.dot(v2, norm))/(1/m1 + 1/m2);
 	}
 	
 	/**
@@ -242,9 +240,11 @@ public class Physics {
 			disp(disp, ball.phys.pos, pos);
 			
 			//If distance is less than minDist then skip.
-			if (disp.lengthSq()<minDist*minDist) continue;
+			if (disp.lengthSq()<minDist*minDist) 
+				continue;
 			//If distance is bigger than maxDist then skip.
-			if (disp.lengthSq()>maxDist*maxDist) continue;
+			if (disp.lengthSq()>maxDist*maxDist) 
+				continue;
 			
 			float distCubed = disp.lengthSq();
 			distCubed *= Math.sqrt(distCubed);
