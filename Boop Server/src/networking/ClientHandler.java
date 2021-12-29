@@ -9,7 +9,12 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
 import balls.Ball;
+import math.Bitmaths;
 
+/**
+ * Manages all client objects making it easier to alter/create data. 
+ *
+ */
 public class ClientHandler {
 
 	List<Client> clientsToAdd = new ArrayList<>(4);
@@ -32,8 +37,24 @@ public class ClientHandler {
 	public void setUpClient(Client client, SocketChannel channel, BlockingQueue<Packet> outboundPacketQueue)
 			throws IOException {
 		client.setupConnection(channel);
-		// Anything to send or recieve here:
-		client.finishSetUp(outboundPacketQueue);
+		
+		// Anything to send or receive here to finish setup:
+		
+		byte[] data = { 5 };
+		data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(1), data);
+		data = Bitmaths.pushByteToData(PacketData.CLIENT_SETUP.getID(), data);
+
+		Packet joinPacket = new Packet(data, client.getIdentity());
+
+		System.out.println("ClientHandler class- last set up data sent");
+
+		// Effectively block until there's space
+		// TODO Create a list of not setup clients and try offering every tick
+		boolean offered = false;
+		while (!offered) {
+			System.out.println("Offering finish Setup packet");
+			offered = outboundPacketQueue.offer(joinPacket);
+		}
 
 		addClient(client);
 	}

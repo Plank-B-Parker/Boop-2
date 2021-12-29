@@ -6,6 +6,10 @@ import java.net.SocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.concurrent.BlockingQueue;
 
+/**
+ * Accepts incoming connections and creates a client object to associate with it.
+ *
+ */
 public class ClientAccept implements Runnable {
 
 	private final Server server;

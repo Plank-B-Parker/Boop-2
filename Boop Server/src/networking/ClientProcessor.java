@@ -2,7 +2,6 @@ package networking;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -13,6 +12,10 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * Handles the nio setup for incoming clients and writing of tcp packets to each client.
+ *
+ */
 public class ClientProcessor implements Runnable {
 
 	private final Server server;

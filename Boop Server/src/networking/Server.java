@@ -4,10 +4,8 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -15,6 +13,12 @@ import balls.Ball;
 import math.Bitmaths;
 import networking.PacketData.Protocol;
 
+/**
+ * Manages all server-related references such as threads, packet and client handling
+ * <p>
+ * The server creates 4 threads to handle client connections, UDP packets and packet (data) handling.
+ * All objects related to core networking functionality are created and shared from this class.
+ */
 public class Server {
 
 	private ClientHandler clientHandler;
@@ -410,14 +414,14 @@ public class Server {
 	private class PacketHandler implements Runnable {
 
 		BlockingQueue<Packet> packetsToHandle = new LinkedBlockingQueue<>(180);
-		Set<Client> activeClients = Collections.synchronizedSet(new LinkedHashSet<>()); // Used so there's no duplicates
+		List<Client> activeClients = Collections.synchronizedList(new ArrayList<>()); 
 
 		@Override
 		public void run() {
 			while (serverON) {
 				checkClientConnection();
 
-				var packet = packetsToHandle.poll();
+				Packet packet = packetsToHandle.poll();
 				Client owner;
 
 				// Checks if both packet is null and if the client is null (client does not
@@ -453,7 +457,7 @@ public class Server {
 			switch (type) {
 			case CLIENT_SETUP:
 				client.setReadyToRecieveUDP(true);
-				System.out.println("Client class, ready for UDP");
+				System.out.println("Client is ready for UDP: Server class");
 				break;
 			case CLIENT_DATA:
 				var nameLength = Integer.valueOf(Bitmaths.bytesToString(data, headIndex, 2)) - 10;
@@ -516,45 +520,54 @@ public class Server {
 				return;
 			}
 		}
-
+		
 		private void checkClientConnection() {
-			var iterator = activeClients.iterator();
-
-			// TODO Solve concurrent modification error
-			// Other threads can access 'activeClients' via the submitPacket method
-
-			while (iterator.hasNext()) {
-				if (!iterator.next().isConnected()) {
-					iterator.remove();
+			List<Client> toRemove = new ArrayList<>();
+			
+			synchronized (activeClients) {
+				for (var client : activeClients) {
+					if (!client.isConnected()) {
+						toRemove.add(client);
+					}
 				}
+				
 			}
-
+			
+			activeClients.removeAll(toRemove);
 		}
 
 		private Client searchActiveClients(Packet packet) {
 			if (packet == null)
 				return null;
-
-			for (var client : activeClients) {
-				if (packet.clientID == client.getIdentity()
-						|| Objects.equals(packet.sourceAddress, client.getSocketAddress())) {
-					return client;
+			
+			synchronized (activeClients) {
+				for (var client : activeClients) {
+					if (packet.clientID == client.getIdentity()
+							|| Objects.equals(packet.sourceAddress, client.getSocketAddress())) {
+						return client;
+					}
 				}
-
 			}
-
+			
 			return null;
 		}
-
+		
+		/**
+		 * Submits a TCP packet to be handled as well as marking the client as active
+		 */
 		public void submitPacket(Packet packet, Client client) {
+			if (!activeClients.contains(client)) activeClients.add(client);
+			
 			boolean offered = packetsToHandle.offer(packet);
-			activeClients.add(client);
 
 			if (!offered) {
 				System.out.println("Packet handling queue is full. Abandoning packet");
 			}
 		}
-
+		
+		/**
+		 * Submits a UDP packet to be handled (Does not care if the client exists or not)
+		 */
 		public void submitUdpPacket(Packet packet) {
 
 			boolean offered = packetsToHandle.offer(packet);

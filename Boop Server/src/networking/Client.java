@@ -9,11 +9,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import balls.Ball;
-import math.Bitmaths;
 import math.Physics;
 import math.Vec2f;
 import networking.PacketData.Protocol;
@@ -111,24 +109,6 @@ public class Client {
 		System.out.println("Client ip: " + ipv4Address);
 
 		connected = true;
-	}
-
-	public void finishSetUp(BlockingQueue<Packet> outboundPacketQueue) {
-		byte[] data = { 5 };
-		data = Bitmaths.pushByteArrayToData(Bitmaths.intToBytes(1), data);
-		data = Bitmaths.pushByteToData(PacketData.CLIENT_SETUP.getID(), data);
-
-		Packet joinPacket = new Packet(data, ID);
-
-		System.out.println("client class- last set up data sent");
-
-		// Effectively block until there's space
-		// TODO Create a list of not setup clients and try offering every tick
-		boolean offered = false;
-		while (!offered) {
-			System.out.println("Offering finish Setup packet");
-			offered = outboundPacketQueue.offer(joinPacket);
-		}
 	}
 
 	public void disconnect() {
